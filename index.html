@@ -69,6 +69,7 @@ document.querySelectorAll('button[data-g]').forEach(b=>b.onclick=()=>{
  group=b.dataset.g;
  document.querySelectorAll('button[data-g]').forEach(x=>x.classList.toggle('active',x.dataset.g===group));
  resetMap(); render();
+ window.scrollTo({top:0,behavior:'smooth'});
 });
 document.getElementById('search').oninput=e=>{query=e.target.value.trim().toLowerCase();resetMap();render();};
 const categoryParam=new URLSearchParams(location.search).get('category');
