@@ -1,6 +1,60 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>地方大小事｜藍田高大社區消息</title><style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:#f4f8fb;color:#17324d}header{background:linear-gradient(135deg,#e83d55,#ff8291);color:#fff;padding:24px 18px}header h1{margin:0 0 7px;font-size:28px}header p{margin:0}main{max-width:900px;margin:auto;padding:14px}input{width:100%;padding:12px 14px;border:1px solid #ccdbe4;border-radius:12px;font-size:16px;margin-bottom:14px}.card{background:#fff;border:1px solid #dfe8ee;border-radius:15px;padding:15px;margin-bottom:11px}.date{font-size:13px;color:#718493}.title{font-size:19px;font-weight:800;margin:5px 0 7px}.summary{line-height:1.6;color:#425b70}.more{margin-top:10px;border:0;background:#e83d55;color:#fff;border-radius:999px;padding:9px 16px;font-weight:700}.detail{display:none;border-top:1px solid #edf1f4;margin-top:13px;padding-top:13px;line-height:1.75;white-space:pre-wrap}.detail.open{display:block}.detail img{max-width:100%;border-radius:12px;margin-top:10px}.detail iframe{width:100%;height:320px;border:0;border-radius:12px;margin-top:10px}.empty{text-align:center;padding:40px;color:#718493}footer{text-align:center;color:#789;padding:20px}</style></head><body><header><h1>地方大小事</h1><p>藍田高大社區消息｜掌握在地資訊與重要消息</p></header><main><input id="q" placeholder="搜尋社區消息"><section id="news"></section></main><footer>智慧藍田 LIVE 一點通</footer><script>
-let all=[];const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function render(){const q=document.getElementById('q').value.trim().toLowerCase();const a=all.filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));document.getElementById('news').innerHTML=a.length?a.map(x=>`<article class="card"><div class="date">${E(x.date)}</div><div class="title">${E(x.title)}</div><div class="summary">${E(x.summary)}</div><button class="more" onclick="toggle('${E(x.id)}',this)">查看完整內容 ＞</button><div class="detail" id="d-${E(x.id)}"><div>${E(x.content)}</div>${x.image?`<img src="${E(x.image)}">`:''}${x.map?`<iframe loading="lazy" src="${E(x.map)}"></iframe>`:''}${x.link?`<p><a href="${E(x.link)}" target="_blank" rel="noopener">${E(x.linkText||'相關連結')} ＞</a></p>`:''}</div></article>`).join(''):'<div class="empty">目前沒有符合的消息</div>'}
-function toggle(id,b){const x=document.getElementById('d-'+id),o=x.classList.toggle('open');b.textContent=o?'收合內容 ↑':'查看完整內容 ＞'}
-document.getElementById('q').addEventListener('input',render);fetch('news.json?v='+Date.now()).then(r=>r.json()).then(x=>{all=x;render()}).catch(()=>document.getElementById('news').innerHTML='<div class="empty">消息資料載入失敗，請稍後再試。</div>');
-</script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>地方大小事｜藍田高大社區消息</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:#f4f8fb;color:#17324d}
+header{background:linear-gradient(135deg,#e83d55,#ff8291);color:#fff;padding:22px 18px}
+header h1{margin:0 0 5px;font-size:27px}header p{margin:0;font-size:15px}
+main{max-width:900px;margin:auto;padding:12px}
+input{width:100%;padding:11px 14px;border:1px solid #ccdbe4;border-radius:12px;font-size:16px;margin-bottom:10px}
+.card{background:#fff;border:1px solid #dfe8ee;border-radius:13px;margin-bottom:8px;overflow:hidden;cursor:pointer}
+.head{position:relative;padding:12px 44px 12px 14px}
+.date{font-size:12px;color:#718493;margin-bottom:3px}
+.title{font-size:18px;font-weight:800;line-height:1.35;margin-bottom:4px}
+.summary{font-size:14px;line-height:1.5;color:#526a7c}
+.arrow{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:28px;color:#7a8e9d;line-height:1}
+.detail{display:none;border-top:1px solid #edf1f4;padding:13px 14px;line-height:1.75;white-space:pre-wrap;background:#fbfdfe}
+.card.open .detail{display:block}.card.open .arrow{transform:translateY(-50%) rotate(90deg)}
+.detail img{max-width:100%;border-radius:10px;margin-top:10px}.detail iframe{width:100%;height:320px;border:0;border-radius:10px;margin-top:10px}
+.empty{text-align:center;padding:36px;color:#718493}footer{text-align:center;color:#789;padding:18px;font-size:13px}
+</style>
+</head>
+<body>
+<header><h1>地方大小事</h1><p>藍田高大社區消息｜掌握在地資訊與重要消息</p></header>
+<main>
+<input id="q" placeholder="搜尋社區消息">
+<section id="news"></section>
+</main>
+<footer>智慧藍田 LIVE 一點通</footer>
+<script>
+let all=[];
+const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function render(){
+ const q=document.getElementById('q').value.trim().toLowerCase();
+ const a=all.filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q))
+ .sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ document.getElementById('news').innerHTML=a.length?a.map(x=>`
+ <article class="card" onclick="toggle(this)">
+  <div class="head">
+   <div class="date">${E(x.date)}</div>
+   <div class="title">${E(x.title)}</div>
+   <div class="summary">${E(x.summary)}</div>
+   <span class="arrow">›</span>
+  </div>
+  <div class="detail" onclick="event.stopPropagation()">
+   <div>${E(x.content)}</div>
+   ${x.image?`<img src="${E(x.image)}" alt="">`:''}
+   ${x.map?`<iframe loading="lazy" src="${E(x.map)}"></iframe>`:''}
+   ${x.link?`<p><a href="${E(x.link)}" target="_blank" rel="noopener">${E(x.linkText||'相關連結')} ＞</a></p>`:''}
+  </div>
+ </article>`).join(''):'<div class="empty">目前沒有符合的消息</div>';
+}
+function toggle(card){card.classList.toggle('open')}
+document.getElementById('q').addEventListener('input',render);
+fetch('news.json?v='+Date.now()).then(r=>{if(!r.ok)throw Error();return r.json()}).then(x=>{all=x;render()})
+.catch(()=>document.getElementById('news').innerHTML='<div class="empty">消息資料載入失敗，請稍後再試。</div>');
+</script>
+</body></html>
