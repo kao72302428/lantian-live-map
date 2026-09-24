@@ -5,7 +5,16 @@ const data=[{"id": "A001", "group": "美食", "sub": "日式", "name": "藏壽�
 function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function filtered(){return data.filter(x=>(group==='全部'||x.group===group)&&(!query||[x.name,x.address,x.sub,x.area].join(' ').toLowerCase().includes(query)))}
 function render(){const a=filtered(); list.innerHTML=a.map((x,i)=>`<div class="card" data-i="${data.indexOf(x)}"><div class="name">${esc(x.name)}</div><div class="meta"><span class="tag">${esc(x.group)}</span><span class="tag">${esc(x.sub)}</span></div><div class="meta">📍 ${esc(x.address)}</div></div>`).join('')||'<div class="card">沒有符合資料</div>'; document.querySelectorAll('.card[data-i]').forEach(c=>c.onclick=()=>select(+c.dataset.i,c));}
-function select(i,el){document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');const x=data[i];const q=(x.address.includes('待查')||x.address.includes('生活圈'))?`${x.name} 高雄 楠梓`: `${x.name} ${x.address}`;map.src='https://www.google.com/maps?q='+encodeURIComponent(q)+'&output=embed';hint.textContent=x.name+'｜'+x.address;}
+function select(i,el){document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');const x=data[i];const q=(x.address.includes('待查')||x.address.includes('生活圈'))?`${x.name} 高雄 楠梓`: `${x.name} ${x.address}`;map.src='https://www.google.com/maps?q='+encodeURIComponent(q)+'&output=embed';hint.textContent=x.name+'｜'+x.address;if(window.innerWidth<=768){setTimeout(()=>{const map=document.querySelector('iframe');if(map){map.scrollIntoView({behavior:'smooth',block:'start'});}},200);}
+  const map=document.querySelector('iframe');
+  if(map) map.scrollIntoView({behavior:'smooth',block:'start'});
+},200);
+}
+  setTimeout(()=>{
+    const map=document.querySelector('iframe');
+    if(map) map.scrollIntoView({behavior:'smooth',block:'start'});
+  },200);
+}}
 document.querySelectorAll('button[data-g]').forEach(b=>{b.classList.toggle('active',b.dataset.g===group); b.onclick=()=>{document.querySelectorAll('button[data-g]').forEach(x=>x.classList.remove('active'));b.classList.add('active');group=b.dataset.g;render()}});document.getElementById('q').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};render();
 const categoryParam = new URLSearchParams(window.location.search).get('category');
 const categoryMap = { food: '美食', home: '居家', medical: '醫療' };
