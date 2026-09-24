@@ -10,11 +10,7 @@ function select(i,el){document.querySelectorAll('.card').forEach(c=>c.classList.
   if(map) map.scrollIntoView({behavior:'smooth',block:'start'});
 },200);
 }
-  setTimeout(()=>{
-    const map=document.querySelector('iframe');
-    if(map) map.scrollIntoView({behavior:'smooth',block:'start'});
-  },200);
-}}
+ 
 document.querySelectorAll('button[data-g]').forEach(b=>{b.classList.toggle('active',b.dataset.g===group); b.onclick=()=>{document.querySelectorAll('button[data-g]').forEach(x=>x.classList.remove('active'));b.classList.add('active');group=b.dataset.g;render()}});document.getElementById('q').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};render();
 const categoryParam = new URLSearchParams(window.location.search).get('category');
 const categoryMap = { food: '美食', home: '居家', medical: '醫療' };
