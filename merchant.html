@@ -6,13 +6,18 @@
 <title>智慧藍田｜商圈店家</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:#f4f8fb;color:#17324d}
-header{padding:18px 16px;background:linear-gradient(135deg,#47a9c4,#69c7a7);color:white}
-header h1{margin:0 0 4px;font-size:23px}header p{margin:0;font-size:14px}
+.hero{padding:18px 12px 8px;background:#fff;text-align:center;overflow:visible}
+.hero img{display:block;width:min(100%,1497px);height:auto;margin:0 auto;border-radius:18px}
+@media(max-width:768px){.hero{padding:12px 8px 4px}.hero img{border-radius:12px}}
 .toolbar{position:sticky;top:0;z-index:5;background:white;padding:12px;border-bottom:1px solid #dfe8ee}
 .buttons{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 button,.search{border:1px solid #cddbe4;border-radius:999px;background:white;padding:9px 14px;font-size:15px}
 button.active{background:#17324d;color:white;border-color:#17324d}
 .search{width:100%;border-radius:12px}
+.subfilters{display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none}
+.subfilters:empty{display:none}.subfilters::-webkit-scrollbar{display:none}
+.subfilters button{flex:0 0 auto;padding:7px 11px;font-size:13px;background:#f5f9fc}
+.subfilters button.active{background:#0c67c7;color:#fff;border-color:#0c67c7}
 .layout{display:grid;grid-template-columns:minmax(300px,42%) 1fr;gap:12px;padding:12px}
 .list{display:grid;gap:9px;align-content:start}
 .card{background:white;border:1px solid #e0e8ed;border-radius:14px;padding:13px;cursor:pointer}
@@ -31,11 +36,12 @@ button.active{background:#17324d;color:white;border-color:#17324d}
 </style>
 </head>
 <body>
-<header><h1>智慧藍田｜商圈店家</h1><p>吃喝・購物・居家・健康・生活・休閒｜在地店家一站查找</p></header>
+<div class="hero"><img src="merchant-header.jpg" alt="商圈店家｜吃喝・購物・居家・健康・生活・休閒"></div>
 <div class="toolbar">
   <div class="buttons">
-    <button data-g="全部">全部店家</button><button data-g="美食餐飲">🍜 美食餐飲</button><button data-g="購物零售">🛍️ 購物零售</button><button data-g="居家服務">🏠 居家服務</button><button data-g="醫療保健">🩺 醫療保健</button><button data-g="生活服務">💇 生活服務</button><button data-g="教育休閒">🎓 教育休閒</button>
+    <button data-g="全部">全部</button><button data-g="美食餐飲">🍜 吃喝</button><button data-g="購物零售">🛍️ 購物</button><button data-g="居家服務">🏠 居家</button><button data-g="醫療保健">🩺 健康</button><button data-g="生活服務">⚙️ 生活</button><button data-g="教育休閒">👟 休閒</button>
   </div>
+  <div id="subfilters" class="subfilters"></div>
   <input id="search" class="search" placeholder="搜尋店名、地址、服務類型">
 </div>
 <main class="layout">
@@ -57,10 +63,17 @@ function categoryOf(x){
  if(/教育|補習|才藝|運動|健身|休閒|娛樂|親子/.test(sub)) return '教育休閒';
  return x.group==='居家'?'生活服務':x.group;
 }
-let group='全部',query='';
+let group='全部',subGroup='全部',query='';
 const list=document.getElementById('list'),hint=document.getElementById('hint'),mapbox=document.getElementById('mapbox');
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function filtered(){return data.filter(x=>(group==='全部'||categoryOf(x)===group)&&(!query||[x.name,x.address,x.sub,x.area,categoryOf(x)].join(' ').toLowerCase().includes(query)))}
+function filtered(){return data.filter(x=>(group==='全部'||categoryOf(x)===group)&&(subGroup==='全部'||x.sub===subGroup)&&(!query||[x.name,x.address,x.sub,x.area,categoryOf(x)].join(' ').toLowerCase().includes(query)))}
+function renderSubs(){
+ const box=document.getElementById('subfilters');
+ if(group==='全部'){box.innerHTML='';return}
+ const subs=[...new Set(data.filter(x=>categoryOf(x)===group).map(x=>x.sub).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+ box.innerHTML=['全部',...subs].map(v=>`<button data-sub="${esc(v)}" class="${v===subGroup?'active':''}">${esc(v)}</button>`).join('');
+ box.querySelectorAll('button[data-sub]').forEach(b=>b.onclick=()=>{subGroup=b.dataset.sub;renderSubs();resetMap();render();});
+}
 function render(){
  const a=filtered();
  list.innerHTML=a.map(x=>`<div class="card" data-i="${data.indexOf(x)}"><div class="name">${esc(x.name)}</div><div class="meta"><span class="tag">${esc(categoryOf(x))}</span><span class="tag">${esc(x.sub)}</span></div><div class="meta">📍 ${esc(x.address)}</div></div>`).join('')||'<div class="card">沒有符合資料</div>';
@@ -82,7 +95,7 @@ function select(i,el){
  if(window.innerWidth<=768) setTimeout(()=>document.getElementById('mapwrap').scrollIntoView({behavior:'smooth',block:'start'}),200);
 }
 document.querySelectorAll('button[data-g]').forEach(b=>b.onclick=()=>{
- group=b.dataset.g;
+ group=b.dataset.g; subGroup='全部'; renderSubs();
  document.querySelectorAll('button[data-g]').forEach(x=>x.classList.toggle('active',x.dataset.g===group));
  resetMap(); render();
  window.scrollTo({top:0,behavior:'smooth'});
