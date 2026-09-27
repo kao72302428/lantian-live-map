@@ -81,9 +81,9 @@ function render(){
 }
 function resetMap(){
  document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
- hint.textContent='請點選商家查看位置';
- mapbox.className='placeholder';
- mapbox.innerHTML='選擇左側商家後，這裡會顯示地圖';
+ hint.textContent='商圈店家地圖｜點選左側商家查看位置';
+ mapbox.className='';
+ mapbox.innerHTML='<iframe id="map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q='+encodeURIComponent('藍田高大特區 高雄 楠梓')+'&output=embed"></iframe>';
 }
 function select(i,el){
  document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');
