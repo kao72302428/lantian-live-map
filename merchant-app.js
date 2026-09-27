@@ -1,4 +1,4 @@
-/* 商圈店家互動程式。原始157筆資料保持不動；第二層分類在顯示層合併，方便長期維護。 */
+/* 商圈店家互動程式。原始157筆資料保持不動；第二層分類只在顯示層合併。 */
 (() => {
   const data = Array.isArray(window.MERCHANTS) ? window.MERCHANTS : [];
   const list = document.getElementById('list');
@@ -11,12 +11,12 @@
 
   const SUB_RULES = {
     '美食餐飲': [
-      ['正餐料理', /日式|韓式|義式|俄式|港式|台日西式|台式|餐廳|餐飲|複合餐飲|鐵板料理|自助餐|快餐|丼飯|日式豬排|牛排/],
-      ['鍋物燒烤', /火鍋|鍋物|燒肉|串燒|居酒屋|熱炒|海鮮|牛排\/鍋物/],
-      ['小吃麵食', /小吃|麵食|鍋燒|海鮮鍋燒|鍋貼|水餃|熟食|便當/],
+      ['鍋物燒烤', /牛排\/鍋物|火鍋|鍋物|燒肉|串燒|居酒屋|熱炒|海鮮/],
       ['早餐輕食', /早餐|咖啡\/輕食/],
-      ['飲品咖啡', /飲料|咖啡|麵食\/飲料/],
-      ['甜點冰品', /冰品|點心/]
+      ['飲品咖啡', /麵食\/飲料|飲料|咖啡/],
+      ['甜點冰品', /冰品|點心/],
+      ['小吃麵食', /海鮮鍋燒|鍋燒|鍋貼|水餃|小吃|麵食|熟食|便當/],
+      ['正餐料理', /日式|韓式|義式|俄式|港式|台日西式|台式|餐廳|餐飲|複合餐飲|鐵板料理|自助餐|快餐|丼飯|日式豬排|牛排|咖哩/]
     ],
     '購物零售': [
       ['超商量販', /便利商店|超市|量販/],
@@ -25,21 +25,21 @@
       ['生活百貨', /生活百貨|文具|雜貨|零售/]
     ],
     '居家服務': [
-      ['居家修繕', /五金|裝潢五金|建材|窗簾/],
+      ['居家修繕', /裝潢五金|五金|建材|窗簾/],
       ['家具家居', /家具/],
       ['房屋服務', /房仲/]
     ],
     '醫療保健': [
-      ['診所醫療', /內科|兒科|過敏|親子診所|耳鼻喉科|牙醫/],
+      ['診所醫療', /親子診所|耳鼻喉科|兒科|過敏|內科|牙醫/],
       ['藥局中藥', /藥局|中藥行/],
       ['寵物醫療', /動物醫院/]
     ],
     '生活服務': [
+      ['汽機車服務', /汽車美容|洗車|鍍膜|機車維修|汽車|機車/],
       ['美容美髮', /美髮|理髮|美容|養生/],
-      ['汽機車服務', /汽車|汽車美容|洗車|鍍膜|機車|機車維修/],
-      ['寵物服務', /寵物店|寵物美容|寵物店\/美容/],
+      ['寵物服務', /寵物店\/美容|寵物美容|寵物店/],
       ['洗衣修鞋', /洗衣|修鞋/],
-      ['停車物流', /停車|停車場|物流取件/],
+      ['停車物流', /停車場|停車|物流取件/],
       ['其他服務', /公司辦公室/]
     ],
     '教育休閒': [
@@ -49,10 +49,19 @@
     ]
   };
 
+  const FALLBACK = {
+    '美食餐飲':'正餐料理',
+    '購物零售':'生活百貨',
+    '居家服務':'居家修繕',
+    '醫療保健':'診所醫療',
+    '生活服務':'其他服務',
+    '教育休閒':'公園休閒'
+  };
+
   function displaySub(x){
     const rules=SUB_RULES[x.group]||[];
     const hit=rules.find(([,pattern])=>pattern.test(x.sub||''));
-    return hit ? hit[0] : (x.sub||'其他');
+    return hit ? hit[0] : (FALLBACK[x.group] || '其他');
   }
 
   function resetMap(){
@@ -65,7 +74,7 @@
     if(group==='全部'){subfilters.innerHTML='';sub='全部';return;}
     const configured=(SUB_RULES[group]||[]).map(([label])=>label);
     const actual=[...new Set(data.filter(x=>x.group===group).map(displaySub))];
-    const subs=[...configured.filter(x=>actual.includes(x)), ...actual.filter(x=>!configured.includes(x)).sort()];
+    const subs=configured.filter(x=>actual.includes(x));
     subfilters.innerHTML='<button data-sub="全部" class="active">全部</button>'+subs.map(x=>'<button data-sub="'+x+'">'+x+'</button>').join('');
     subfilters.querySelectorAll('button').forEach(btn=>btn.onclick=()=>{
       sub=btn.dataset.sub;
