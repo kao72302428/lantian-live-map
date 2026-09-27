@@ -105,6 +105,6 @@ const categoryParam=new URLSearchParams(location.search).get('category');
 const categoryMap={food:'美食餐飲',home:'居家服務',medical:'醫療保健',foodservice:'美食餐飲',retail:'購物零售',homeservice:'居家服務',health:'醫療保健',life:'生活服務',leisure:'教育休閒'};
 if(categoryMap[categoryParam]) group=categoryMap[categoryParam];
 document.querySelectorAll('button[data-g]').forEach(b=>b.classList.toggle('active',b.dataset.g===group));
-resetMap();render();
+renderSubs();resetMap();render();
 </script>
 </body></html>
