@@ -1,6 +1,7 @@
 const SHEET_ID = '1OsP6JygCRd5FN4XHZsba8TM6hEU8h96k3cqHTJfr6Sk';
 const SHEET_NAME = '案件紀錄';
 const NOTIFY_EMAIL = 'kao72302428@gmail.com';
+const PHOTO_FOLDER_ID = '1EVW-eWrvDlhsDFR7IFN6KlGOQ7OADnUT';
 
 function doPost(e) {
   try {
@@ -15,9 +16,24 @@ function doPost(e) {
     const phone = clean_(p['電話']);
     const email = clean_(p['email']);
     const content = clean_(p['事實內容']);
+    const photoBase64 = String(p['照片Base64'] || '');
+    const photoName = clean_(p['照片檔名']) || 'photo.jpg';
+    const photoMime = clean_(p['照片格式']) || 'image/jpeg';
 
     if (!type || !name || !phone || !email || !content) {
       return result_(false, '', '缺少必要欄位');
+    }
+
+    let photoUrl = '';
+    if (photoBase64) {
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowed.includes(photoMime)) throw new Error('不支援的照片格式');
+      const bytes = Utilities.base64Decode(photoBase64);
+      if (bytes.length > 2500000) throw new Error('照片檔案過大，請改用較小圖片');
+      const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
+      const safeName = caseId + '-' + photoName.replace(/[^0-9A-Za-z._\-\u4e00-\u9fff]/g, '_');
+      const file = folder.createFile(Utilities.newBlob(bytes, photoMime, safeName));
+      photoUrl = file.getUrl();
     }
 
     const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
@@ -37,13 +53,14 @@ function doPost(e) {
         '未處理',
         '',
         submittedAt,
-        '智慧藍田 LIVE 一點通｜聯絡我們'
+        '智慧藍田 LIVE 一點通｜建言與合作',
+        photoUrl
       ]);
     } finally {
       lock.releaseLock();
     }
 
-    const subject = '【智慧藍田】新聯絡案件 ' + caseId + '｜' + type;
+    const subject = '【智慧藍田】新案件 ' + caseId + '｜' + type;
     const body = [
       '案件編號：' + caseId,
       '送出時間：' + submittedAt,
@@ -54,6 +71,8 @@ function doPost(e) {
       '',
       '事實內容：',
       content,
+      '',
+      '附件照片：' + (photoUrl || '無'),
       '',
       'Google Sheets 案件紀錄：',
       'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/edit'
@@ -74,7 +93,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return HtmlService.createHtmlOutput('智慧藍田聯絡表單服務正常');
+  return HtmlService.createHtmlOutput('智慧藍田建言與合作表單服務正常');
 }
 
 function result_(ok, id, message) {
