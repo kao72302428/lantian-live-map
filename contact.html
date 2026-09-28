@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>智慧藍田｜建言與合作</title>
-<link rel="stylesheet" href="./contact.css?v=20260928-1800">
+<link rel="stylesheet" href="./contact.css?v=20260928-1645">
 </head>
 <body>
 <header class="top"><a href="./merchant.html">← 返回</a><strong>建言與合作</strong></header>
@@ -19,10 +19,14 @@
 <section class="formbox"><h2>填寫聯絡表單</h2><div id="selected">請先選擇上方聯絡類型</div>
 <form id="contactForm" action="https://script.google.com/macros/s/AKfycbwimGrgk9jKgIAA2G7K0VDSDahmFZ_Q0o-WZQ0o9heeBxH7BvN9sGHk3Ee-CipZkNIa/exec" method="POST" target="contactReceiver">
 <input type="hidden" id="caseType" name="聯絡類型" required>
+<input type="hidden" id="photoData" name="照片Base64">
+<input type="hidden" id="photoName" name="照片檔名">
+<input type="hidden" id="photoType" name="照片格式">
 <label>姓名 <em>*</em><input name="姓名" required autocomplete="name"></label>
 <label>電話 <em>*</em><input name="電話" type="tel" required autocomplete="tel"></label>
 <label>信箱 <em>*</em><input name="email" type="email" required autocomplete="email"></label>
-<label class="full">事實內容 <em>*</em><textarea name="事實內容" rows="7" required placeholder="請具體說明需要修改、反映或合作的事實內容。"></textarea></label>
+<label class="full" id="contentLabel"><span id="contentLabelText">事實內容</span> <em>*</em><textarea id="contentText" name="事實內容" rows="8" required placeholder="請先選擇上方聯絡類型，系統會顯示對應填寫提示。"></textarea></label>
+<label class="full uploadBox">上傳相片 <span class="optional">（選填，1張）</span><input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"><small>可上傳現場、店家資訊或提案相關相片；系統會自動壓縮後存入案件附件資料夾。</small><div id="photoPreview" class="photoPreview" hidden><img id="photoPreviewImg" alt="附件預覽"><button type="button" id="removePhoto">移除相片</button></div></label>
 <button class="submit" type="submit">送出資料</button><p id="formMsg" class="msg" role="status"></p>
 </form>
 <iframe name="contactReceiver" id="contactReceiver" title="聯絡表單送出結果" style="display:none"></iframe>
@@ -30,5 +34,5 @@
 <section class="contact"><h2>聯絡資訊</h2><p><b>高雄市工商發展協會</b></p><p>電話：<a href="tel:0933101434">0933-101-434</a></p><p>Email：<a href="mailto:kao72302428@gmail.com">kao72302428@gmail.com</a></p></section>
 <section class="notice"><h2>服務說明</h2><p>本平台提供地方資訊交流、意見蒐集及協助聯繫服務。地方公共設施問題將視內容協助整理或轉達相關單位，本平台並非政府機關正式報修或緊急通報系統；涉及緊急安全事件，請直接聯絡相關主管機關。</p><p><b>預防詐騙提醒：</b>本平台不會要求提供銀行帳號、信用卡資料、網路銀行密碼，也不會以案件處理為由要求匯款。如收到可疑訊息或付款要求，請勿提供金融或敏感資料，並先透過上述電話或 Email 向本平台確認。</p></section>
 </main>
-<script src="./contact-app.js?v=20260928-2246"></script>
+<script src="./contact-app.js?v=20260928-1645"></script>
 </body></html>
