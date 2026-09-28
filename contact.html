@@ -16,9 +16,22 @@
 <button type="button" data-type="商圈意見回饋"><b>⭐ 商圈意見回饋</b><span>店家服務品質、環境、食安問題反映及優良店家推薦。</span></button>
 <button type="button" data-type="合作提案"><b>🤝 合作提案</b><span>活動、商圈、社區及地方合作提案。</span></button>
 </section>
-<section class="formbox"><h2>填寫聯絡表單</h2><div id="selected">請先選擇上方聯絡類型</div><form id="contactForm"><input type="hidden" id="caseType" name="caseType" required><label>姓名 <em>*</em><input name="name" required autocomplete="name"></label><label>電話 <em>*</em><input name="phone" type="tel" required autocomplete="tel"></label><label>信箱 <em>*</em><input name="email" type="email" required autocomplete="email"></label><label class="full">事實內容 <em>*</em><textarea name="content" rows="7" required placeholder="請具體說明需要修改、反映或合作的事實內容。"></textarea></label><button class="submit" type="submit">送出資料</button><p id="formMsg" class="msg" role="status"></p></form></section>
+<section class="formbox"><h2>填寫聯絡表單</h2><div id="selected">請先選擇上方聯絡類型</div>
+<form id="contactForm" action="https://formsubmit.co/kao72302428@gmail.com" method="POST">
+<input type="hidden" id="caseType" name="聯絡類型" required>
+<input type="hidden" name="_subject" value="智慧藍田｜聯絡我們新訊息">
+<input type="hidden" name="_template" value="table">
+<input type="hidden" name="_captcha" value="false">
+<input type="hidden" name="_next" value="https://kao72302428.github.io/lantian-live-map/contact.html?sent=1">
+<input type="text" name="_honey" tabindex="-1" autocomplete="off" style="display:none">
+<label>姓名 <em>*</em><input name="姓名" required autocomplete="name"></label>
+<label>電話 <em>*</em><input name="電話" type="tel" required autocomplete="tel"></label>
+<label>信箱 <em>*</em><input name="email" type="email" required autocomplete="email"></label>
+<label class="full">事實內容 <em>*</em><textarea name="事實內容" rows="7" required placeholder="請具體說明需要修改、反映或合作的事實內容。"></textarea></label>
+<button class="submit" type="submit">送出資料</button><p id="formMsg" class="msg" role="status"></p>
+</form></section>
 <section class="contact"><h2>聯絡資訊</h2><p><b>高雄市工商發展協會</b></p><p>電話：<a href="tel:0933101434">0933-101-434</a></p><p>Email：<a href="mailto:kao72302428@gmail.com">kao72302428@gmail.com</a></p></section>
 <section class="notice"><h2>服務說明</h2><p>本平台提供地方資訊交流、意見蒐集及協助聯繫服務。地方公共設施問題將視內容協助整理或轉達相關單位，本平台並非政府機關正式報修或緊急通報系統；涉及緊急安全事件，請直接聯絡相關主管機關。</p><p><b>預防詐騙提醒：</b>本平台不會要求提供銀行帳號、信用卡資料、網路銀行密碼，也不會以案件處理為由要求匯款。如收到可疑訊息或付款要求，請勿提供金融或敏感資料，並先透過上述電話或 Email 向本平台確認。</p></section>
 </main>
-<script src="./contact-app.js?v=20260928-2005"></script>
+<script src="./contact-app.js?v=20260928-2015"></script>
 </body></html>
