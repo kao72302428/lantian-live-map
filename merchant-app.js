@@ -13,7 +13,7 @@
   function render(){const rows=filtered();list.innerHTML=rows.map(x=>`<article class="card" role="button" tabindex="0" data-id="${x.id}"><div class="name">${x.name}</div><div><span class="tag">${displaySub(x)}</span></div><div class="meta">${x.address||''}</div></article>`).join('')||'<div class="card">目前沒有符合的店家</div>';selectedId=null;}
   list.addEventListener('click',e=>{const c=e.target.closest('.card[data-id]');if(c){e.preventDefault();selectMerchant(c.dataset.id);}});
   list.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const c=e.target.closest('.card[data-id]');if(c){e.preventDefault();selectMerchant(c.dataset.id);}}});
-  document.querySelectorAll('button[data-g]').forEach(btn=>btn.addEventListener('click',()=>{group=btn.dataset.g;sub='全部';if(search)search.value='';document.querySelectorAll('button[data-g]').forEach(b=>b.classList.toggle('active',b===btn));renderSubs();resetMap();render();window.scrollTo({top:0,behavior:'smooth'});}));
+  document.querySelectorAll('button[data-g]').forEach(btn=>btn.addEventListener('click',()=>{group=btn.dataset.g;sub='全部';if(search)search.value='';document.querySelectorAll('button[data-g]').forEach(b=>b.classList.toggle('active',b===btn));renderSubs();resetMap();render();}));
   if(search)search.addEventListener('input',()=>{resetMap();render();});
   document.querySelector('button[data-g="全部"]')?.classList.add('active');renderSubs();resetMap();render();
 })();
