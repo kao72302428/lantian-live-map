@@ -17,36 +17,17 @@
       ['甜點飲品', /冰品|點心|飲料|咖啡|麵食\/飲料/],
       ['正餐小吃', /日式|韓式|義式|俄式|港式|台日西式|台式|餐廳|餐飲|複合餐飲|鐵板料理|自助餐|快餐|丼飯|日式豬排|咖哩|小吃|麵食|鍋燒|鍋貼|水餃|熟食|便當|海鮮鍋燒/]
     ],
-    '購物零售': [
-      ['民生購物', /便利商店|超市|量販|生活百貨|文具|雜貨|零售/],
-      ['3C通訊', /3C通訊/],
-      ['服飾配件', /服飾|服飾配件|帽類|珠寶/]
-    ],
-    '居家服務': [
-      ['居家修繕', /裝潢五金|五金|建材|窗簾|家具/],
-      ['房屋服務', /房仲/]
-    ],
-    '醫療保健': [
-      ['診所醫療', /親子診所|耳鼻喉科|兒科|過敏|內科|牙醫/],
-      ['藥局中藥', /藥局|中藥行/]
-    ],
-    '生活服務': [
-      ['汽機車', /汽車美容|洗車|鍍膜|機車維修|汽車|機車/],
-      ['寵物', /動物醫院|寵物店\/美容|寵物美容|寵物店|寵物用品|水族/],
-      ['美容美髮', /美髮|理髮|美容|養生/],
-      ['日常服務', /洗衣|修鞋|停車場|停車|物流取件|公司辦公室/]
-    ],
-    '教育休閒': [
-      ['教育學習', /補習班/],
-      ['休閒遊樂', /公園|娃娃機|遊樂/]
-    ]
+    '購物零售': [['民生購物', /便利商店|超市|量販|生活百貨|文具|雜貨|零售/],['3C通訊', /3C通訊/],['服飾配件', /服飾|服飾配件|帽類|珠寶/]],
+    '居家服務': [['居家修繕', /裝潢五金|五金|建材|窗簾|家具/],['房屋服務', /房仲/]],
+    '醫療保健': [['診所醫療', /親子診所|耳鼻喉科|兒科|過敏|內科|牙醫/],['藥局中藥', /藥局|中藥行/]],
+    '生活服務': [['汽機車', /汽車美容|洗車|鍍膜|機車維修|汽車|機車/],['寵物', /動物醫院|寵物店\/美容|寵物美容|寵物店|寵物用品|水族/],['美容美髮', /美髮|理髮|美容|養生/],['日常服務', /洗衣|修鞋|停車場|停車|物流取件|公司辦公室/]],
+    '教育休閒': [['教育學習', /補習班/],['休閒遊樂', /公園|娃娃機|遊樂/]]
   };
   const FALLBACK={'美食餐飲':'正餐小吃','購物零售':'民生購物','居家服務':'居家修繕','醫療保健':'診所醫療','生活服務':'日常服務','教育休閒':'休閒遊樂'};
   function displayGroup(x){if(x.group==='醫療保健'&&/動物醫院/.test(x.sub||''))return '生活服務';return x.group;}
   function displaySub(x){const g=displayGroup(x);const hit=(SUB_RULES[g]||[]).find(([,p])=>p.test(x.sub||''));return hit?hit[0]:(FALLBACK[g]||'其他');}
   function mapHtml(query){return '<iframe id="map" title="商圈店家地圖" loading="eager" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q='+encodeURIComponent(query)+'&output=embed"></iframe>';}
-  function resetMap(){document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));hint.textContent='商圈店家地圖｜點選左側商家查看位置';mapbox.innerHTML=mapHtml('藍田高大特區 高雄 楠梓');}
-  function goTop(){window.scrollTo({top:0,behavior:'smooth'});}
+  function resetMap(){document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));hint.textContent='商圈店家地圖｜點選商家查看位置';mapbox.innerHTML=mapHtml('藍田高大特區 高雄 楠梓');}
   function renderSubs(){
     if(group==='全部'){subfilters.innerHTML='';sub='全部';return;}
     const configured=(SUB_RULES[group]||[]).map(([label])=>label);const actual=[...new Set(data.filter(x=>displayGroup(x)===group).map(displaySub))];const subs=configured.filter(x=>actual.includes(x));
@@ -57,15 +38,15 @@
   function selectMerchant(id){
     const x=data.find(v=>v.id===id);if(!x)return;
     document.querySelectorAll('.card').forEach(c=>c.classList.toggle('sel',c.dataset.id===id));
-    hint.innerHTML='<button type="button" id="backTop" aria-label="返回頁首">↑ 返回頁首</button><span>'+x.name+'｜'+x.address+'</span>';
+    hint.textContent=x.name+'｜'+x.address;
     mapbox.innerHTML=mapHtml(x.name+' '+x.address+' 高雄市楠梓區');
-    document.getElementById('backTop')?.addEventListener('click',goTop);
-    if(window.matchMedia('(max-width:760px)').matches){setTimeout(()=>mapwrap.scrollIntoView({behavior:'smooth',block:'start'}),80);}
+    /* 手機點商家後只移到地圖頂端，不再把整個地圖捲到頁面最底部。 */
+    if(window.matchMedia('(max-width:760px)').matches){setTimeout(()=>{const y=mapwrap.getBoundingClientRect().top+window.scrollY-8;window.scrollTo({top:y,behavior:'smooth'});},80);}
   }
   function render(){const rows=filtered();list.innerHTML=rows.map(x=>`<article class="card" role="button" tabindex="0" data-id="${x.id}"><div class="name">${x.name}</div><div><span class="tag">${displaySub(x)}</span></div><div class="meta">${x.address||''}</div></article>`).join('')||'<div class="card">目前沒有符合的店家</div>';}
   list.addEventListener('click',e=>{const card=e.target.closest('.card[data-id]');if(card)selectMerchant(card.dataset.id);});
   list.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const card=e.target.closest('.card[data-id]');if(card){e.preventDefault();selectMerchant(card.dataset.id);}}});
-  document.querySelectorAll('button[data-g]').forEach(btn=>btn.addEventListener('click',()=>{group=btn.dataset.g;sub='全部';if(search)search.value='';document.querySelectorAll('button[data-g]').forEach(b=>b.classList.toggle('active',b===btn));renderSubs();resetMap();render();}));
+  document.querySelectorAll('button[data-g]').forEach(btn=>btn.addEventListener('click',()=>{group=btn.dataset.g;sub='全部';if(search)search.value='';document.querySelectorAll('button[data-g]').forEach(b=>b.classList.toggle('active',b===btn));renderSubs();resetMap();render();window.scrollTo({top:0,behavior:'smooth'});}));
   if(search)search.addEventListener('input',()=>{resetMap();render();});
   document.querySelector('button[data-g="全部"]')?.classList.add('active');renderSubs();resetMap();render();
 })();
