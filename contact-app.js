@@ -40,8 +40,14 @@ if(form){form.addEventListener('submit',e=>{
  if(!form.reportValidity()){e.preventDefault();return;}
  waiting=true;done=false;if(submit){submit.disabled=true;submit.textContent='送出中…';}if(msg)msg.textContent='資料已提交，等待後端確認…';
  if(confirmTimer)clearTimeout(confirmTimer);
- confirmTimer=setTimeout(()=>{if(waiting&&!done){waiting=false;if(msg)msg.textContent='系統尚未回傳完成確認，這筆資料不能視為已送達。請稍後再試。';if(submit){submit.disabled=false;submit.textContent='重新送出';}}},12000);
+ confirmTimer=setTimeout(()=>{if(waiting&&!done){waiting=false;if(msg)msg.textContent='系統尚未回傳完成確認，這筆資料不能視為已送達。請先確認案件是否已入帳，再決定是否重新送出。';if(submit){submit.disabled=false;submit.textContent='重新送出';}}},12000);
 });}
 if(receiver){receiver.addEventListener('load',()=>{if(waiting&&!done&&msg)msg.textContent='資料已提交，等待後端確認…';});}
-window.addEventListener('message',e=>{const d=e.data;if(!d||typeof d!=='object'||typeof d.ok==='undefined'||done)return;if(confirmTimer){clearTimeout(confirmTimer);confirmTimer=null;}if(d.ok){resetUi('資料已送出並完成存檔。案件編號：'+(d.id||''));}else{done=true;waiting=false;if(msg)msg.textContent='送出失敗：'+(d.message||'請稍後再試');if(submit){submit.disabled=false;submit.textContent='重新送出';}}});
+window.addEventListener('message',e=>{
+ if(!receiver||e.source!==receiver.contentWindow||!waiting||done)return;
+ const d=e.data;if(!d||typeof d!=='object'||typeof d.ok==='undefined')return;
+ if(confirmTimer){clearTimeout(confirmTimer);confirmTimer=null;}
+ if(d.ok){resetUi('資料已送出並完成存檔。案件編號：'+(d.id||''));}
+ else{done=true;waiting=false;if(msg)msg.textContent='送出失敗：'+(d.message||'請稍後再試');if(submit){submit.disabled=false;submit.textContent='重新送出';}}
+});
 })();
