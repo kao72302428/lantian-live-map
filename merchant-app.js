@@ -28,13 +28,12 @@
     ],
     '醫療保健': [
       ['診所醫療', /親子診所|耳鼻喉科|兒科|過敏|內科|牙醫/],
-      ['藥局中藥', /藥局|中藥行/],
-      ['寵物醫療', /動物醫院/]
+      ['藥局中藥', /藥局|中藥行/]
     ],
     '生活服務': [
       ['汽機車', /汽車美容|洗車|鍍膜|機車維修|汽車|機車/],
       ['美容美髮', /美髮|理髮|美容|養生/],
-      ['寵物服務', /寵物店\/美容|寵物美容|寵物店/],
+      ['寵物', /動物醫院|寵物店\/美容|寵物美容|寵物店|寵物用品|水族/],
       ['日常服務', /洗衣|修鞋|停車場|停車|物流取件|公司辦公室/]
     ],
     '教育休閒': [
@@ -43,16 +42,17 @@
     ]
   };
   const FALLBACK={'美食餐飲':'正餐小吃','購物零售':'民生購物','居家服務':'居家修繕','醫療保健':'診所醫療','生活服務':'日常服務','教育休閒':'休閒遊樂'};
-  function displaySub(x){const hit=(SUB_RULES[x.group]||[]).find(([,p])=>p.test(x.sub||''));return hit?hit[0]:(FALLBACK[x.group]||'其他');}
+  function displayGroup(x){if(x.group==='醫療保健'&&/動物醫院/.test(x.sub||''))return '生活服務';return x.group;}
+  function displaySub(x){const g=displayGroup(x);const hit=(SUB_RULES[g]||[]).find(([,p])=>p.test(x.sub||''));return hit?hit[0]:(FALLBACK[g]||'其他');}
   function mapHtml(query){return '<iframe id="map" title="商圈店家地圖" loading="eager" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q='+encodeURIComponent(query)+'&output=embed"></iframe>';}
   function resetMap(){document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));hint.textContent='商圈店家地圖｜點選左側商家查看位置';mapbox.innerHTML=mapHtml('藍田高大特區 高雄 楠梓');}
   function renderSubs(){
     if(group==='全部'){subfilters.innerHTML='';sub='全部';return;}
-    const configured=(SUB_RULES[group]||[]).map(([label])=>label);const actual=[...new Set(data.filter(x=>x.group===group).map(displaySub))];const subs=configured.filter(x=>actual.includes(x));
+    const configured=(SUB_RULES[group]||[]).map(([label])=>label);const actual=[...new Set(data.filter(x=>displayGroup(x)===group).map(displaySub))];const subs=configured.filter(x=>actual.includes(x));
     subfilters.innerHTML='<button type="button" data-sub="全部" class="active">全部</button>'+subs.map(x=>'<button type="button" data-sub="'+x+'">'+x+'</button>').join('');
     subfilters.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{sub=btn.dataset.sub;subfilters.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));resetMap();render();}));
   }
-  function filtered(){const q=(search?.value||'').trim().toLowerCase();return data.filter(x=>(group==='全部'||x.group===group)&&(sub==='全部'||displaySub(x)===sub)&&(!q||`${x.name} ${x.address} ${x.sub} ${displaySub(x)} ${x.area}`.toLowerCase().includes(q)));}
+  function filtered(){const q=(search?.value||'').trim().toLowerCase();return data.filter(x=>(group==='全部'||displayGroup(x)===group)&&(sub==='全部'||displaySub(x)===sub)&&(!q||`${x.name} ${x.address} ${x.sub} ${displaySub(x)} ${x.area}`.toLowerCase().includes(q)));}
   function selectMerchant(id){
     const x=data.find(v=>v.id===id);if(!x)return;
     document.querySelectorAll('.card').forEach(c=>c.classList.toggle('sel',c.dataset.id===id));
