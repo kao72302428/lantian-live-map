@@ -46,6 +46,7 @@
   function displaySub(x){const g=displayGroup(x);const hit=(SUB_RULES[g]||[]).find(([,p])=>p.test(x.sub||''));return hit?hit[0]:(FALLBACK[g]||'其他');}
   function mapHtml(query){return '<iframe id="map" title="商圈店家地圖" loading="eager" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q='+encodeURIComponent(query)+'&output=embed"></iframe>';}
   function resetMap(){document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));hint.textContent='商圈店家地圖｜點選左側商家查看位置';mapbox.innerHTML=mapHtml('藍田高大特區 高雄 楠梓');}
+  function goTop(){window.scrollTo({top:0,behavior:'smooth'});}
   function renderSubs(){
     if(group==='全部'){subfilters.innerHTML='';sub='全部';return;}
     const configured=(SUB_RULES[group]||[]).map(([label])=>label);const actual=[...new Set(data.filter(x=>displayGroup(x)===group).map(displaySub))];const subs=configured.filter(x=>actual.includes(x));
@@ -56,14 +57,15 @@
   function selectMerchant(id){
     const x=data.find(v=>v.id===id);if(!x)return;
     document.querySelectorAll('.card').forEach(c=>c.classList.toggle('sel',c.dataset.id===id));
-    hint.textContent=x.name+'｜'+x.address;
+    hint.innerHTML='<button type="button" id="backTop" aria-label="返回頁首">↑ 返回頁首</button><span>'+x.name+'｜'+x.address+'</span>';
     mapbox.innerHTML=mapHtml(x.name+' '+x.address+' 高雄市楠梓區');
+    document.getElementById('backTop')?.addEventListener('click',goTop);
     if(window.matchMedia('(max-width:760px)').matches){setTimeout(()=>mapwrap.scrollIntoView({behavior:'smooth',block:'start'}),80);}
   }
   function render(){const rows=filtered();list.innerHTML=rows.map(x=>`<article class="card" role="button" tabindex="0" data-id="${x.id}"><div class="name">${x.name}</div><div><span class="tag">${displaySub(x)}</span></div><div class="meta">${x.address||''}</div></article>`).join('')||'<div class="card">目前沒有符合的店家</div>';}
   list.addEventListener('click',e=>{const card=e.target.closest('.card[data-id]');if(card)selectMerchant(card.dataset.id);});
   list.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const card=e.target.closest('.card[data-id]');if(card){e.preventDefault();selectMerchant(card.dataset.id);}}});
-  document.querySelectorAll('button[data-g]').forEach(btn=>btn.addEventListener('click',()=>{group=btn.dataset.g;sub='全部';document.querySelectorAll('button[data-g]').forEach(b=>b.classList.toggle('active',b===btn));renderSubs();resetMap();render();}));
+  document.querySelectorAll('button[data-g]').forEach(btn=>btn.addEventListener('click',()=>{group=btn.dataset.g;sub='全部';if(search)search.value='';document.querySelectorAll('button[data-g]').forEach(b=>b.classList.toggle('active',b===btn));renderSubs();resetMap();render();}));
   if(search)search.addEventListener('input',()=>{resetMap();render();});
   document.querySelector('button[data-g="全部"]')?.classList.add('active');renderSubs();resetMap();render();
 })();
