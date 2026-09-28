@@ -17,22 +17,34 @@ function doPost(e) {
     const email = clean_(p['email']);
     const content = clean_(p['事實內容']);
     const photoBase64 = String(p['照片Base64'] || '');
-    const photoName = clean_(p['照片檔名']) || 'photo.jpg';
-    const photoMime = clean_(p['照片格式']) || 'image/jpeg';
+    const photoName = clean_(p['照片檔名']) || '';
+    const photoMime = clean_(p['照片格式']) || '';
 
     if (!type || !name || !phone || !email || !content) {
       return result_(false, '', '缺少必要欄位');
     }
 
     let photoUrl = '';
+    let photoSavedName = '';
+    let photoSavedMime = '';
+    let photoBlob = null;
+
     if (photoBase64) {
       const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowed.includes(photoMime)) throw new Error('不支援的照片格式');
+      const effectiveMime = photoMime || 'image/jpeg';
+      if (!allowed.includes(effectiveMime)) throw new Error('不支援的照片格式');
+
       const bytes = Utilities.base64Decode(photoBase64);
       if (bytes.length > 2500000) throw new Error('照片檔案過大，請改用較小圖片');
+
+      const originalName = photoName || 'photo.jpg';
+      const safeOriginalName = originalName.replace(/[^0-9A-Za-z._\-\u4e00-\u9fff]/g, '_');
+      photoSavedName = caseId + '-' + safeOriginalName;
+      photoSavedMime = effectiveMime;
+      photoBlob = Utilities.newBlob(bytes, effectiveMime, photoSavedName);
+
       const folder = DriveApp.getFolderById(PHOTO_FOLDER_ID);
-      const safeName = caseId + '-' + photoName.replace(/[^0-9A-Za-z._\-\u4e00-\u9fff]/g, '_');
-      const file = folder.createFile(Utilities.newBlob(bytes, photoMime, safeName));
+      const file = folder.createFile(photoBlob.copyBlob());
       photoUrl = file.getUrl();
     }
 
@@ -54,7 +66,9 @@ function doPost(e) {
         '',
         submittedAt,
         '智慧藍田 LIVE 一點通｜建言與合作',
-        photoUrl
+        photoUrl,
+        photoSavedName,
+        photoSavedMime
       ]);
     } finally {
       lock.releaseLock();
@@ -73,18 +87,22 @@ function doPost(e) {
       content,
       '',
       '附件照片：' + (photoUrl || '無'),
+      '附件檔名：' + (photoSavedName || '無'),
+      '附件格式：' + (photoSavedMime || '無'),
       '',
       'Google Sheets 案件紀錄：',
       'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/edit'
     ].join('\n');
 
-    MailApp.sendEmail({
+    const mailOptions = {
       to: NOTIFY_EMAIL,
       subject: subject,
       body: body,
       replyTo: email,
       name: '智慧藍田 LIVE 一點通'
-    });
+    };
+    if (photoBlob) mailOptions.attachments = [photoBlob];
+    MailApp.sendEmail(mailOptions);
 
     return result_(true, caseId, '已送出');
   } catch (err) {
