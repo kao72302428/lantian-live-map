@@ -10,7 +10,7 @@
 <main>
 <section class="hero" aria-label="建言與合作"><img src="./contact-hero-v2.png?v=20260928-2355" alt="建言與合作｜您的意見、建議、需求，我們用心回應" onerror="this.parentElement.classList.add('hero-missing');this.style.display='none'"><div class="heroFallback"><strong>建言與合作</strong><span>您的意見・建議・需求・我們用心回應</span></div></section>
 <section class="intro"><p>意見回饋・地方問題反映・平台資訊修改・合作提案</p><p>您送出的資料僅供平台管理人員查看與處理，不會公開顯示。</p></section>
-<section id="contactTypes" class="types" aria-label="聯絡類型">
+<section id="contactTypes" class="types" aria-label="聯絡類型" style="scroll-margin-top:12px">
 <button type="button" data-type="平台資訊修改"><b>🏪 平台資訊修改</b><span>店名、地址、營業時間、販售品項／類別、電話及文字資料新增或修正。</span></button>
 <button type="button" data-type="地方問題反映／協助通報"><b>🛠️ 地方問題反映／協助通報</b><span>路燈故障、道路不平、水溝阻塞及其他地方公共設施問題。</span></button>
 <button type="button" data-type="商圈意見回饋"><b>⭐ 商圈意見回饋</b><span>店家服務品質、環境、食安問題反映及優良店家推薦。</span></button>
@@ -30,5 +30,22 @@
 <section class="contact"><h2>聯絡資訊</h2><p><b>高雄市工商發展協會</b></p><p>電話：<a href="tel:0933101434">0933-101-434</a></p><p>Email：<a href="mailto:kao72302428@gmail.com">kao72302428@gmail.com</a></p></section>
 <section class="notice"><h2>服務說明</h2><p>本平台提供地方資訊交流、意見蒐集及協助聯繫服務。地方公共設施問題將視內容協助整理或轉達相關單位，本平台並非政府機關正式報修或緊急通報系統；涉及緊急安全事件，請直接聯絡相關主管機關。</p><p><b>預防詐騙提醒：</b>本平台不會要求提供銀行帳號、信用卡資料、網路銀行密碼，也不會以案件處理為由要求匯款。如收到可疑訊息或付款要求，請勿提供金融或敏感資料，並先透過上述電話或 Email 向本平台確認。</p></section>
 </main>
-<script src="./contact-app.js?v=20260929-1210"></script>
+<script>
+if('scrollRestoration' in history) history.scrollRestoration='manual';
+function forceContactTypes(){
+  const el=document.getElementById('contactTypes');
+  if(!el)return;
+  el.scrollIntoView({behavior:'auto',block:'start'});
+  const first=el.querySelector('button');
+  if(first) first.focus({preventScroll:true});
+}
+window.addEventListener('load',()=>{
+  if(location.hash!=='#contactTypes') history.replaceState(null,'',location.pathname+location.search+'#contactTypes');
+  setTimeout(forceContactTypes,0);
+  setTimeout(forceContactTypes,250);
+  setTimeout(forceContactTypes,800);
+});
+window.addEventListener('pageshow',()=>setTimeout(forceContactTypes,50));
+</script>
+<script src="./contact-app.js?v=20260929-1238"></script>
 </body></html>
