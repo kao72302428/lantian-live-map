@@ -10,7 +10,7 @@ const prompts={
 function clearTimers(){if(progressTimer){clearTimeout(progressTimer);progressTimer=null;}if(slowTimer){clearTimeout(slowTimer);slowTimer=null;}}
 function clearResetTimer(){if(resetTimer){clearTimeout(resetTimer);resetTimer=null;}}
 function clearDraft(){try{sessionStorage.removeItem('contactDraft');localStorage.removeItem('contactDraft');}catch(e){}}
-function showTypes(){
+function showTypes(scrollToTypes=true){
  clearResetTimer();
  form?.reset();clearDraft();clearTimers();waiting=false;done=false;
  if(typeInput)typeInput.value='';
@@ -22,7 +22,7 @@ function showTypes(){
  if(formSection)formSection.hidden=true;
  document.querySelectorAll('[data-card-type]').forEach(c=>c.classList.remove('active'));
  if(submit){submit.disabled=false;submit.textContent='送出資料';}
- requestAnimationFrame(()=>typesSection?.scrollIntoView({behavior:'smooth',block:'start'}));
+ if(scrollToTypes)requestAnimationFrame(()=>typesSection?.scrollIntoView({behavior:'smooth',block:'start'}));
 }
 function openForm(type){
  const p=prompts[type];if(!p)return;
@@ -44,7 +44,11 @@ function markSuccess(text){
  if(submit){submit.disabled=true;submit.textContent='已送出';}
  resetTimer=setTimeout(()=>showTypes(),1800);
 }
-window.addEventListener('pageshow',showTypes);
+if('scrollRestoration' in history)history.scrollRestoration='manual';
+window.addEventListener('pageshow',()=>{
+ showTypes(false);
+ requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}));
+});
 window.addEventListener('beforeunload',()=>{clearDraft();clearResetTimer();});
 document.querySelectorAll('.enterMessage[data-type]').forEach(btn=>btn.addEventListener('click',()=>openForm(btn.dataset.type)));
 
