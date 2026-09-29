@@ -104,6 +104,42 @@ function doPost(e) {
     if (photoBlob) mailOptions.attachments = [photoBlob];
     MailApp.sendEmail(mailOptions);
 
+    // 使用者收件確認信：案件已成功寫入後才寄送。
+    // 若確認信寄送失敗，不影響案件已成功建立的結果，避免使用者重複送件。
+    try {
+      const receiptSubject = '【智慧藍田】已收到您的留言｜' + caseId;
+      const receiptBody = [
+        name + ' 您好：',
+        '',
+        '我們已收到您的留言，後續將依案件內容儘速檢視、處理並回覆。',
+        '以下為您本次提交的內容，請留存案件編號供後續查詢。',
+        '',
+        '案件編號：' + caseId,
+        '送出時間：' + submittedAt,
+        '留言類型：' + type,
+        '',
+        '您的留言內容：',
+        content,
+        '',
+        '如後續需要補充資料，可直接回覆本信或透過「智慧藍田 LIVE 一點通」再次聯絡。',
+        '',
+        '智慧藍田 LIVE 一點通',
+        '高雄市工商發展協會',
+        '聯絡電話：0933-101-434',
+        'Email：' + NOTIFY_EMAIL
+      ].join('\n');
+
+      MailApp.sendEmail({
+        to: email,
+        subject: receiptSubject,
+        body: receiptBody,
+        replyTo: NOTIFY_EMAIL,
+        name: '智慧藍田 LIVE 一點通'
+      });
+    } catch (receiptErr) {
+      console.log('使用者收件確認信寄送失敗：' + String(receiptErr && receiptErr.message ? receiptErr.message : receiptErr));
+    }
+
     return result_(true, caseId, '已送出');
   } catch (err) {
     return result_(false, '', String(err && err.message ? err.message : err));
