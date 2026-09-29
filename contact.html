@@ -16,7 +16,7 @@
 <button type="button" data-type="商圈意見回饋"><b>⭐ 商圈意見回饋</b><span>店家服務品質、環境、食安問題反映及優良店家推薦。</span></button>
 <button type="button" data-type="合作提案"><b>🤝 合作提案</b><span>活動、商圈、社區及地方合作提案。</span></button>
 </section>
-<section class="formbox"><h2>填寫聯絡表單</h2><div id="selected">目前選擇：平台資訊修改</div>
+<section id="contactFormSection" class="formbox" style="scroll-margin-top:12px"><h2>填寫聯絡表單</h2><div id="selected">目前選擇：平台資訊修改</div>
 <form id="contactForm" action="https://script.google.com/macros/s/AKfycbwimGrgk9jKgIAA2G7K0VDSDahmFZ_Q0o-WZQ0o9heeBxH7BvN9sGHk3Ee-CipZkNIa/exec" method="POST" target="contactReceiver" autocomplete="off">
 <input type="hidden" id="caseType" name="聯絡類型" value="平台資訊修改" required>
 <label>姓名 <em>*</em><input id="nameInput" name="姓名" required autocomplete="off"></label>
@@ -36,20 +36,18 @@
 </main>
 <script>
 if('scrollRestoration' in history) history.scrollRestoration='manual';
-function forceContactTypes(){
-  const el=document.getElementById('contactTypes');
+function forceContactForm(){
+  const el=document.getElementById('contactFormSection');
   if(!el)return;
   el.scrollIntoView({behavior:'auto',block:'start'});
-  const first=el.querySelector('button');
-  if(first) first.focus({preventScroll:true});
 }
 window.addEventListener('load',()=>{
-  if(location.hash!=='#contactTypes') history.replaceState(null,'',location.pathname+location.search+'#contactTypes');
-  setTimeout(forceContactTypes,0);
-  setTimeout(forceContactTypes,250);
-  setTimeout(forceContactTypes,800);
+  history.replaceState(null,'',location.pathname+location.search+'#contactFormSection');
+  setTimeout(forceContactForm,0);
+  setTimeout(forceContactForm,250);
+  setTimeout(forceContactForm,800);
 });
-window.addEventListener('pageshow',()=>setTimeout(forceContactTypes,50));
+window.addEventListener('pageshow',()=>setTimeout(forceContactForm,50));
 </script>
-<script src="./contact-app.js?v=20260929-1258"></script>
+<script src="./contact-app.js?v=20260929-1338"></script>
 </body></html>
