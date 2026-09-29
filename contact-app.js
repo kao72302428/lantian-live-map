@@ -1,7 +1,6 @@
 (()=>{
-const typeInput=document.getElementById('caseType'),selected=document.getElementById('selected'),form=document.getElementById('contactForm'),msg=document.getElementById('formMsg'),submit=form?.querySelector('.submit'),receiver=document.getElementById('contactReceiver'),contentText=document.getElementById('contentText'),contentLabelText=document.getElementById('contentLabelText'),contentGuide=document.getElementById('contentGuide'),typesSection=document.getElementById('contactTypes');
+const typeInput=document.getElementById('caseType'),selected=document.getElementById('selected'),form=document.getElementById('contactForm'),formSection=document.getElementById('contactFormSection'),msg=document.getElementById('formMsg'),submit=form?.querySelector('.submit'),receiver=document.getElementById('contactReceiver'),contentText=document.getElementById('contentText'),contentLabelText=document.getElementById('contentLabelText'),contentGuide=document.getElementById('contentGuide'),typesSection=document.getElementById('contactTypes');
 let waiting=false,done=false,confirmTimer=null,progressTimer=null;
-const defaultType='平台資訊修改';
 const prompts={
 '平台資訊修改':{label:'平台資訊修改留言',guide:'請依序填寫：\n1. 店家／單位名稱\n2. 需要修改的項目（店名、地址、電話、營業時間、類別等）\n3. 正確資料\n4. 其他補充說明'},
 '地方問題反映／協助通報':{label:'地方問題反映留言',guide:'請依序填寫：\n1. 問題類型（路燈、道路、水溝、環境或其他）\n2. 發生地點／附近明顯地標\n3. 發現時間\n4. 現場狀況與影響\n5. 問題是否仍持續'},
@@ -10,32 +9,36 @@ const prompts={
 };
 function clearTimers(){if(confirmTimer){clearTimeout(confirmTimer);confirmTimer=null;}if(progressTimer){clearTimeout(progressTimer);progressTimer=null;}}
 function clearDraft(){try{sessionStorage.removeItem('contactDraft');localStorage.removeItem('contactDraft');}catch(e){}}
-function focusTypes(){requestAnimationFrame(()=>typesSection?.scrollIntoView({behavior:'auto',block:'start'}));}
-function applyType(type,scroll=true){
- const p=prompts[type]||prompts[defaultType];
- document.querySelectorAll('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===type));
+function showTypes(){
+ form?.reset();clearDraft();clearTimers();waiting=false;done=false;
+ if(typeInput)typeInput.value='';
+ if(selected)selected.textContent='';
+ if(contentLabelText)contentLabelText.textContent='留言內容';
+ if(contentGuide)contentGuide.textContent='';
+ if(contentText){contentText.value='';contentText.placeholder='請依照上方提示項目填寫內容';}
+ if(formSection)formSection.hidden=true;
+ document.querySelectorAll('[data-card-type]').forEach(c=>c.classList.remove('active'));
+ if(submit){submit.disabled=false;submit.textContent='送出資料';}
+ requestAnimationFrame(()=>typesSection?.scrollIntoView({behavior:'auto',block:'start'}));
+}
+function openForm(type){
+ const p=prompts[type];if(!p)return;
+ document.querySelectorAll('[data-card-type]').forEach(c=>c.classList.toggle('active',c.dataset.cardType===type));
  if(typeInput)typeInput.value=type;
  if(selected)selected.textContent='目前選擇：'+type;
  if(contentLabelText)contentLabelText.textContent=p.label;
  if(contentGuide){contentGuide.textContent=p.guide;contentGuide.style.whiteSpace='pre-line';}
- if(contentText)contentText.placeholder='請依照上方提示項目填寫內容';
+ if(contentText){contentText.value='';contentText.placeholder='請依照上方提示項目填寫內容';}
+ if(formSection)formSection.hidden=false;
  if(msg)msg.textContent='';
- if(scroll)document.querySelector('.formbox')?.scrollIntoView({behavior:'smooth',block:'start'});
+ requestAnimationFrame(()=>formSection?.scrollIntoView({behavior:'smooth',block:'start'}));
 }
-function resetToDefault(){
- form?.reset();clearDraft();clearTimers();waiting=false;done=false;
- if(contentText)contentText.value='';
- if(submit){submit.disabled=false;submit.textContent='送出資料';}
- applyType(defaultType,false);
- focusTypes();
-}
-window.addEventListener('pageshow',resetToDefault);
+window.addEventListener('pageshow',showTypes);
 window.addEventListener('beforeunload',clearDraft);
-
-document.querySelectorAll('[data-type]').forEach(btn=>btn.addEventListener('click',()=>applyType(btn.dataset.type,true)));
+document.querySelectorAll('.enterMessage[data-type]').forEach(btn=>btn.addEventListener('click',()=>openForm(btn.dataset.type)));
 
 if(form){form.addEventListener('submit',e=>{
- if(!typeInput?.value){e.preventDefault();applyType(defaultType,false);focusTypes();return;}
+ if(!typeInput?.value){e.preventDefault();showTypes();return;}
  if(!form.reportValidity()){e.preventDefault();return;}
  clearTimers();waiting=true;done=false;
  if(submit){submit.disabled=true;submit.textContent='送出中…';}
@@ -53,7 +56,9 @@ window.addEventListener('message',e=>{
   if(msg)msg.textContent='資料已送出並完成存檔。案件編號：'+(d.id||'');
   if(submit){submit.disabled=true;submit.textContent='已送出';}
  }else{
-  done=true;waiting=false;if(msg)msg.textContent='送出失敗：'+(d.message||'請稍後再試');if(submit){submit.disabled=false;submit.textContent='重新送出';}
+  done=true;waiting=false;
+  if(msg)msg.textContent='送出失敗：'+(d.message||'請稍後再試');
+  if(submit){submit.disabled=false;submit.textContent='重新送出';}
  }
 });
 })();
