@@ -1,6 +1,6 @@
 (()=>{
-const typeInput=document.getElementById('caseType'),selected=document.getElementById('selected'),form=document.getElementById('contactForm'),msg=document.getElementById('formMsg'),submit=form?.querySelector('.submit'),receiver=document.getElementById('contactReceiver'),contentText=document.getElementById('contentText'),contentLabelText=document.getElementById('contentLabelText'),contentGuide=document.getElementById('contentGuide'),photoInput=document.getElementById('photoInput'),photoData=document.getElementById('photoData'),photoName=document.getElementById('photoName'),photoType=document.getElementById('photoType'),photoPreview=document.getElementById('photoPreview'),photoPreviewImg=document.getElementById('photoPreviewImg'),photoStatus=document.getElementById('photoStatus'),removePhoto=document.getElementById('removePhoto');
-let waiting=false,done=false,photoBusy=false,confirmTimer=null,progressTimer=null;
+const typeInput=document.getElementById('caseType'),selected=document.getElementById('selected'),form=document.getElementById('contactForm'),msg=document.getElementById('formMsg'),submit=form?.querySelector('.submit'),receiver=document.getElementById('contactReceiver'),contentText=document.getElementById('contentText'),contentLabelText=document.getElementById('contentLabelText'),contentGuide=document.getElementById('contentGuide');
+let waiting=false,done=false,confirmTimer=null,progressTimer=null;
 const prompts={
 '平台資訊修改':{label:'修改內容',guide:'請依序填寫：\n1. 店家／單位名稱\n2. 需要修改的項目（店名、地址、電話、營業時間、類別等）\n3. 正確資料\n4. 其他補充說明'},
 '地方問題反映／協助通報':{label:'問題內容',guide:'請依序填寫：\n1. 問題類型（路燈、道路、水溝、環境或其他）\n2. 發生地點／附近明顯地標\n3. 發現時間\n4. 現場狀況與影響\n5. 問題是否仍持續'},
@@ -9,9 +9,8 @@ const prompts={
 };
 function clearTimers(){if(confirmTimer){clearTimeout(confirmTimer);confirmTimer=null;}if(progressTimer){clearTimeout(progressTimer);progressTimer=null;}}
 function clearDraft(){try{sessionStorage.removeItem('contactDraft');localStorage.removeItem('contactDraft');}catch(e){}}
-const resetPhoto=()=>{if(photoInput)photoInput.value='';if(photoData)photoData.value='';if(photoName)photoName.value='';if(photoType)photoType.value='';if(photoPreview)photoPreview.hidden=true;if(photoPreviewImg)photoPreviewImg.removeAttribute('src');if(photoStatus)photoStatus.textContent='目前未選擇相片';};
-const resetUi=(text)=>{done=true;waiting=false;clearTimers();if(msg)msg.textContent=text;form?.reset();clearDraft();if(typeInput)typeInput.value='';if(selected)selected.textContent='請先選擇上方聯絡類型';if(contentLabelText)contentLabelText.textContent='事實內容';if(contentGuide)contentGuide.textContent='請先選擇上方聯絡類型，系統會固定顯示對應填寫項目；輸入文字後提示不會消失。';if(contentText){contentText.value='';contentText.placeholder='請在此輸入內容';}resetPhoto();document.querySelectorAll('[data-type]').forEach(b=>b.classList.remove('active'));if(submit){submit.disabled=false;submit.textContent='送出資料';}};
-function clearFormOnLoad(){form?.reset();clearDraft();clearTimers();waiting=false;done=false;if(typeInput)typeInput.value='';if(contentText)contentText.value='';resetPhoto();document.querySelectorAll('[data-type]').forEach(b=>b.classList.remove('active'));if(selected)selected.textContent='請先選擇上方聯絡類型';if(contentLabelText)contentLabelText.textContent='事實內容';if(contentGuide)contentGuide.textContent='請先選擇上方聯絡類型，系統會固定顯示對應填寫項目；輸入文字後提示不會消失。';}
+const resetUi=(text)=>{done=true;waiting=false;clearTimers();if(msg)msg.textContent=text;form?.reset();clearDraft();if(typeInput)typeInput.value='';if(selected)selected.textContent='請先選擇上方聯絡類型';if(contentLabelText)contentLabelText.textContent='事實內容';if(contentGuide)contentGuide.textContent='請先選擇上方聯絡類型，系統會固定顯示對應填寫項目；輸入文字後提示不會消失。';if(contentText){contentText.value='';contentText.placeholder='請在此輸入內容';}document.querySelectorAll('[data-type]').forEach(b=>b.classList.remove('active'));if(submit){submit.disabled=false;submit.textContent='送出資料';}};
+function clearFormOnLoad(){form?.reset();clearDraft();clearTimers();waiting=false;done=false;if(typeInput)typeInput.value='';if(contentText)contentText.value='';document.querySelectorAll('[data-type]').forEach(b=>b.classList.remove('active'));if(selected)selected.textContent='請先選擇上方聯絡類型';if(contentLabelText)contentLabelText.textContent='事實內容';if(contentGuide)contentGuide.textContent='請先選擇上方聯絡類型，系統會固定顯示對應填寫項目；輸入文字後提示不會消失。';if(submit){submit.disabled=false;submit.textContent='送出資料';}}
 window.addEventListener('pageshow',clearFormOnLoad);
 window.addEventListener('beforeunload',clearDraft);
 
@@ -22,30 +21,16 @@ document.querySelectorAll('[data-type]').forEach(btn=>btn.addEventListener('clic
  document.querySelector('.formbox')?.scrollIntoView({behavior:'smooth',block:'start'});
 }));
 
-if(photoInput){photoInput.addEventListener('change',async()=>{
- const file=photoInput.files?.[0];resetPhoto();if(!file)return;
- if(!/^image\/(jpeg|png|webp)$/.test(file.type)){if(msg)msg.textContent='相片僅支援 JPG、PNG、WebP。';return;}
- photoBusy=true;if(msg)msg.textContent='相片處理中…';if(photoStatus)photoStatus.textContent='相片處理中…';
- try{
-  const url=URL.createObjectURL(file);const img=new Image();img.src=url;await img.decode();
-  const max=1600,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);
-  const dataUrl=canvas.toDataURL('image/jpeg',0.82);if(photoData)photoData.value=dataUrl.split(',')[1];if(photoName)photoName.value=(file.name.replace(/\.[^.]+$/,'')||'photo')+'.jpg';if(photoType)photoType.value='image/jpeg';if(photoPreviewImg)photoPreviewImg.src=dataUrl;if(photoPreview)photoPreview.hidden=false;if(photoStatus)photoStatus.textContent='已選擇：'+(photoName?.value||'photo.jpg')+'｜格式：JPG';if(msg)msg.textContent='相片已加入，送出時會一併存檔。';
- }catch(e){resetPhoto();if(msg)msg.textContent='相片處理失敗，請換一張再試。';}
- finally{photoBusy=false;}
-});}
-if(removePhoto)removePhoto.addEventListener('click',()=>{resetPhoto();if(msg)msg.textContent='已移除相片。';});
-
 if(form){form.addEventListener('submit',e=>{
  if(!typeInput?.value){e.preventDefault();if(msg)msg.textContent='請先選擇聯絡類型。';return;}
- if(photoBusy){e.preventDefault();if(msg)msg.textContent='相片仍在處理中，請稍候再送出。';return;}
  if(!form.reportValidity()){e.preventDefault();return;}
- clearTimers();waiting=true;done=false;const hasPhoto=!!photoData?.value;
+ clearTimers();waiting=true;done=false;
  if(submit){submit.disabled=true;submit.textContent='送出中…';}
- if(msg)msg.textContent=hasPhoto?'資料與附件送出中，請稍候…':'資料已提交，等待後端確認…';
- progressTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent=hasPhoto?'附件正在存檔並寄送通知信，請繼續等待，不要重複送出。':'資料仍在處理中，請繼續等待，不要重複送出。';},10000);
- confirmTimer=setTimeout(()=>{if(waiting&&!done){waiting=false;if(msg)msg.textContent='系統等待確認時間較久。這筆資料可能仍已送達，請先確認是否收到案件通知信，再決定是否重新送出。';if(submit){submit.disabled=false;submit.textContent='重新送出';}}},60000);
+ if(msg)msg.textContent='資料送出中，請稍候…';
+ progressTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent='資料仍在處理中，請稍候，不要重複送出。';},8000);
+ confirmTimer=setTimeout(()=>{if(waiting&&!done){waiting=false;if(msg)msg.textContent='系統尚未收到完成確認。若已收到案件通知信，代表資料已送達，請勿重複送出；若未收到通知信，再重新送出。';if(submit){submit.disabled=false;submit.textContent='重新送出';}}},30000);
 });}
-if(receiver){receiver.addEventListener('load',()=>{if(waiting&&!done&&msg&&!photoData?.value)msg.textContent='資料已提交，等待後端確認…';});}
+if(receiver){receiver.addEventListener('load',()=>{if(waiting&&!done&&msg)msg.textContent='資料已提交，等待系統確認…';});}
 window.addEventListener('message',e=>{
  if(!receiver||e.source!==receiver.contentWindow||!waiting||done)return;
  const d=e.data;if(!d||typeof d!=='object'||typeof d.ok==='undefined')return;
