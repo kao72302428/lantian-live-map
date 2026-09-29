@@ -3,30 +3,26 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>智慧藍田｜建言與合作</title>
-<link rel="stylesheet" href="./contact.css?v=20260929-0125">
+<link rel="stylesheet" href="./contact.css?v=20260929-1347">
 </head>
 <body>
 <header class="top"><a href="./merchant.html">← 返回</a><strong>建言與合作</strong></header>
 <main>
 <section class="hero" aria-label="建言與合作"><img src="./contact-hero-v2.png?v=20260928-2355" alt="建言與合作｜您的意見、建議、需求，我們用心回應" onerror="this.parentElement.classList.add('hero-missing');this.style.display='none'"><div class="heroFallback"><strong>建言與合作</strong><span>您的意見・建議・需求・我們用心回應</span></div></section>
-<section class="intro"><p>意見回饋・地方問題反映・平台資訊修改・合作提案</p><p>預設顯示「平台資訊修改」留言內容；如有其他需求，可點選其他類型切換。</p></section>
-<section id="contactTypes" class="types" aria-label="聯絡類型" style="scroll-margin-top:12px">
-<button type="button" class="active" data-type="平台資訊修改"><b>🏪 平台資訊修改</b><span>店名、地址、營業時間、販售品項／類別、電話及文字資料新增或修正。</span></button>
-<button type="button" data-type="地方問題反映／協助通報"><b>🛠️ 地方問題反映／協助通報</b><span>路燈故障、道路不平、水溝阻塞及其他地方公共設施問題。</span></button>
-<button type="button" data-type="商圈意見回饋"><b>⭐ 商圈意見回饋</b><span>店家服務品質、環境、食安問題反映及優良店家推薦。</span></button>
-<button type="button" data-type="合作提案"><b>🤝 合作提案</b><span>活動、商圈、社區及地方合作提案。</span></button>
+<section class="intro"><p>意見回饋・地方問題反映・平台資訊修改・合作提案</p><p>請依需求選擇留言類別，再按「進入留言」。</p></section>
+<section id="contactTypes" class="types" aria-label="聯絡類型">
+<article class="typeCard" data-card-type="平台資訊修改"><b>🏪 平台資訊修改</b><span class="typeDesc">店名、地址、營業時間、販售品項／類別、電話及文字資料新增或修正。</span><button type="button" class="enterMessage" data-type="平台資訊修改">進入留言</button></article>
+<article class="typeCard" data-card-type="地方問題反映／協助通報"><b>🛠️ 地方問題反映／協助通報</b><span class="typeDesc">路燈故障、道路不平、水溝阻塞及其他地方公共設施問題。</span><button type="button" class="enterMessage" data-type="地方問題反映／協助通報">進入留言</button></article>
+<article class="typeCard" data-card-type="商圈意見回饋"><b>⭐ 商圈意見回饋</b><span class="typeDesc">店家服務品質、環境、食安問題反映及優良店家推薦。</span><button type="button" class="enterMessage" data-type="商圈意見回饋">進入留言</button></article>
+<article class="typeCard" data-card-type="合作提案"><b>🤝 合作提案</b><span class="typeDesc">活動、商圈、社區及地方合作提案。</span><button type="button" class="enterMessage" data-type="合作提案">進入留言</button></article>
 </section>
-<section id="contactFormSection" class="formbox" style="scroll-margin-top:12px"><h2>填寫聯絡表單</h2><div id="selected">目前選擇：平台資訊修改</div>
+<section id="contactFormSection" class="formbox" hidden><h2>填寫聯絡表單</h2><div id="selected"></div>
 <form id="contactForm" action="https://script.google.com/macros/s/AKfycbwimGrgk9jKgIAA2G7K0VDSDahmFZ_Q0o-WZQ0o9heeBxH7BvN9sGHk3Ee-CipZkNIa/exec" method="POST" target="contactReceiver" autocomplete="off">
-<input type="hidden" id="caseType" name="聯絡類型" value="平台資訊修改" required>
+<input type="hidden" id="caseType" name="聯絡類型" required>
 <label>姓名 <em>*</em><input id="nameInput" name="姓名" required autocomplete="off"></label>
 <label>電話 <em>*</em><input id="phoneInput" name="電話" type="tel" required autocomplete="off"></label>
 <label>信箱 <em>*</em><input id="emailInput" name="email" type="email" required autocomplete="off"></label>
-<label class="full" id="contentLabel"><span id="contentLabelText">平台資訊修改留言</span> <em>*</em><div id="contentGuide" class="contentGuide" style="white-space:pre-line">請依序填寫：
-1. 店家／單位名稱
-2. 需要修改的項目（店名、地址、電話、營業時間、類別等）
-3. 正確資料
-4. 其他補充說明</div><textarea id="contentText" name="事實內容" rows="8" required autocomplete="off" placeholder="請依照上方提示項目填寫內容"></textarea></label>
+<label class="full" id="contentLabel"><span id="contentLabelText">留言內容</span> <em>*</em><div id="contentGuide" class="contentGuide"></div><textarea id="contentText" name="事實內容" rows="8" required autocomplete="off" placeholder="請依照上方提示項目填寫內容"></textarea></label>
 <button class="submit" type="submit">送出資料</button><p id="formMsg" class="msg" role="status"></p>
 </form>
 <iframe name="contactReceiver" id="contactReceiver" title="聯絡表單送出結果" style="display:none"></iframe>
@@ -34,20 +30,5 @@
 <section class="contact"><h2>聯絡資訊</h2><p><b>高雄市工商發展協會</b></p><p>電話：<a href="tel:0933101434">0933-101-434</a></p><p>Email：<a href="mailto:kao72302428@gmail.com">kao72302428@gmail.com</a></p></section>
 <section class="notice"><h2>服務說明</h2><p>本平台提供地方資訊交流、意見蒐集及協助聯繫服務。地方公共設施問題將視內容協助整理或轉達相關單位，本平台並非政府機關正式報修或緊急通報系統；涉及緊急安全事件，請直接聯絡相關主管機關。</p><p><b>預防詐騙提醒：</b>本平台不會要求提供銀行帳號、信用卡資料、網路銀行密碼，也不會以案件處理為由要求匯款。如收到可疑訊息或付款要求，請勿提供金融或敏感資料，並先透過上述電話或 Email 向本平台確認。</p></section>
 </main>
-<script>
-if('scrollRestoration' in history) history.scrollRestoration='manual';
-function forceContactForm(){
-  const el=document.getElementById('contactFormSection');
-  if(!el)return;
-  el.scrollIntoView({behavior:'auto',block:'start'});
-}
-window.addEventListener('load',()=>{
-  history.replaceState(null,'',location.pathname+location.search+'#contactFormSection');
-  setTimeout(forceContactForm,0);
-  setTimeout(forceContactForm,250);
-  setTimeout(forceContactForm,800);
-});
-window.addEventListener('pageshow',()=>setTimeout(forceContactForm,50));
-</script>
-<script src="./contact-app.js?v=20260929-1338"></script>
+<script src="./contact-app.js?v=20260929-1347"></script>
 </body></html>
