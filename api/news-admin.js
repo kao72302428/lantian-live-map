@@ -69,7 +69,7 @@ async function writeNews(token, items, sha, message) {
   return data;
 }
 
-function cleanItem(raw, existingId) {
+function cleanItem(raw, existingId, existingPublished) {
   const now = Date.now();
   const id = String(existingId || raw?.id || `news-${now}`).trim();
   return {
@@ -81,7 +81,8 @@ function cleanItem(raw, existingId) {
     image: String(raw?.image || '').trim(),
     map: String(raw?.map || '').trim(),
     link: String(raw?.link || '').trim(),
-    linkText: String(raw?.linkText || '').trim()
+    linkText: String(raw?.linkText || '').trim(),
+    published: typeof raw?.published === 'boolean' ? raw.published : (existingPublished !== false)
   };
 }
 
@@ -110,7 +111,9 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'upsert') {
-      const incoming = cleanItem(req.body?.item, req.body?.item?.id);
+      const raw = req.body?.item || {};
+      const current = items.find(x => String(x.id) === String(raw.id || ''));
+      const incoming = cleanItem(raw, raw.id, current?.published);
       if (!incoming.date || !incoming.title || !incoming.summary || !incoming.content) {
         return res.status(400).json({ ok: false, code: 'REQUIRED_FIELDS_MISSING' });
       }
@@ -120,6 +123,16 @@ module.exports = async function handler(req, res) {
       items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
       await writeNews(token, items, sha, `Admin ${index >= 0 ? 'update' : 'publish'} news: ${incoming.title}`);
       return res.status(200).json({ ok: true, items, item: incoming });
+    }
+
+    if (action === 'setPublished') {
+      const id = String(req.body?.id || '').trim();
+      const published = !!req.body?.published;
+      const index = items.findIndex(x => String(x.id) === id);
+      if (index < 0) return res.status(404).json({ ok: false, code: 'NOT_FOUND' });
+      items[index] = { ...items[index], published };
+      await writeNews(token, items, sha, `Admin ${published ? 'publish' : 'unpublish'} news: ${id}`);
+      return res.status(200).json({ ok: true, items, item: items[index] });
     }
 
     if (action === 'delete') {
