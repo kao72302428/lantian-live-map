@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>智慧藍田管理中心</title>
-<link rel="stylesheet" href="./admin.css?v=20260930-1">
+<link rel="stylesheet" href="./admin.css?v=20260930-2">
 </head>
 <body>
 <header class="topbar">
@@ -20,7 +20,7 @@
     <div>
       <p class="eyebrow">ADMIN ACCESS</p>
       <h1 id="gateTitle">管理員登入</h1>
-      <p class="lead">管理功能統一由本頁進入。未完成管理員身分驗證前，所有新增、修改、刪除與發布功能一律鎖定。</p>
+      <p class="lead">管理功能統一由本頁進入。未完成管理員身分驗證前，所有管理入口維持鎖定。</p>
     </div>
     <div id="authStatus" class="status status-warn">正在初始化 LINE LIFF…</div>
     <button id="loginBtn" class="primary" type="button" disabled>LINE 管理員登入</button>
@@ -40,72 +40,72 @@
         <div class="icon">訊</div>
         <div class="module-body">
           <h3>地方大小事管理</h3>
-          <p>新增、修改、下架與刪除消息；日期新的自動排在最上方。</p>
-          <span class="tag tag-existing">管理介面已建立｜寫入權限待驗證</span>
+          <p>消息欄位、列表與公開狀態管理介面。</p>
+          <span class="tag tag-existing">第一階段基本介面已建立</span>
         </div>
-        <a class="module-action" href="./admin-news.html">查看管理介面</a>
+        <a class="module-action" href="./admin-news.html">進入管理</a>
       </article>
 
       <article class="module" data-module="cases" data-state="existing">
         <div class="icon">案</div>
         <div class="module-body">
           <h3>建言與合作案件管理</h3>
-          <p>查看案件、搜尋資料、處理狀態與後續回覆。</p>
-          <span class="tag tag-existing">既有模組｜驗證待完成</span>
+          <p>案件查詢、狀態、內容與後續回覆入口。</p>
+          <span class="tag tag-existing">第一階段基本介面已建立</span>
         </div>
-        <a class="module-action disabled-link" href="./admin-cases.html" aria-disabled="true" tabindex="-1">進入管理</a>
+        <a class="module-action" href="./admin-cases.html">進入管理</a>
       </article>
 
-      <article class="module" data-module="merchant" data-state="locked">
+      <article class="module" data-module="merchant" data-state="existing">
         <div class="icon">店</div>
         <div class="module-body">
           <h3>高大好店家管理</h3>
-          <p>新增與修改店家、分類、營業資訊、上下架與排序。</p>
-          <span class="tag">待建立管理介面</span>
+          <p>店家資料、分類、地圖連結與公開狀態入口。</p>
+          <span class="tag tag-existing">第一階段基本介面已建立</span>
         </div>
-        <button type="button" class="module-action" disabled>進入管理</button>
+        <a class="module-action" href="./admin-merchant.html">進入管理</a>
       </article>
 
-      <article class="module" data-module="whitepaper" data-state="locked">
+      <article class="module" data-module="whitepaper" data-state="existing">
         <div class="icon">白</div>
         <div class="module-body">
           <h3>商圈白皮書管理</h3>
-          <p>管理白皮書內容、版本與公開狀態。</p>
-          <span class="tag">待建立管理介面</span>
+          <p>章節、版本、附件與公開狀態入口。</p>
+          <span class="tag tag-existing">第一階段基本介面已建立</span>
         </div>
-        <button type="button" class="module-action" disabled>進入管理</button>
+        <a class="module-action" href="./admin-whitepaper.html">進入管理</a>
       </article>
 
-      <article class="module" data-module="greenlife" data-state="locked">
+      <article class="module" data-module="greenlife" data-state="existing">
         <div class="icon">綠</div>
         <div class="module-body">
           <h3>低碳綠生活管理</h3>
-          <p>管理活動、文章、宣導資訊及相關連結。</p>
-          <span class="tag">待建立管理介面</span>
+          <p>活動、文章、宣導資訊與相關連結入口。</p>
+          <span class="tag tag-existing">第一階段基本介面已建立</span>
         </div>
-        <button type="button" class="module-action" disabled>進入管理</button>
+        <a class="module-action" href="./admin-greenlife.html">進入管理</a>
       </article>
 
-      <article class="module" data-module="vision" data-state="locked">
+      <article class="module" data-module="vision" data-state="existing">
         <div class="icon">願</div>
         <div class="module-body">
           <h3>藍田新願景管理</h3>
-          <p>管理政策、建設、願景與階段進度內容。</p>
-          <span class="tag">待建立管理介面</span>
+          <p>願景、政策、建設與階段進度管理入口。</p>
+          <span class="tag tag-existing">第一階段基本介面已建立</span>
         </div>
-        <button type="button" class="module-action" disabled>進入管理</button>
+        <a class="module-action" href="./admin-vision.html">進入管理</a>
       </article>
     </div>
   </section>
 
   <section class="rulebox">
-    <strong>權限原則</strong>
-    <p>前台維持公開瀏覽；管理中心只供授權管理員操作。管理員驗證未完成時採 fail-closed：不載入管理資料、不開放寫入功能。</p>
+    <strong>第一階段</strong>
+    <p>六格基本管理入口與欄位架構先完成；正式新增、修改、刪除、發布及資料寫入列入第二階段。</p>
   </section>
 </main>
 
 <footer>智慧藍田 LIVE 一點通｜管理中心</footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="./admin.js?v=20260930-liff1"></script>
+<script src="./admin.js?v=20260930-liff2"></script>
 </body>
 </html>
