@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>地方大小事管理｜智慧藍田管理中心</title>
-<link rel="stylesheet" href="./admin-news.css?v=20260930-1">
+<link rel="stylesheet" href="./admin-news.css?v=20260930-2">
 </head>
 <body>
 <header class="topbar">
@@ -20,35 +20,38 @@
   <section class="lockbox">
     <div>
       <p class="eyebrow">AUTH STATUS</p>
-      <h1>管理權限尚未啟用</h1>
-      <p>目前只載入公開的消息資料供版面驗收。LINE LIFF 管理員驗證完成前，新增、修改、下架、刪除與發布功能全部鎖定。</p>
+      <h1 id="authTitle">正在驗證管理員</h1>
+      <p id="authText">本頁會再次驗證 LINE 管理員身分，驗證成功後才開放新增、修改、下架與刪除。</p>
     </div>
-    <div class="status">尚未完成 LINE LIFF 管理員驗證設定</div>
+    <div id="authStatus" class="status">驗證中…</div>
   </section>
 
   <section class="panel">
     <div class="section-head">
       <div>
         <p class="eyebrow">EDITOR</p>
-        <h2>新增／修改消息</h2>
+        <h2 id="formTitle">新增消息</h2>
       </div>
-      <span class="readonly">唯讀預覽</span>
+      <button id="newBtn" type="button" class="secondary" disabled>新增一則</button>
     </div>
 
     <form id="newsForm" class="form-grid">
-      <label>日期<input id="date" type="date" disabled></label>
-      <label class="wide">標題<input id="title" type="text" placeholder="例如：高大特區道路施工通知" disabled></label>
-      <label class="wide">摘要<textarea id="summary" rows="2" placeholder="顯示在消息卡上的短摘要" disabled></textarea></label>
-      <label class="wide">完整內容<textarea id="content" rows="5" placeholder="點開消息卡後顯示的完整內容" disabled></textarea></label>
+      <input id="id" type="hidden">
+      <label>日期<input id="date" type="date" required disabled></label>
+      <label class="wide">標題<input id="title" type="text" placeholder="例如：高大特區道路施工通知" required disabled></label>
+      <label class="wide">摘要<textarea id="summary" rows="2" placeholder="顯示在消息卡上的短摘要" required disabled></textarea></label>
+      <label class="wide">完整內容<textarea id="content" rows="5" placeholder="點開消息卡後顯示的完整內容" required disabled></textarea></label>
       <label class="wide">圖片網址<input id="image" type="url" placeholder="選填" disabled></label>
       <label class="wide">地圖網址<input id="map" type="url" placeholder="選填" disabled></label>
       <label class="wide">外部連結<input id="link" type="url" placeholder="選填" disabled></label>
       <label>連結文字<input id="linkText" type="text" placeholder="例如：查看詳細資訊" disabled></label>
+      <label class="publish-toggle"><input id="published" type="checkbox" checked disabled> 前台公開</label>
       <div class="actions wide">
-        <button type="button" class="secondary" disabled>儲存草稿</button>
-        <button type="submit" class="primary" disabled>發布消息</button>
+        <button id="saveDraftBtn" type="button" class="secondary" disabled>儲存為未公開</button>
+        <button id="publishBtn" type="submit" class="primary" disabled>儲存並發布</button>
       </div>
     </form>
+    <div id="formMessage" class="form-message" hidden></div>
   </section>
 
   <section class="panel">
@@ -59,11 +62,12 @@
       </div>
       <span id="count" class="count">載入中</span>
     </div>
-    <div id="list" class="news-list"><div class="empty">正在讀取 news.json…</div></div>
+    <div id="list" class="news-list"><div class="empty">正在讀取消息資料…</div></div>
   </section>
 </main>
 
 <footer>智慧藍田 LIVE 一點通｜地方大小事管理</footer>
-<script src="./admin-news.js?v=20260930-1"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="./admin-news.js?v=20260930-2"></script>
 </body>
 </html>
