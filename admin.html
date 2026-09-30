@@ -22,7 +22,7 @@
       <h1 id="gateTitle">管理員登入</h1>
       <p class="lead">管理功能統一由本頁進入。未完成管理員身分驗證前，所有新增、修改、刪除與發布功能一律鎖定。</p>
     </div>
-    <div id="authStatus" class="status status-warn">尚未完成 LINE LIFF 管理員驗證設定。</div>
+    <div id="authStatus" class="status status-warn">正在初始化 LINE LIFF…</div>
     <button id="loginBtn" class="primary" type="button" disabled>LINE 管理員登入</button>
   </section>
 
@@ -105,6 +105,7 @@
 </main>
 
 <footer>智慧藍田 LIVE 一點通｜管理中心</footer>
-<script src="./admin.js?v=20260930-1"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="./admin.js?v=20260930-liff1"></script>
 </body>
 </html>
