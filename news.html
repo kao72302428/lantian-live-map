@@ -35,7 +35,7 @@ let all=[];
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function render(){
  const q=document.getElementById('q').value.trim().toLowerCase();
- const a=all.filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q))
+ const a=all.filter(x=>x.published!==false).filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q))
  .sort((a,b)=>String(b.date).localeCompare(String(a.date)));
  document.getElementById('news').innerHTML=a.length?a.map(x=>`
  <article class="card" onclick="toggle(this)">
