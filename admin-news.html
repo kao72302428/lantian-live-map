@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>地方大小事管理｜智慧藍田管理中心</title>
+<link rel="stylesheet" href="./admin-news.css?v=20260930-1">
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="./admin.html">← 返回管理中心</a>
+  <div>
+    <div class="title">地方大小事管理</div>
+    <div class="sub">智慧藍田 LIVE 一點通</div>
+  </div>
+  <span class="badge">管理員專用</span>
+</header>
+
+<main class="shell">
+  <section class="lockbox">
+    <div>
+      <p class="eyebrow">AUTH STATUS</p>
+      <h1>管理權限尚未啟用</h1>
+      <p>目前只載入公開的消息資料供版面驗收。LINE LIFF 管理員驗證完成前，新增、修改、下架、刪除與發布功能全部鎖定。</p>
+    </div>
+    <div class="status">尚未完成 LINE LIFF 管理員驗證設定</div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">EDITOR</p>
+        <h2>新增／修改消息</h2>
+      </div>
+      <span class="readonly">唯讀預覽</span>
+    </div>
+
+    <form id="newsForm" class="form-grid">
+      <label>日期<input id="date" type="date" disabled></label>
+      <label class="wide">標題<input id="title" type="text" placeholder="例如：高大特區道路施工通知" disabled></label>
+      <label class="wide">摘要<textarea id="summary" rows="2" placeholder="顯示在消息卡上的短摘要" disabled></textarea></label>
+      <label class="wide">完整內容<textarea id="content" rows="5" placeholder="點開消息卡後顯示的完整內容" disabled></textarea></label>
+      <label class="wide">圖片網址<input id="image" type="url" placeholder="選填" disabled></label>
+      <label class="wide">地圖網址<input id="map" type="url" placeholder="選填" disabled></label>
+      <label class="wide">外部連結<input id="link" type="url" placeholder="選填" disabled></label>
+      <label>連結文字<input id="linkText" type="text" placeholder="例如：查看詳細資訊" disabled></label>
+      <div class="actions wide">
+        <button type="button" class="secondary" disabled>儲存草稿</button>
+        <button type="submit" class="primary" disabled>發布消息</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">CURRENT NEWS</p>
+        <h2>目前消息</h2>
+      </div>
+      <span id="count" class="count">載入中</span>
+    </div>
+    <div id="list" class="news-list"><div class="empty">正在讀取 news.json…</div></div>
+  </section>
+</main>
+
+<footer>智慧藍田 LIVE 一點通｜地方大小事管理</footer>
+<script src="./admin-news.js?v=20260930-1"></script>
+</body>
+</html>
