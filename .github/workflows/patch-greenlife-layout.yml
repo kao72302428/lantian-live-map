@@ -1,5 +1,6 @@
 name: Patch Greenlife Layout
 
+# Temporary workflow: self-removes after applying the scoped CSS patch.
 on:
   push:
     paths:
@@ -80,7 +81,6 @@ jobs:
           git diff --check
           python - <<'PY'
           from pathlib import Path
-          import re
           s = Path('greenlife-map-v15.html').read_text(encoding='utf-8')
           assert s.count('id="greenlife-layout-20261001"') == 1
           assert 'grid-template-columns:repeat(4,140px)!important' in s
