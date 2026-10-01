@@ -1,0 +1,104 @@
+name: Patch Greenlife Layout
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-greenlife-layout.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-greenlife-layout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Patch only Greenlife hero and four primary buttons
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('greenlife-map-v15.html')
+          html = path.read_text(encoding='utf-8')
+          style_id = 'greenlife-layout-20261001'
+          if style_id in html:
+              raise SystemExit('Scoped layout style already exists; refusing duplicate patch.')
+          if '</head>' not in html:
+              raise SystemExit('Could not find </head>; refusing to modify file.')
+
+          scoped_css = r'''
+<style id="greenlife-layout-20261001">
+/* 2026-10-01 scoped layout adjustment: hero display + four primary transport buttons only. */
+.hero{
+  max-width:none!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+}
+.hero img{
+  display:block!important;
+  width:100%!important;
+  max-width:none!important;
+  height:auto!important;
+  margin:0!important;
+}
+@media screen and (min-width:769px){
+  .tabs{
+    display:grid!important;
+    grid-template-columns:repeat(4,140px)!important;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:10px!important;
+    width:100%!important;
+    overflow:visible!important;
+    padding:0 0 10px!important;
+  }
+  .tabs button{
+    width:100%!important;
+    min-width:0!important;
+    min-height:38px!important;
+    padding:7px 10px!important;
+    margin:0!important;
+    border-radius:999px!important;
+    font-size:14px!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+  }
+}
+</style>
+'''
+          html = html.replace('</head>', scoped_css + '\n</head>', 1)
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Verify scope of change
+        shell: bash
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s = Path('greenlife-map-v15.html').read_text(encoding='utf-8')
+          assert s.count('id="greenlife-layout-20261001"') == 1
+          assert 'grid-template-columns:repeat(4,140px)!important' in s
+          assert '.hero{' in s and 'max-width:none!important' in s
+          assert 'data-layer="bus"' in s
+          assert 'data-layer="bike"' in s
+          assert 'data-layer="trash"' in s
+          assert 'data-layer="metro"' in s
+          assert 'mobile-tabs-final-fix' in s
+          print('Scoped CSS and protected button/mobile markers verified.')
+          PY
+
+      - name: Commit scoped page change and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-greenlife-layout.yml
+          git add greenlife-map-v15.html
+          git commit -m "Adjust greenlife hero and primary button layout"
+          git push
