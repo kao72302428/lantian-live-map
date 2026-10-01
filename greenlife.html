@@ -4,12 +4,97 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>淨零綠生活｜智慧藍田 LIVE 一點通</title>
-<meta http-equiv="refresh" content="0; url=./greenlife-map-v15.html">
 <link rel="canonical" href="./greenlife-map-v15.html">
-<style>body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;margin:0;background:#f4f8fb;color:#17324d;display:grid;place-items:center;min-height:100vh}.box{background:#fff;border:1px solid #dce8ef;border-radius:16px;padding:24px;max-width:520px;margin:20px;text-align:center}.box a{display:inline-block;margin-top:12px;background:#1672c4;color:#fff;text-decoration:none;padding:11px 18px;border-radius:999px;font-weight:700}</style>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#f3f8f6}
+#greenlifeFrame{display:block;width:100%;height:100%;border:0;background:#f3f8f6}
+.fallback{position:fixed;inset:0;display:grid;place-items:center;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#17324d;background:#f4f8fb}
+.fallback a{color:#0b6ea8;font-weight:700}
+</style>
 </head>
 <body>
-<div class="box"><strong>淨零綠生活</strong><div>正在前往最新版本…</div><a href="./greenlife-map-v15.html">立即進入</a></div>
-<script>location.replace('./greenlife-map-v15.html'+location.search+location.hash);</script>
+<iframe id="greenlifeFrame" title="淨零綠生活｜智慧藍田 LIVE 一點通"></iframe>
+<noscript><div class="fallback"><a href="./greenlife-map-v15.html">立即進入淨零綠生活</a></div></noscript>
+<script>
+(() => {
+  const frame=document.getElementById('greenlifeFrame');
+  const target=new URL('./greenlife-map-v15.html',location.href);
+  for(const [k,v] of new URLSearchParams(location.search)) if(k!=='v') target.searchParams.append(k,v);
+  target.searchParams.set('v','20261001-layout1');
+  target.hash=location.hash;
+  frame.addEventListener('load',()=>{
+    try{
+      const doc=frame.contentDocument;
+      if(!doc||doc.getElementById('greenlife-layout-20261001')) return;
+      const style=doc.createElement('style');
+      style.id='greenlife-layout-20261001';
+      style.textContent=`
+/* 只調整低碳綠生活頁首顯示與四個主功能按鍵；其餘 V15 功能保持原樣。 */
+.hero{
+  max-width:none!important;
+  width:100%!important;
+  margin:0!important;
+  padding:18px 12px 8px!important;
+  background:#fff!important;
+  text-align:center!important;
+  overflow:visible!important;
+}
+.hero img{
+  display:block!important;
+  width:min(100%,1497px)!important;
+  max-width:1497px!important;
+  height:auto!important;
+  margin:0 auto!important;
+  border-radius:18px!important;
+}
+@media screen and (min-width:769px){
+  .tabs{
+    display:grid!important;
+    grid-template-columns:repeat(4,clamp(120px,12vw,170px))!important;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:10px!important;
+    width:100%!important;
+    overflow:visible!important;
+    padding:0 0 12px!important;
+  }
+  .tabs button{
+    width:100%!important;
+    min-width:0!important;
+    min-height:38px!important;
+    padding:7px 10px!important;
+    margin:0!important;
+    border-radius:999px!important;
+    font-size:14px!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+  }
+}
+@media screen and (max-width:768px){
+  .hero{padding:10px 8px 4px!important;}
+  .hero img{width:100%!important;max-width:100%!important;border-radius:12px!important;}
+  .tabs{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:10px!important;
+    width:100%!important;
+  }
+  .tabs button{
+    width:100%!important;
+    min-width:0!important;
+    min-height:52px!important;
+    height:52px!important;
+    padding:8px 6px!important;
+    font-size:16px!important;
+    line-height:1.15!important;
+    white-space:normal!important;
+  }
+}
+`;
+      doc.head.appendChild(style);
+    }catch(err){console.error('greenlife layout injection failed',err);}
+  });
+  frame.src=target.href;
+})();
+</script>
 </body>
 </html>
