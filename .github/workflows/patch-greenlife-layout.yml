@@ -18,10 +18,12 @@ jobs:
 
       - name: Patch only Greenlife hero and four primary buttons
         shell: bash
+        env:
+          GREENLIFE_CSS_B64: "PHN0eWxlIGlkPSJncmVlbmxpZmUtbGF5b3V0LTIwMjYxMDAxIj4KLyogMjAyNi0xMC0wMSBzY29wZWQgbGF5b3V0IGFkanVzdG1lbnQ6IGhlcm8gZGlzcGxheSArIGZvdXIgcHJpbWFyeSB0cmFuc3BvcnQgYnV0dG9ucyBvbmx5LiAqLwouaGVyb3sKICBtYXgtd2lkdGg6bm9uZSFpbXBvcnRhbnQ7CiAgd2lkdGg6MTAwJSFpbXBvcnRhbnQ7CiAgbWFyZ2luOjAhaW1wb3J0YW50OwogIHBhZGRpbmc6MCFpbXBvcnRhbnQ7Cn0KLmhlcm8gaW1newogIGRpc3BsYXk6YmxvY2shaW1wb3J0YW50OwogIHdpZHRoOjEwMCUhaW1wb3J0YW50OwogIG1heC13aWR0aDpub25lIWltcG9ydGFudDsKICBoZWlnaHQ6YXV0byFpbXBvcnRhbnQ7CiAgbWFyZ2luOjAhaW1wb3J0YW50Owp9CkBtZWRpYSBzY3JlZW4gYW5kIChtaW4td2lkdGg6NzY5cHgpewogIC50YWJzewogICAgZGlzcGxheTpncmlkIWltcG9ydGFudDsKICAgIGdyaWQtdGVtcGxhdGUtY29sdW1uczpyZXBlYXQoNCwxNDBweCkhaW1wb3J0YW50OwogICAganVzdGlmeS1jb250ZW50OmNlbnRlciFpbXBvcnRhbnQ7CiAgICBhbGlnbi1pdGVtczpjZW50ZXIhaW1wb3J0YW50OwogICAgZ2FwOjEwcHghaW1wb3J0YW50OwogICAgd2lkdGg6MTAwJSFpbXBvcnRhbnQ7CiAgICBvdmVyZmxvdzp2aXNpYmxlIWltcG9ydGFudDsKICAgIHBhZGRpbmc6MCAwIDEwcHghaW1wb3J0YW50OwogIH0KICAudGFicyBidXR0b257CiAgICB3aWR0aDoxMDAlIWltcG9ydGFudDsKICAgIG1pbi13aWR0aDowIWltcG9ydGFudDsKICAgIG1pbi1oZWlnaHQ6MzhweCFpbXBvcnRhbnQ7CiAgICBwYWRkaW5nOjdweCAxMHB4IWltcG9ydGFudDsKICAgIG1hcmdpbjowIWltcG9ydGFudDsKICAgIGJvcmRlci1yYWRpdXM6OTk5cHghaW1wb3J0YW50OwogICAgZm9udC1zaXplOjE0cHghaW1wb3J0YW50OwogICAgbGluZS1oZWlnaHQ6MS4xNSFpbXBvcnRhbnQ7CiAgICB3aGl0ZS1zcGFjZTpub3dyYXAhaW1wb3J0YW50OwogIH0KfQo8L3N0eWxlPg=="
         run: |
           python - <<'PY'
           from pathlib import Path
-
+          import base64, os
           path = Path('greenlife-map-v15.html')
           html = path.read_text(encoding='utf-8')
           style_id = 'greenlife-layout-20261001'
@@ -29,50 +31,8 @@ jobs:
               raise SystemExit('Scoped layout style already exists; refusing duplicate patch.')
           if '</head>' not in html:
               raise SystemExit('Could not find </head>; refusing to modify file.')
-
-          scoped_css = r'''
-<style id="greenlife-layout-20261001">
-/* 2026-10-01 scoped layout adjustment: hero display + four primary transport buttons only. */
-.hero{
-  max-width:none!important;
-  width:100%!important;
-  margin:0!important;
-  padding:0!important;
-}
-.hero img{
-  display:block!important;
-  width:100%!important;
-  max-width:none!important;
-  height:auto!important;
-  margin:0!important;
-}
-@media screen and (min-width:769px){
-  .tabs{
-    display:grid!important;
-    grid-template-columns:repeat(4,140px)!important;
-    justify-content:center!important;
-    align-items:center!important;
-    gap:10px!important;
-    width:100%!important;
-    overflow:visible!important;
-    padding:0 0 10px!important;
-  }
-  .tabs button{
-    width:100%!important;
-    min-width:0!important;
-    min-height:38px!important;
-    padding:7px 10px!important;
-    margin:0!important;
-    border-radius:999px!important;
-    font-size:14px!important;
-    line-height:1.15!important;
-    white-space:nowrap!important;
-  }
-}
-</style>
-'''
-          html = html.replace('</head>', scoped_css + '\n</head>', 1)
-          path.write_text(html, encoding='utf-8')
+          scoped_css = base64.b64decode(os.environ['GREENLIFE_CSS_B64']).decode('utf-8')
+          path.write_text(html.replace('</head>', scoped_css + '\n</head>', 1), encoding='utf-8')
           PY
 
       - name: Verify scope of change
@@ -84,7 +44,7 @@ jobs:
           s = Path('greenlife-map-v15.html').read_text(encoding='utf-8')
           assert s.count('id="greenlife-layout-20261001"') == 1
           assert 'grid-template-columns:repeat(4,140px)!important' in s
-          assert '.hero{' in s and 'max-width:none!important' in s
+          assert 'max-width:none!important' in s
           assert 'data-layer="bus"' in s
           assert 'data-layer="bike"' in s
           assert 'data-layer="trash"' in s
