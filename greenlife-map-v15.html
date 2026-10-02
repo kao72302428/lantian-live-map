@@ -269,4 +269,20 @@ let rd=document.querySelector('#routeDetail');rd.innerHTML=d.r56;document.queryS
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');Object.values(groups).forEach(g=>map.removeLayer(g));groups[b.dataset.layer].addTo(map)});
 </script>
 
+
+<script id="greenlife-mobile-neutral-start-20261003">
+(()=>{
+  if(!window.matchMedia('(max-width:768px)').matches) return;
+  const neutralize=()=>{
+    document.querySelectorAll('.tabs button').forEach(btn=>btn.classList.remove('on'));
+    try{ Object.values(G).forEach(group=>map.removeLayer(group)); }catch(err){}
+  };
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',neutralize,{once:true});
+  }else{
+    neutralize();
+  }
+})();
+</script>
+
 </body></html>
