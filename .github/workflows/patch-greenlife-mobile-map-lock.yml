@@ -1,0 +1,62 @@
+name: Patch Greenlife Mobile Map Lock
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-greenlife-mobile-map-lock.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch mobile map to stay fixed until a function button is tapped
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('greenlife-map-v15.html')
+          s=p.read_text(encoding='utf-8')
+          style_id='greenlife-mobile-map-lock-20261003'
+          script_id='greenlife-mobile-map-unlock-20261003'
+          if style_id in s or script_id in s:
+              raise SystemExit('Mobile map lock patch already exists; refusing duplicate patch.')
+          required=['id="map"','.tabs','data-layer="bus"','data-layer="bike"','data-layer="trash"','data-layer="metro"','</head>','</body>']
+          missing=[x for x in required if x not in s]
+          if missing:
+              raise SystemExit('Required markers missing: '+', '.join(missing))
+          css='''\n<style id="greenlife-mobile-map-lock-20261003">\n/* Mobile only: keep map fixed until the visitor deliberately selects a function. */\n@media screen and (max-width:768px){\n  body:not(.greenlife-map-unlocked) #map{\n    pointer-events:none!important;\n    touch-action:pan-y!important;\n  }\n}\n</style>\n'''
+          js='''\n<script id="greenlife-mobile-map-unlock-20261003">\n(()=>{\n  if(!window.matchMedia('(max-width:768px)').matches) return;\n  const unlock=()=>document.body.classList.add('greenlife-map-unlocked');\n  document.querySelectorAll('.tabs button').forEach(btn=>{\n    btn.addEventListener('click',unlock,{once:true});\n  });\n})();\n</script>\n'''
+          s=s.replace('</head>',css+'\n</head>',1)
+          s=s.replace('</body>',js+'\n</body>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify patch scope
+        shell: bash
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('greenlife-map-v15.html').read_text(encoding='utf-8')
+          assert s.count('id="greenlife-mobile-map-lock-20261003"') == 1
+          assert s.count('id="greenlife-mobile-map-unlock-20261003"') == 1
+          assert 'body:not(.greenlife-map-unlocked) #map' in s
+          assert "document.querySelectorAll('.tabs button')" in s
+          assert "document.body.classList.add('greenlife-map-unlocked')" in s
+          for marker in ['data-layer="bus"','data-layer="bike"','data-layer="trash"','data-layer="metro"']:
+              assert marker in s
+          print('Greenlife mobile map lock patch verified.')
+          PY
+      - name: Commit patch and clean temporary workflows
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v15.html
+          git rm -f .github/workflows/patch-greenlife-mobile-map-lock.yml
+          git rm -f .github/workflows/inspect-greenlife-mobile.yml || true
+          git commit -m "Lock Greenlife mobile map until function selection"
+          git push
