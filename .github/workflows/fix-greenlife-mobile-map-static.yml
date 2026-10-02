@@ -1,0 +1,62 @@
+name: Fix Greenlife Mobile Map Static
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-greenlife-mobile-map-static.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Keep mobile map permanently static while preserving function-button layer switching
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('greenlife-map-v15.html')
+          s=p.read_text(encoding='utf-8')
+          old_style=re.compile(r'\n?<style id="greenlife-mobile-map-lock-20261003">.*?</style>\n?',re.S)
+          old_script=re.compile(r'\n?<script id="greenlife-mobile-map-unlock-20261003">.*?</script>\n?',re.S)
+          if not old_style.search(s):
+              raise SystemExit('Previous mobile map lock style not found; refusing blind patch.')
+          if not old_script.search(s):
+              raise SystemExit('Previous mobile map unlock script not found; refusing blind patch.')
+          s=old_style.sub('\n',s,count=1)
+          s=old_script.sub('\n',s,count=1)
+          css='''\n<style id="greenlife-mobile-map-static-20261003">\n/* Mobile only: map stays visually fixed; external function buttons still switch Leaflet layers. */\n@media screen and (max-width:768px){\n  #map{\n    pointer-events:none!important;\n    touch-action:pan-y!important;\n  }\n}\n</style>\n'''
+          if '</head>' not in s:
+              raise SystemExit('Missing </head>.')
+          s=s.replace('</head>',css+'\n</head>',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Verify exact scope
+        shell: bash
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('greenlife-map-v15.html').read_text(encoding='utf-8')
+          assert 'id="greenlife-mobile-map-static-20261003"' in s
+          assert 'id="greenlife-mobile-map-lock-20261003"' not in s
+          assert 'id="greenlife-mobile-map-unlock-20261003"' not in s
+          assert '#map{' in s and 'pointer-events:none!important' in s
+          for marker in ['data-layer="bus"','data-layer="bike"','data-layer="trash"','data-layer="metro"']:
+              assert marker in s
+          assert "document.querySelectorAll('.tabs button')" in s
+          print('Mobile map static patch verified; function-button markers preserved.')
+          PY
+      - name: Commit and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v15.html
+          git rm .github/workflows/fix-greenlife-mobile-map-static.yml
+          git commit -m "Keep Greenlife mobile map static and button-driven"
+          git push
