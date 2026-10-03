@@ -1,0 +1,135 @@
+name: Adjust Greenlife Card Rows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/adjust-greenlife-card-rows.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Adjust only requested desktop card rows
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('greenlife-map-v15.html')
+          s=p.read_text(encoding='utf-8')
+          marker='greenlife-row-layout-20261004'
+          if marker in s:
+              raise SystemExit('Layout patch already exists; refusing duplicate patch.')
+
+          required=['🚲 YouBike｜藍田高大生活圈','♻️ 垃圾清運｜藍田高大特區','🚕 叫車服務','55688 台灣大車隊','Uber','LINE GO','yoxi']
+          missing=[x for x in required if x not in s]
+          if missing:
+              raise SystemExit('Required markers missing: '+repr(missing))
+
+          hrefs_before=re.findall(r'href="[^"]+"',s)
+          core_counts={m:s.count(m) for m in ['data-layer="bus"','data-layer="bike"','data-layer="trash"','data-layer="metro"','<div id="map"></div>']}
+          text_counts={m:s.count(m) for m in required}
+
+          # Parse section boundaries and find the unique enclosing sections for YouBike and trash.
+          token_re=re.compile(r'</?section\b[^>]*>',re.I)
+          stack=[]; sections=[]
+          for m in token_re.finditer(s):
+              tag=m.group(0)
+              if tag.lower().startswith('</section'):
+                  if not stack: raise SystemExit('Unbalanced section tags')
+                  start=stack.pop(); sections.append((start,m.end()))
+              else:
+                  stack.append(m.start())
+          if stack: raise SystemExit('Unbalanced section tags at EOF')
+
+          def unique_section(marker_text):
+              matches=[]
+              for a,b in sections:
+                  block=s[a:b]
+                  if marker_text in block:
+                      matches.append((b-a,a,b,block))
+              if not matches: raise SystemExit('No section for '+marker_text)
+              matches.sort(key=lambda x:x[0])
+              minlen=matches[0][0]
+              small=[x for x in matches if x[0]==minlen]
+              if len(small)!=1: raise SystemExit('Section not unique for '+marker_text)
+              return small[0][1],small[0][2],small[0][3]
+
+          ya,yb,yblock=unique_section('🚲 YouBike｜藍田高大生活圈')
+          ta,tb,tblock=unique_section('♻️ 垃圾清運｜藍田高大特區')
+          if not (yb <= ta and s[yb:ta].strip()==''):
+              raise SystemExit('YouBike and trash sections are not adjacent in expected order')
+          if 'collapse-card' not in yblock or 'collapse-card' not in tblock:
+              raise SystemExit('Expected collapse-card structure missing')
+
+          wrapped='<div class="greenlife-two-row">'+s[ya:tb]+'</div>'
+          s2=s[:ya]+wrapped+s[tb:]
+
+          # Scope the four-column class only to the unique taxi section.
+          # Re-parse the taxi section from the original structure before wrapper changes using visible markers.
+          taxi_matches=[]
+          for a,b in sections:
+              block=s[a:b]
+              if all(x in block for x in ['🚕 叫車服務','55688 台灣大車隊','Uber','LINE GO','yoxi']):
+                  taxi_matches.append((b-a,a,b,block))
+          taxi_matches.sort(key=lambda x:x[0])
+          if not taxi_matches:
+              raise SystemExit('Taxi section not found')
+          minlen=taxi_matches[0][0]
+          smallest=[x for x in taxi_matches if x[0]==minlen]
+          if len(smallest)!=1:
+              raise SystemExit('Taxi section not unique')
+          taxi_block=smallest[0][3]
+          if taxi_block.count('<div class="service-grid">')!=1:
+              raise SystemExit('Taxi service-grid not unique')
+          taxi_new=taxi_block.replace('<div class="service-grid">','<div class="service-grid taxi-four-row">',1)
+          if s2.count(taxi_block)!=1:
+              raise SystemExit('Taxi block occurrence changed unexpectedly before scoped replacement')
+          s2=s2.replace(taxi_block,taxi_new,1)
+
+          css='''\n<style id="greenlife-row-layout-20261004">\n/* Requested desktop-only row arrangement; mobile behavior remains unchanged. */\n@media screen and (min-width:651px){\n  .greenlife-two-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start;}\n  .greenlife-two-row>.panel{margin-top:14px;min-width:0;}\n  .taxi-four-row{grid-template-columns:repeat(4,minmax(0,1fr))!important;}\n}\n</style>\n'''
+          if s2.count('</head>')!=1:
+              raise SystemExit('Unique </head> not found')
+          s2=s2.replace('</head>',css+'</head>',1)
+
+          # Safety verification: only layout wrappers/classes/CSS changed; all links and visible markers preserved.
+          if re.findall(r'href="[^"]+"',s2)!=hrefs_before:
+              raise SystemExit('Href list changed unexpectedly')
+          for m,c in core_counts.items():
+              if s2.count(m)!=c: raise SystemExit('Core marker changed: '+m)
+          for m,c in text_counts.items():
+              if s2.count(m)!=c: raise SystemExit('Visible text marker changed: '+m)
+          for x in [marker,'class="greenlife-two-row"','class="service-grid taxi-four-row"']:
+              if s2.count(x)!=1: raise SystemExit('Expected layout marker count != 1: '+x)
+
+          p.write_text(s2,encoding='utf-8')
+          print('Requested desktop row layout applied; content and links preserved.')
+          PY
+
+      - name: Verify, commit and self-remove
+        shell: bash
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('greenlife-map-v15.html').read_text(encoding='utf-8')
+          assert s.count('id="greenlife-row-layout-20261004"')==1
+          assert s.count('class="greenlife-two-row"')==1
+          assert s.count('class="service-grid taxi-four-row"')==1
+          for x in ['🚲 YouBike｜藍田高大生活圈','♻️ 垃圾清運｜藍田高大特區','55688 台灣大車隊','Uber','LINE GO','yoxi']:
+              assert x in s
+          print('Layout-only verification passed.')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v15.html
+          git rm .github/workflows/adjust-greenlife-card-rows.yml
+          git commit -m "Adjust Greenlife desktop card rows"
+          git push
