@@ -4,24 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>淨零綠生活｜智慧藍田 LIVE 一點通</title>
+<meta http-equiv="refresh" content="0; url=./greenlife-map-v15.html">
 <link rel="canonical" href="./greenlife-map-v15.html">
 </head>
 <body>
-<script>
-(async()=>{
-  try{
-    const res=await fetch('./greenlife-map-v15.html'+location.search,{cache:'no-store'});
-    if(!res.ok) throw new Error('load failed');
-    let html=await res.text();
-    const sticky='<style id="greenlife-entry-sticky-20261003">@media screen and (min-width:769px){#map{position:sticky!important;top:12px!important;z-index:2!important;}}@media screen and (max-width:768px){#map{position:sticky!important;top:8px!important;bottom:auto!important;z-index:2!important;}}</style>';
-    html=html.replace('</head>',sticky+'</head>');
-    document.open();
-    document.write(html);
-    document.close();
-  }catch(e){
-    location.replace('./greenlife-map-v15.html'+location.search+location.hash);
-  }
-})();
-</script>
+<script>location.replace('./greenlife-map-v15.html'+location.search+location.hash);</script>
 </body>
 </html>
