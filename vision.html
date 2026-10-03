@@ -9,48 +9,48 @@
 html,body{margin:0;padding:0;background:#eef8ff}
 body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#17324d}
 .vision-page{width:100%;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;background:linear-gradient(180deg,#eaf7ff 0%,#f7fcff 100%)}
-.vision-stage{position:relative;width:min(1120px,100vw);aspect-ratio:1120/1024;margin:0 auto;overflow:hidden;background-image:url('vision-layout-v2.png');background-repeat:no-repeat;background-size:auto 100%;background-position:left top;line-height:0}
+.viewport{position:relative;width:min(1536px,100vw);aspect-ratio:1536/900;overflow:hidden;margin:0 auto}
+.canvas{position:absolute;left:0;top:0;width:100%;aspect-ratio:1536/1024;background:url('vision-desktop.jpg') center top/100% auto no-repeat;line-height:0}
 .hotspot{position:absolute;display:block;text-decoration:none;z-index:2;background:transparent;line-height:1;border-radius:50%}
 .hotspot:focus-visible{outline:5px solid #fff;box-shadow:0 0 0 9px #1688e8;background:rgba(255,255,255,.08)}
 .hotspot::after{content:"";position:absolute;inset:0;border-radius:inherit;transition:background .18s ease,box-shadow .18s ease}
-@media (hover:hover){.hotspot:hover::after{background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.86)}}
-/* Desktop crop: left panel of vision-layout-v2.png */
-.smart{left:40.2%;top:3.0%;width:23.3%;height:27.5%}
-.business{left:16.5%;top:17.6%;width:24.6%;height:27.0%}
-.green{left:64.3%;top:17.6%;width:24.6%;height:27.0%}
-.traffic{left:3.6%;top:43.9%;width:25.9%;height:22.5%}
-.environment{left:22.3%;top:60.5%;width:22.0%;height:23.0%}
-.infrastructure{left:40.2%;top:63.5%;width:21.4%;height:22.5%}
-.care{left:61.2%;top:60.5%;width:20.1%;height:23.0%}
-.culture{left:75.1%;top:43.9%;width:21.5%;height:22.5%}
-.visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(hover:hover){.hotspot:hover::after{background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.82)}}
+.smart{left:40.2%;top:2.2%;width:19.7%;height:25.8%}
+.business{left:21.1%;top:17.1%;width:20.1%;height:27.1%}
+.green{left:60.8%;top:17.1%;width:20.2%;height:27.1%}
+.traffic{left:13.5%;top:44.2%;width:17.4%;height:25.2%}
+.environment{left:26.3%;top:60.7%;width:17.6%;height:25.8%}
+.infrastructure{left:41.1%;top:64.0%;width:17.7%;height:26.1%}
+.care{left:58.8%;top:60.6%;width:17.8%;height:25.9%}
+.culture{left:69.1%;top:44.2%;width:17.5%;height:25.2%}
 @media(max-width:720px){
   .vision-page{background:#fff}
-  .vision-stage{width:min(402px,100vw);aspect-ratio:402/1024;background-size:auto 100%;background-position:right top}
-  /* Mobile crop: right panel of vision-layout-v2.png */
-  .smart{left:22.4%;top:11.7%;width:44.0%;height:18.1%}
-  .business{left:2.5%;top:22.9%;width:29.0%;height:14.2%}
-  .green{left:66.0%;top:22.9%;width:30.0%;height:14.2%}
-  .traffic{left:5.0%;top:48.8%;width:44.0%;height:14.6%}
-  .environment{left:50.0%;top:48.8%;width:45.0%;height:14.6%}
-  .infrastructure{left:5.0%;top:63.5%;width:44.0%;height:14.2%}
-  .care{left:50.0%;top:63.5%;width:45.0%;height:14.2%}
-  .culture{left:26.0%;top:79.0%;width:47.0%;height:14.0%}
+  .viewport{width:100vw;aspect-ratio:941/1052}
+  .canvas{width:100%;aspect-ratio:941/1672;background-image:url('vision-mobile.jpg');background-size:100% auto;background-position:center top;transform:translateY(-37.08%)}
+  .smart{left:4.0%;top:43.1%;width:29.2%;height:16.2%;border-radius:26px}
+  .business{left:35.1%;top:43.1%;width:29.5%;height:16.2%;border-radius:26px}
+  .green{left:66.7%;top:43.1%;width:29.2%;height:16.2%;border-radius:26px}
+  .traffic{left:5.1%;top:65.0%;width:43.2%;height:9.2%;border-radius:24px}
+  .environment{left:51.4%;top:65.0%;width:43.4%;height:9.2%;border-radius:24px}
+  .infrastructure{left:5.1%;top:74.7%;width:43.2%;height:9.5%;border-radius:24px}
+  .care{left:51.4%;top:74.7%;width:43.4%;height:9.5%;border-radius:24px}
+  .culture{left:24.9%;top:85.1%;width:50.3%;height:9.0%;border-radius:24px}
 }
 </style>
 </head>
 <body>
 <main class="vision-page">
-  <section class="vision-stage" role="img" aria-label="藍田新願景：三大核心主軸與五大里政治理目標；底部『點選圖示進入』為操作提醒文字">
-    <span class="visually-hidden">點選八大願景圖示可進入對應內容頁；底部「點選圖示進入」僅為提示，不是按鈕。</span>
-    <a class="hotspot smart" href="vision-smart.html" aria-label="智慧社區｜核心主軸"></a>
-    <a class="hotspot business" href="vision-business.html" aria-label="推動商圈發展｜核心主軸"></a>
-    <a class="hotspot green" href="vision-green.html" aria-label="淨零綠生活｜核心主軸"></a>
-    <a class="hotspot traffic" href="vision-traffic.html" aria-label="交通安全｜里政治理目標"></a>
-    <a class="hotspot environment" href="vision-environment.html" aria-label="環境清消｜里政治理目標"></a>
-    <a class="hotspot infrastructure" href="vision-infrastructure.html" aria-label="燈亮・路平・水溝通｜里政治理目標"></a>
-    <a class="hotspot care" href="vision-care.html" aria-label="長者・幼童・弱勢照護｜里政治理目標"></a>
-    <a class="hotspot culture" href="vision-culture.html" aria-label="人文教育｜里政治理目標"></a>
+  <section class="viewport" aria-label="藍田新願景八大主題導覽">
+    <div class="canvas">
+      <a class="hotspot smart" href="vision-smart.html" aria-label="智慧社區｜核心主軸"></a>
+      <a class="hotspot business" href="vision-business.html" aria-label="推動商圈發展｜核心主軸"></a>
+      <a class="hotspot green" href="vision-green.html" aria-label="淨零綠生活｜核心主軸"></a>
+      <a class="hotspot traffic" href="vision-traffic.html" aria-label="交通安全｜里政治理目標"></a>
+      <a class="hotspot environment" href="vision-environment.html" aria-label="環境清消｜里政治理目標"></a>
+      <a class="hotspot infrastructure" href="vision-infrastructure.html" aria-label="燈亮・路平・水溝通｜里政治理目標"></a>
+      <a class="hotspot care" href="vision-care.html" aria-label="長者・幼童・弱勢照護｜里政治理目標"></a>
+      <a class="hotspot culture" href="vision-culture.html" aria-label="人文教育｜里政治理目標"></a>
+    </div>
   </section>
 </main>
 </body>
