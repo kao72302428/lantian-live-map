@@ -13,7 +13,7 @@
     const res=await fetch('./greenlife-map-v15.html'+location.search,{cache:'no-store'});
     if(!res.ok) throw new Error('load failed');
     let html=await res.text();
-    const sticky='<style id="greenlife-entry-mobile-sticky">@media screen and (max-width:768px){#map{position:sticky!important;top:8px!important;z-index:20!important;}}</style>';
+    const sticky='<style id="greenlife-entry-sticky-20261003">@media screen and (min-width:769px){#map{position:sticky!important;top:12px!important;z-index:2!important;}}@media screen and (max-width:768px){#map{position:static!important;top:auto!important;bottom:auto!important;z-index:auto!important;}}</style>';
     html=html.replace('</head>',sticky+'</head>');
     document.open();
     document.write(html);
