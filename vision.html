@@ -5,24 +5,57 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>藍田新願景｜智慧藍田 LIVE 一點通</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;padding:0}body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:linear-gradient(180deg,#eef8ff,#f8fbfd);color:#17324d;min-height:100vh}.wrap{min-height:100vh;display:grid;place-items:center;padding:32px}.vision-map{position:relative;width:min(980px,94vw);aspect-ratio:1/1;max-height:92vh}.center,.node{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;box-shadow:0 12px 28px rgba(23,50,77,.12);transition:.2s ease}.center{left:50%;top:50%;transform:translate(-50%,-50%);width:29%;aspect-ratio:1;background:#17324d;color:white;border:8px solid rgba(255,255,255,.9);font-weight:800;font-size:clamp(24px,3.5vw,44px);z-index:3;padding:20px}.node{width:19%;aspect-ratio:1;background:white;color:#17324d;border:3px solid #9fd3ff;font-weight:800;font-size:clamp(14px,1.8vw,22px);padding:16px;z-index:2}.node.core{background:#e7f5ff;border-color:#55aee6}.node.govern{background:#f4fbf7;border-color:#8cc8a5}.node:hover,.node:focus-visible{transform:scale(1.05);outline:none}.line{position:absolute;left:50%;top:50%;width:34%;height:2px;background:#bfd7e5;transform-origin:left center;z-index:1}.n1{left:40.5%;top:3%}.n2{right:11%;top:13%}.n3{right:3%;top:40.5%}.n4{right:11%;bottom:13%}.n5{left:40.5%;bottom:3%}.n6{left:11%;bottom:13%}.n7{left:3%;top:40.5%}.n8{left:11%;top:13%}.l1{transform:rotate(-90deg)}.l2{transform:rotate(-45deg)}.l3{transform:rotate(0deg)}.l4{transform:rotate(45deg)}.l5{transform:rotate(90deg)}.l6{transform:rotate(135deg)}.l7{transform:rotate(180deg)}.l8{transform:rotate(225deg)}.badge{display:block;font-size:.72em;font-weight:700;opacity:.7;margin-top:4px}
-@media(max-width:720px){.wrap{padding:18px 12px;align-items:start}.vision-map{width:100%;aspect-ratio:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding-top:180px}.center{top:18px;left:50%;transform:translateX(-50%);width:150px;height:150px;font-size:26px}.node{position:static;width:100%;aspect-ratio:1/1;min-height:150px;font-size:18px}.line{display:none}.node:hover,.node:focus-visible{transform:none}}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#eef8ff}
+body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#17324d}
+.vision-page{width:100%;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;background:linear-gradient(180deg,#eaf7ff 0%,#f7fcff 100%)}
+.vision-stage{position:relative;width:min(1536px,100vw);line-height:0;margin:0 auto;overflow:hidden}
+.vision-stage picture,.vision-stage img{display:block;width:100%;height:auto}
+.hotspot{position:absolute;display:block;border-radius:28px;text-decoration:none;z-index:2;background:transparent;line-height:1}
+.hotspot:focus-visible{outline:5px solid #fff;box-shadow:0 0 0 9px #1688e8;background:rgba(255,255,255,.08)}
+.hotspot::after{content:"";position:absolute;inset:0;border-radius:inherit;transition:background .18s ease,box-shadow .18s ease}
+@media (hover:hover){.hotspot:hover::after{background:rgba(255,255,255,.10);box-shadow:inset 0 0 0 3px rgba(255,255,255,.82)}}
+/* Desktop image: 1536 x 1024 */
+.smart{left:40.2%;top:2.2%;width:19.7%;height:25.8%;border-radius:50%}
+.business{left:21.1%;top:17.1%;width:20.1%;height:27.1%;border-radius:50%}
+.green{left:60.8%;top:17.1%;width:20.2%;height:27.1%;border-radius:50%}
+.traffic{left:13.5%;top:44.2%;width:17.4%;height:25.2%;border-radius:50%}
+.environment{left:26.3%;top:60.7%;width:17.6%;height:25.8%;border-radius:50%}
+.infrastructure{left:41.1%;top:64.0%;width:17.7%;height:26.1%;border-radius:50%}
+.care{left:58.8%;top:60.6%;width:17.8%;height:25.9%;border-radius:50%}
+.culture{left:69.1%;top:44.2%;width:17.5%;height:25.2%;border-radius:50%}
+@media(max-width:720px){
+  .vision-page{background:#fff}
+  .vision-stage{width:100vw;max-width:941px}
+  /* Mobile image: 941 x 1672 */
+  .smart{left:4.0%;top:43.1%;width:29.2%;height:16.2%;border-radius:26px}
+  .business{left:35.1%;top:43.1%;width:29.5%;height:16.2%;border-radius:26px}
+  .green{left:66.7%;top:43.1%;width:29.2%;height:16.2%;border-radius:26px}
+  .traffic{left:5.1%;top:65.0%;width:43.2%;height:9.2%;border-radius:24px}
+  .environment{left:51.4%;top:65.0%;width:43.4%;height:9.2%;border-radius:24px}
+  .infrastructure{left:5.1%;top:74.7%;width:43.2%;height:9.5%;border-radius:24px}
+  .care{left:51.4%;top:74.7%;width:43.4%;height:9.5%;border-radius:24px}
+  .culture{left:24.9%;top:85.1%;width:50.3%;height:9.0%;border-radius:24px}
+}
 </style>
 </head>
 <body>
-<main class="wrap">
-<section class="vision-map" aria-label="藍田新願景八大主題">
-<div class="center">藍田新願景</div>
-<span class="line l1"></span><span class="line l2"></span><span class="line l3"></span><span class="line l4"></span><span class="line l5"></span><span class="line l6"></span><span class="line l7"></span><span class="line l8"></span>
-<a class="node core n1" href="vision-smart.html">智慧社區<span class="badge">核心主軸</span></a>
-<a class="node core n2" href="vision-business.html">推動商圈發展<span class="badge">核心主軸</span></a>
-<a class="node core n3" href="vision-green.html">淨零綠生活<span class="badge">核心主軸</span></a>
-<a class="node govern n4" href="vision-traffic.html">交通安全<span class="badge">里政治理目標</span></a>
-<a class="node govern n5" href="vision-environment.html">環境清消<span class="badge">里政治理目標</span></a>
-<a class="node govern n6" href="vision-infrastructure.html">燈亮・路平・水溝通<span class="badge">里政治理目標</span></a>
-<a class="node govern n7" href="vision-care.html">長者・幼童・弱勢照護<span class="badge">里政治理目標</span></a>
-<a class="node govern n8" href="vision-culture.html">人文教育<span class="badge">里政治理目標</span></a>
-</section>
+<main class="vision-page">
+  <section class="vision-stage" aria-label="藍田新願景八大主題導覽">
+    <picture>
+      <source media="(max-width:720px)" srcset="vision-mobile.jpg">
+      <img src="vision-desktop.jpg" alt="藍田新願景：三大核心主軸與五大里政治理目標" width="1536" height="1024">
+    </picture>
+
+    <a class="hotspot smart" href="vision-smart.html" aria-label="智慧社區｜核心主軸"></a>
+    <a class="hotspot business" href="vision-business.html" aria-label="推動商圈發展｜核心主軸"></a>
+    <a class="hotspot green" href="vision-green.html" aria-label="淨零綠生活｜核心主軸"></a>
+    <a class="hotspot traffic" href="vision-traffic.html" aria-label="交通安全｜里政治理目標"></a>
+    <a class="hotspot environment" href="vision-environment.html" aria-label="環境清消｜里政治理目標"></a>
+    <a class="hotspot infrastructure" href="vision-infrastructure.html" aria-label="燈亮・路平・水溝通｜里政治理目標"></a>
+    <a class="hotspot care" href="vision-care.html" aria-label="長者・幼童・弱勢照護｜里政治理目標"></a>
+    <a class="hotspot culture" href="vision-culture.html" aria-label="人文教育｜里政治理目標"></a>
+  </section>
 </main>
 </body>
 </html>
