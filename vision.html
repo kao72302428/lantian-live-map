@@ -9,8 +9,8 @@
 html,body{margin:0;padding:0;background:#eef8ff}
 body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#17324d}
 .vision-page{width:100%;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;background:linear-gradient(180deg,#eaf7ff 0%,#f7fcff 100%)}
-.viewport{position:relative;width:min(1536px,100vw);aspect-ratio:1536/900;overflow:hidden;margin:0 auto}
-.canvas{position:absolute;left:0;top:0;width:100%;aspect-ratio:1536/1024;background:url('vision-desktop.jpg') center top/100% auto no-repeat;line-height:0}
+.desktop-viewport{position:relative;width:min(1536px,100vw);aspect-ratio:1536/900;overflow:hidden;margin:0 auto}
+.desktop-canvas{position:absolute;left:0;top:0;width:100%;aspect-ratio:1536/1024;background:url('vision-desktop.jpg') center top/100% auto no-repeat;line-height:0}
 .hotspot{position:absolute;display:block;text-decoration:none;z-index:2;background:transparent;line-height:1;border-radius:50%}
 .hotspot:focus-visible{outline:5px solid #fff;box-shadow:0 0 0 9px #1688e8;background:rgba(255,255,255,.08)}
 .hotspot::after{content:"";position:absolute;inset:0;border-radius:inherit;transition:background .18s ease,box-shadow .18s ease}
@@ -23,25 +23,41 @@ body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#17324d
 .infrastructure{left:41.1%;top:64.0%;width:17.7%;height:26.1%}
 .care{left:58.8%;top:60.6%;width:17.8%;height:25.9%}
 .culture{left:69.1%;top:44.2%;width:17.5%;height:25.2%}
+.mobile-layout{display:none}
+
 @media(max-width:720px){
-  .vision-page{background:#fff}
-  .viewport{width:100vw;aspect-ratio:941/1052}
-  .canvas{width:100%;aspect-ratio:941/1672;background-image:url('vision-mobile.jpg');background-size:100% auto;background-position:center top;transform:translateY(-37.08%)}
-  .smart{left:4.0%;top:43.1%;width:29.2%;height:16.2%;border-radius:26px}
-  .business{left:35.1%;top:43.1%;width:29.5%;height:16.2%;border-radius:26px}
-  .green{left:66.7%;top:43.1%;width:29.2%;height:16.2%;border-radius:26px}
-  .traffic{left:5.1%;top:65.0%;width:43.2%;height:9.2%;border-radius:24px}
-  .environment{left:51.4%;top:65.0%;width:43.4%;height:9.2%;border-radius:24px}
-  .infrastructure{left:5.1%;top:74.7%;width:43.2%;height:9.5%;border-radius:24px}
-  .care{left:51.4%;top:74.7%;width:43.4%;height:9.5%;border-radius:24px}
-  .culture{left:24.9%;top:85.1%;width:50.3%;height:9.0%;border-radius:24px}
+  html,body{background:#f8fff9}
+  .vision-page{display:block;min-height:100dvh;background:linear-gradient(180deg,#f4fbff 0%,#f4fff5 100%)}
+  .desktop-viewport{display:none}
+  .mobile-layout{display:block;width:100%;max-width:720px;margin:0 auto;padding:8px 8px 14px;overflow:hidden}
+  .mobile-heading{margin:2px auto 8px;text-align:center;font-size:clamp(24px,7vw,36px);font-weight:900;color:#0b5160;line-height:1.15;letter-spacing:.02em}
+  .mobile-heading.gov{margin-top:10px;color:#0c5f39}
+  .mobile-heading .leaf{color:#198a42;margin-right:.18em}
+
+  .core-triangle{position:relative;width:100%;height:min(72vw,500px);max-height:500px;margin:0 auto 6px}
+  .mobile-card{position:absolute;display:block;overflow:hidden;text-decoration:none;background-image:url('vision-mobile.jpg');background-repeat:no-repeat;box-shadow:0 5px 14px rgba(20,95,75,.16);border-radius:24px}
+  .mobile-card:focus-visible{outline:4px solid #1688e8;outline-offset:2px}
+  .mobile-card.smart-m{width:32%;aspect-ratio:275/260;left:34%;top:0;background-size:342.1818% auto;background-position:5.2553% 50.9915%}
+  .mobile-card.business-m{width:40%;aspect-ratio:275/260;left:3%;bottom:0;background-size:342.1818% auto;background-position:50% 50.9915%}
+  .mobile-card.green-m{width:40%;aspect-ratio:270/260;right:3%;bottom:0;background-size:348.5185% auto;background-position:96.1252% 50.9915%}
+  .core-arrow{position:absolute;z-index:3;display:grid;place-items:center;width:10vw;height:10vw;max-width:52px;max-height:52px;border-radius:50%;background:#fff;color:#1688e8;font-size:clamp(24px,7vw,40px);font-weight:900;box-shadow:0 4px 12px rgba(0,91,170,.15);line-height:1}
+  .core-arrow.left{left:24%;top:45%;transform:rotate(18deg)}
+  .core-arrow.right{right:24%;top:45%;transform:rotate(-18deg)}
+
+  .gov-plum{position:relative;width:100%;height:min(68vw,470px);max-height:470px;margin:0 auto}
+  .mobile-card.gov-card{width:46%;aspect-ratio:405/145;border-radius:999px}
+  .mobile-card.traffic-m{left:1%;top:0;background-size:232.3457% auto;background-position:10.2612% 72.0367%}
+  .mobile-card.environment-m{right:1%;top:0;background-size:232.3457% auto;background-position:90.1119% 72.0367%}
+  .mobile-card.culture-m{width:52%;aspect-ratio:460/150;left:24%;top:35%;background-size:204.5652% auto;background-position:49.8960% 94.2838%}
+  .mobile-card.infrastructure-m{left:1%;bottom:0;background-size:232.3457% auto;background-position:10.2612% 82.7858%}
+  .mobile-card.care-m{right:1%;bottom:0;background-size:232.3457% auto;background-position:90.1119% 82.7858%}
 }
 </style>
 </head>
 <body>
 <main class="vision-page">
-  <section class="viewport" aria-label="藍田新願景八大主題導覽">
-    <div class="canvas">
+  <section class="desktop-viewport" aria-label="藍田新願景八大主題導覽">
+    <div class="desktop-canvas">
       <a class="hotspot smart" href="vision-smart.html" aria-label="智慧社區｜核心主軸"></a>
       <a class="hotspot business" href="vision-business.html" aria-label="推動商圈發展｜核心主軸"></a>
       <a class="hotspot green" href="vision-green.html" aria-label="淨零綠生活｜核心主軸"></a>
@@ -50,6 +66,26 @@ body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;color:#17324d
       <a class="hotspot infrastructure" href="vision-infrastructure.html" aria-label="燈亮・路平・水溝通｜里政治理目標"></a>
       <a class="hotspot care" href="vision-care.html" aria-label="長者・幼童・弱勢照護｜里政治理目標"></a>
       <a class="hotspot culture" href="vision-culture.html" aria-label="人文教育｜里政治理目標"></a>
+    </div>
+  </section>
+
+  <section class="mobile-layout" aria-label="藍田新願景手機版八大主題導覽">
+    <h1 class="mobile-heading"><span class="leaf">◆</span>三大核心主軸</h1>
+    <div class="core-triangle">
+      <a class="mobile-card smart-m" href="vision-smart.html" aria-label="智慧社區｜核心主軸"></a>
+      <span class="core-arrow left" aria-hidden="true">↙</span>
+      <span class="core-arrow right" aria-hidden="true">↘</span>
+      <a class="mobile-card business-m" href="vision-business.html" aria-label="推動商圈發展｜核心主軸"></a>
+      <a class="mobile-card green-m" href="vision-green.html" aria-label="淨零綠生活｜核心主軸"></a>
+    </div>
+
+    <h2 class="mobile-heading gov"><span class="leaf">◆</span>五大里政治理目標</h2>
+    <div class="gov-plum">
+      <a class="mobile-card gov-card traffic-m" href="vision-traffic.html" aria-label="交通安全｜里政治理目標"></a>
+      <a class="mobile-card gov-card environment-m" href="vision-environment.html" aria-label="環境清消｜里政治理目標"></a>
+      <a class="mobile-card culture-m" href="vision-culture.html" aria-label="人文教育｜里政治理目標"></a>
+      <a class="mobile-card gov-card infrastructure-m" href="vision-infrastructure.html" aria-label="燈亮・路平・水溝通｜里政治理目標"></a>
+      <a class="mobile-card gov-card care-m" href="vision-care.html" aria-label="長者・幼童・弱勢照護｜里政治理目標"></a>
     </div>
   </section>
 </main>
