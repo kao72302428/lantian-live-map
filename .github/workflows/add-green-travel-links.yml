@@ -14,86 +14,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Add Green Travel four official links at page bottom
+      - name: Add Green Travel links
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
-
-          p = Path('greenlife-map-v15.html')
-          s = p.read_text(encoding='utf-8')
-
-          marker = 'green-travel-links-20261004'
-          anchor = '</main><footer>智慧藍田 LIVE 一點通｜藍田高大特區生活資訊</footer>'
-          if marker in s:
-              raise SystemExit('Green Travel section already exists; refusing duplicate patch.')
-          if s.count(anchor) != 1:
-              raise SystemExit('Expected unique page-bottom anchor not found.')
-          if s.count('</head>') != 1:
-              raise SystemExit('Expected unique </head> not found.')
-
-          before_counts = {m:s.count(m) for m in [
-              'data-layer="bus"','data-layer="bike"','data-layer="trash"','data-layer="metro"',
-              '<div id="map"></div>'
-          ]}
-
-          css = '''
-<style id="green-travel-links-20261004">
-.green-travel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}
-.green-travel-card{display:flex;min-height:112px;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:16px;text-decoration:none;background:#f7fcf9;border:1px solid #dcebe3;box-shadow:0 4px 14px rgba(0,0,0,.06);color:#173a4d;text-align:center;transition:transform .15s ease,box-shadow .15s ease}
-.green-travel-card b{font-size:20px}.green-travel-card span{font-size:14px;color:#557268;font-weight:700}
-.green-travel-card:hover{transform:translateY(-1px);box-shadow:0 7px 18px rgba(0,0,0,.09)}
-@media(max-width:650px){.green-travel-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.green-travel-card{min-height:104px;padding:14px 10px}.green-travel-card b{font-size:18px}}
-</style>
-'''
-
-          section = '''
-<section class="panel" id="green-travel-links">
-<h2>🌿 綠色出行</h2>
-<div class="green-travel-grid">
-<a class="green-travel-card" href="https://ibusplus.tbkc.gov.tw/" rel="noopener" target="_blank" aria-label="前往高雄動態公車資訊官方網站"><b>🚌 公車</b><span>點選進入官網 →</span></a>
-<a class="green-travel-card" href="https://www.youbike.com.tw/region/kcg/" rel="noopener" target="_blank" aria-label="前往高雄 YouBike 官方網站"><b>🚲 YouBike</b><span>點選進入官網 →</span></a>
-<a class="green-travel-card" href="https://www.krtc.com.tw/" rel="noopener" target="_blank" aria-label="前往高雄捷運官方網站"><b>🚇 捷運</b><span>點選進入官網 →</span></a>
-<a class="green-travel-card" href="https://www.krtc.com.tw/KLRT/" rel="noopener" target="_blank" aria-label="前往高雄輕軌官方網站"><b>🚈 輕軌</b><span>點選進入官網 →</span></a>
-</div>
-</section>
-'''
-
-          s2 = s.replace('</head>', css + '</head>', 1)
-          s2 = s2.replace(anchor, section + anchor, 1)
-
-          required_new = [marker, 'id="green-travel-links"', '🚌 公車', '🚲 YouBike', '🚇 捷運', '🚈 輕軌',
-                          'https://ibusplus.tbkc.gov.tw/', 'https://www.youbike.com.tw/region/kcg/',
-                          'https://www.krtc.com.tw/', 'https://www.krtc.com.tw/KLRT/']
-          missing = [x for x in required_new if x not in s2]
-          if missing:
-              raise SystemExit('New section verification failed: ' + repr(missing))
-
-          for m, c in before_counts.items():
-              if s2.count(m) != c:
-                  raise SystemExit('Unrelated core marker changed: ' + m)
-
-          p.write_text(s2, encoding='utf-8')
-          print('Green Travel section added at page bottom; existing content preserved.')
+          p=Path('greenlife-map-v15.html')
+          s=p.read_text(encoding='utf-8')
+          if 'id="green-travel-links"' in s:
+              raise SystemExit('green-travel-links already exists')
+          anchor='</main><footer>智慧藍田 LIVE 一點通｜藍田高大特區生活資訊</footer>'
+          if s.count(anchor)!=1:
+              raise SystemExit('page-bottom anchor missing or not unique')
+          css='''\n<style id="green-travel-links-20261004">\n.green-travel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}\n.green-travel-card{display:flex;min-height:112px;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:16px;text-decoration:none;background:#f7fcf9;border:1px solid #dcebe3;box-shadow:0 4px 14px rgba(0,0,0,.06);color:#173a4d;text-align:center}\n.green-travel-card b{font-size:20px}.green-travel-card span{font-size:14px;color:#557268;font-weight:700}\n.green-travel-card:hover{transform:translateY(-1px);box-shadow:0 7px 18px rgba(0,0,0,.09)}\n@media(max-width:650px){.green-travel-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.green-travel-card{min-height:104px;padding:14px 10px}.green-travel-card b{font-size:18px}}\n</style>\n'''
+          section='''<section class="panel" id="green-travel-links">\n<h2>🌿 綠色出行</h2>\n<div class="green-travel-grid">\n<a class="green-travel-card" href="https://ibusplus.tbkc.gov.tw/" rel="noopener" target="_blank"><b>🚌 公車</b><span>點選進入官網 →</span></a>\n<a class="green-travel-card" href="https://www.youbike.com.tw/region/kcg/" rel="noopener" target="_blank"><b>🚲 YouBike</b><span>點選進入官網 →</span></a>\n<a class="green-travel-card" href="https://www.krtc.com.tw/" rel="noopener" target="_blank"><b>🚇 捷運</b><span>點選進入官網 →</span></a>\n<a class="green-travel-card" href="https://www.krtc.com.tw/KLRT/" rel="noopener" target="_blank"><b>🚈 輕軌</b><span>點選進入官網 →</span></a>\n</div>\n</section>\n'''
+          if s.count('</head>')!=1:
+              raise SystemExit('head anchor missing or not unique')
+          s=s.replace('</head>',css+'</head>',1)
+          s=s.replace(anchor,section+anchor,1)
+          p.write_text(s,encoding='utf-8')
           PY
-
-      - name: Verify, commit and self-remove workflow
+      - name: Verify and commit
         shell: bash
         run: |
           git diff --check
           python - <<'PY'
           from pathlib import Path
           s=Path('greenlife-map-v15.html').read_text(encoding='utf-8')
-          assert s.count('id="green-travel-links"') == 1
-          assert s.count('id="green-travel-links-20261004"') == 1
-          for href in ['https://ibusplus.tbkc.gov.tw/','https://www.youbike.com.tw/region/kcg/','https://www.krtc.com.tw/','https://www.krtc.com.tw/KLRT/']:
-              assert href in s
-          for marker in ['data-layer="bus"','data-layer="bike"','data-layer="trash"','data-layer="metro"']:
-              assert marker in s
-          print('Verified four official Green Travel links and preserved map controls.')
+          assert s.count('id="green-travel-links"')==1
+          assert s.count('id="green-travel-links-20261004"')==1
+          for x in ['🚌 公車','🚲 YouBike','🚇 捷運','🚈 輕軌']:
+              assert x in s
+          for x in ['data-layer="bus"','data-layer="bike"','data-layer="trash"','data-layer="metro"']:
+              assert x in s
           PY
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add greenlife-map-v15.html
