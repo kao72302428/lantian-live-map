@@ -1,0 +1,47 @@
+name: Switch Greenlife Related Image To SVG
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/switch-greenlife-related-image-to-svg.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Switch image source only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f assets/greenlife-related-links.svg
+          test -f greenlife-map-v16.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('greenlife-map-v16.html')
+          s=p.read_text(encoding='utf-8')
+          assert s.count('id="greenlife-related-links-interactive"') == 1
+          assert s.count('class="greenlife-related-hotspot"') == 11
+          assert s.count('./assets/greenlife-related-links-hd.jpg') == 1
+          new=s.replace('./assets/greenlife-related-links-hd.jpg','./assets/greenlife-related-links.svg')
+          assert new.count('class="greenlife-related-hotspot"') == 11
+          assert new.count('./assets/greenlife-related-links.svg') == 1
+          assert 'greenlife-row-layout-20261004' in new
+          assert 'green-travel-links-20261004' in new
+          p.write_text(new,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Commit source switch and cleanup helper workflows
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v16.html
+          git rm .github/workflows/switch-greenlife-related-image-to-svg.yml
+          git rm -f .github/workflows/fix-greenlife-related-image.yml || true
+          git commit -m "Use vector Greenlife related links image"
+          git push
