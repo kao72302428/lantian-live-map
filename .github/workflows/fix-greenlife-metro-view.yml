@@ -1,0 +1,51 @@
+name: Fix Greenlife Metro View
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-greenlife-metro-view.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rename metro tab and reveal existing markers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('greenlife-map-v16.html')
+          s=p.read_text(encoding='utf-8')
+
+          old_btn='<button data-layer="metro">🚇 捷運接駁</button>'
+          new_btn='<button data-layer="metro">🚇 捷運轉乘</button>'
+          assert s.count(old_btn)==1, s.count(old_btn)
+          s=s.replace(old_btn,new_btn,1)
+
+          old="document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');Object.values(G).forEach(g=>map.removeLayer(g));G[b.dataset.layer].addTo(map);if(b.dataset.layer==='bus')showBus(document.querySelector('.r5.on5')?.dataset.r||'r56');});"
+          new="document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');Object.values(G).forEach(g=>map.removeLayer(g));G[b.dataset.layer].addTo(map);if(b.dataset.layer==='bus')showBus(document.querySelector('.r5.on5')?.dataset.r||'r56');if(b.dataset.layer==='metro')map.fitBounds([[22.7087,120.3070],[22.7188,120.3075]],{padding:[30,30],maxZoom:15});});"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          assert s.count('<button data-layer="metro">🚇 捷運轉乘</button>')==1
+          assert "marker('metro',22.7087,120.3070,'R18 油廠國小站'" in s
+          assert "marker('metro',22.7188,120.3075,'R19 楠梓科技園區站'" in s
+          assert "b.dataset.layer==='metro')map.fitBounds" in s
+          p.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Commit fix and self-remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v16.html
+          git rm .github/workflows/fix-greenlife-metro-view.yml
+          git commit -m "Fix Greenlife metro transfer map view"
+          git push
