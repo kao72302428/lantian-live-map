@@ -309,6 +309,12 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
   const tabs=Array.from(document.querySelectorAll('.tabs button[data-layer]'));
   let unlocked=false;
   let activeLayer=document.querySelector('.tabs button.on[data-layer]')?.dataset.layer || null;
+  let scrollReturnArmed=false;
+  let touchStartX=0;
+  let touchStartY=0;
+  let watchVerticalGesture=false;
+  const verticalThreshold=30;
+  const verticalRatio=1.4;
   const handlers=[map.dragging,map.touchZoom,map.scrollWheelZoom,map.doubleClickZoom,map.boxZoom,map.keyboard,map.tap].filter(Boolean);
   function lockMap(){
     handlers.forEach(h=>{if(typeof h.disable==='function') h.disable();});
@@ -316,6 +322,8 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
     mapEl.style.touchAction='pan-y';
     mapEl.setAttribute('data-mobile-map-state','locked');
     unlocked=false;
+    scrollReturnArmed=false;
+    watchVerticalGesture=false;
   }
   function unlockMap(){
     handlers.forEach(h=>{if(typeof h.enable==='function') h.enable();});
@@ -323,13 +331,40 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
     mapEl.style.touchAction='none';
     mapEl.setAttribute('data-mobile-map-state','unlocked');
     unlocked=true;
+    scrollReturnArmed=false;
+    watchVerticalGesture=false;
   }
+  function armScrollReturn(){
+    if(unlocked) scrollReturnArmed=true;
+  }
+  map.on('dragend zoomend popupopen',armScrollReturn);
+  mapEl.addEventListener('touchstart',e=>{
+    if(!unlocked||!scrollReturnArmed||e.touches.length!==1){
+      watchVerticalGesture=false;
+      return;
+    }
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+    watchVerticalGesture=true;
+  },{passive:true,capture:true});
+  mapEl.addEventListener('touchmove',e=>{
+    if(!unlocked||!watchVerticalGesture||e.touches.length!==1) return;
+    const deltaX=e.touches[0].clientX-touchStartX;
+    const deltaY=e.touches[0].clientY-touchStartY;
+    const absX=Math.abs(deltaX);
+    const absY=Math.abs(deltaY);
+    if(absY>=verticalThreshold&&absY>absX*verticalRatio){
+      lockMap();
+    }
+  },{passive:true,capture:true});
   lockMap();
   tabs.forEach(btn=>btn.addEventListener('click',()=>{
     const layer=btn.dataset.layer;
     if(!unlocked){activeLayer=layer;unlockMap();return;}
     if(activeLayer===layer){lockMap();return;}
     activeLayer=layer;
+    scrollReturnArmed=false;
+    watchVerticalGesture=false;
   }));
 })();
 </script>
