@@ -218,7 +218,20 @@
 .greenlife-related-stage img{display:block;width:100%;height:auto;border-radius:18px}
 .greenlife-related-hotspot{position:absolute;display:block;z-index:2;border-radius:16px;outline-offset:2px}
 .greenlife-related-hotspot:focus-visible{outline:3px solid #176f46;background:rgba(255,255,255,.14)}
-@media(max-width:650px){.greenlife-related-stage{min-width:960px}.greenlife-related-scroll{border-radius:14px}}
+.greenlife-related-mobile{display:none}
+@media(max-width:650px){
+  .greenlife-related-scroll{display:none!important}
+  .greenlife-related-mobile{display:block;margin-top:14px;padding:18px 14px;border-radius:18px;background:linear-gradient(180deg,#eef8df 0%,#c9eeb4 100%);overflow:hidden}
+  .greenlife-related-mobile-header{margin:0 0 14px;padding:4px 6px 12px;text-align:center;color:#145a35}
+  .greenlife-related-mobile-header .eyebrow{display:inline-block;margin-bottom:5px;padding-bottom:4px;border-bottom:3px solid #65a946;font-size:16px;font-weight:800;color:#317b4c}
+  .greenlife-related-mobile-header h3{margin:4px 0 0;font-size:27px;line-height:1.15;font-weight:900;color:#145a35}
+  .greenlife-related-mobile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
+  .greenlife-related-mobile-card{display:flex;min-width:0;min-height:112px;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:14px 8px;border-radius:16px;background:#fff;color:#0e5535;text-decoration:none;text-align:center;box-shadow:0 4px 12px rgba(91,143,87,.16)}
+  .greenlife-related-mobile-card .icon{display:block;font-size:34px;line-height:1}
+  .greenlife-related-mobile-card .label{display:block;width:100%;font-size:14px;line-height:1.35;font-weight:800;white-space:normal;overflow-wrap:anywhere;word-break:normal}
+  .greenlife-related-mobile-card:last-child{grid-column:1/-1;width:calc((100% - 10px)/2);justify-self:center}
+  .greenlife-related-mobile-card:focus-visible{outline:3px solid #176f46;outline-offset:2px}
+}
 </style>
 <div class="greenlife-related-scroll" aria-label="綠生活相關連結，可左右滑動">
 <div class="greenlife-related-stage">
@@ -235,6 +248,25 @@
 <a class="greenlife-related-hotspot" href="https://sup.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="源頭減量生活行動網" title="源頭減量生活行動網" style="left:65.3%;top:56.9%;width:14.4%;height:29.2%"></a>
 <a class="greenlife-related-hotspot" href="https://tcpip.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="循環採購推動媒合平台" title="循環採購推動媒合平台" style="left:80.6%;top:56.9%;width:16.2%;height:29.2%"></a>
 </div>
+</div>
+<div class="greenlife-related-mobile" aria-label="綠生活相關連結">
+  <div class="greenlife-related-mobile-header">
+    <span class="eyebrow">Related Links</span>
+    <h3>綠生活相關連結</h3>
+  </div>
+  <div class="greenlife-related-mobile-grid">
+    <a class="greenlife-related-mobile-card" href="https://www.greenpoint.org.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">🌱</span><span class="label">環保集點</span></a>
+    <a class="greenlife-related-mobile-card" href="https://recycle.moenv.gov.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">♻</span><span class="label">資源回收網</span></a>
+    <a class="greenlife-related-mobile-card" href="https://www.circuplus.org/water-refill-map/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">☕</span><span class="label">奉茶</span></a>
+    <a class="greenlife-related-mobile-card" href="https://esms.moenv.gov.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">🏡</span><span class="label">環境衛生管理資訊系統</span></a>
+    <a class="greenlife-related-mobile-card" href="https://env.moenv.gov.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">📊</span><span class="label">環境智能儀表板</span></a>
+    <a class="greenlife-related-mobile-card" href="https://eeis.moenv.gov.tw/front/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">📖</span><span class="label">環境探索館</span></a>
+    <a class="greenlife-related-mobile-card" href="https://lcss.moenv.gov.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">🚲</span><span class="label">低碳永續家園</span></a>
+    <a class="greenlife-related-mobile-card" href="https://cfp.moenv.gov.tw/WebPage/Index.aspx" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">CO₂</span><span class="label">產品碳足跡資訊網</span></a>
+    <a class="greenlife-related-mobile-card" href="https://ecolife2.moenv.gov.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">🌊</span><span class="label">海岸清理資訊平台</span></a>
+    <a class="greenlife-related-mobile-card" href="https://sup.moenv.gov.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">✂</span><span class="label">源頭減量生活行動網</span></a>
+    <a class="greenlife-related-mobile-card" href="https://tcpip.moenv.gov.tw/" target="_blank" rel="noopener"><span class="icon" aria-hidden="true">🛒</span><span class="label">循環採購推動媒合平台</span></a>
+  </div>
 </div>
 </section>
 </main><footer>智慧藍田 LIVE 一點通｜藍田高大特區生活資訊</footer>
