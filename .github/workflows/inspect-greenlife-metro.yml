@@ -1,0 +1,45 @@
+name: Inspect Greenlife Metro
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-greenlife-metro.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect metro button and marker wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('greenlife-map-v16.html')
+          s=p.read_text(encoding='utf-8')
+          terms=['捷運接駁','捷運轉乘','捷運','metro','MRT','marker','filter','toggle']
+          for t in terms:
+              print('\n===',t,'count=',s.count(t),'===')
+              start=0
+              shown=0
+              while shown<20:
+                  i=s.find(t,start)
+                  if i<0: break
+                  a=max(0,i-500); b=min(len(s),i+1000)
+                  print('POS',i)
+                  print(s[a:b].replace('\n','\\n'))
+                  start=i+len(t); shown+=1
+          PY
+      - name: Self-remove
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/inspect-greenlife-metro.yml
+          git commit -m "Remove one-time Greenlife metro inspection workflow"
+          git push
