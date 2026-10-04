@@ -1,0 +1,45 @@
+name: Normalize Greenlife Footer Once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/normalize-greenlife-footer-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize-footer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Normalize greenlife footer
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('greenlife-map-v16.html')
+          s = p.read_text(encoding='utf-8')
+          old = '智慧藍田 LIVE 一點通｜藍田高大特區生活資訊'
+          new = '智慧藍田 LIVE 一點通'
+          if old not in s:
+              raise SystemExit('Target footer text not found; no change made.')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit footer normalization
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v16.html
+          if git diff --cached --quiet; then
+            echo "No change to commit"
+            exit 0
+          fi
+          git commit -m "Standardize platform footer on greenlife page"
+          git push origin HEAD:main
