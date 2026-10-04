@@ -9,20 +9,20 @@
   background-size:19px 19px;
   padding-left:43px;
 }
-.card[data-id]{position:relative;padding-right:84px;padding-bottom:58px}
+.card[data-id]{position:relative}
 .card[data-id]::after{
   content:"";
   position:absolute;
-  right:16px;
-  bottom:14px;
-  width:52px;
-  height:52px;
+  right:14px;
+  top:58%;
+  transform:translateY(-50%);
+  width:46px;
+  height:46px;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%232f80ed' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 19h34'/%3E%3Cpath d='M10 19l3-9h22l3 9'/%3E%3Cpath d='M10 19v19h28V19'/%3E%3Cpath d='M18 38V27h12v11'/%3E%3Cpath d='M8 19c0 4 5 5 8 2 3 3 7 3 10 0 3 3 7 3 10 0 3 3 8 2 8-2'/%3E%3C/svg%3E") center/contain no-repeat;
   pointer-events:none;
   opacity:.96;
 }
 @media(max-width:768px){
   .search{padding:10px 12px 10px 43px;background-position:14px 50%;background-size:19px 19px}
-  .card[data-id]{padding-right:72px;padding-bottom:50px}
-  .card[data-id]::after{right:13px;bottom:12px;width:44px;height:44px}
+  .card[data-id]::after{right:11px;top:60%;width:40px;height:40px}
 }
