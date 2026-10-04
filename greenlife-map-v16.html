@@ -259,7 +259,18 @@ const TR=[["援中路、大學七街口", "15:40", "一、二、四、五、六"
 TR.forEach(x=>marker('trash',x[4],x[5],x[0],'約 '+x[1]+'<br>一般垃圾／廚餘：'+x[2]+'<br>資源回收：'+x[3]+'<br><small>（各區清潔隊依轄區狀況訂定路線與時間）</small>',x[0]));
 marker('metro',22.7087,120.3070,'R18 油廠國小站','捷運紅線接駁節點','捷運油廠國小站');
 marker('metro',22.7188,120.3075,'R19 楠梓科技園區站','捷運紅線接駁節點','捷運楠梓科技園區站');
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');Object.values(G).forEach(g=>map.removeLayer(g));G[b.dataset.layer].addTo(map);if(b.dataset.layer==='bus')showBus(document.querySelector('.r5.on5')?.dataset.r||'r56');if(b.dataset.layer==='metro')map.fitBounds([[22.7087,120.3070],[22.7188,120.3075]],{padding:[30,30],maxZoom:15});});
+function fitLayerView(layer){
+  if(layer==='metro'){
+    map.fitBounds([[22.7087,120.3070],[22.7188,120.3075]],{padding:[30,30],maxZoom:15});
+    return;
+  }
+  const target=G[layer];
+  if(target&&typeof target.getLayers==='function'&&target.getLayers().length){
+    const bounds=L.featureGroup(target.getLayers()).getBounds();
+    if(bounds.isValid()) map.fitBounds(bounds,{padding:[30,30],maxZoom:15});
+  }
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');Object.values(G).forEach(g=>map.removeLayer(g));const layer=b.dataset.layer;G[layer].addTo(map);if(layer==='bus')showBus(document.querySelector('.r5.on5')?.dataset.r||'r56');fitLayerView(layer);});
 </script><script>
 const map=L.map('map').setView([22.731,120.281],15);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
 const G={bus:L.layerGroup().addTo(map),bike:L.layerGroup(),trash:L.layerGroup(),metro:L.layerGroup()},C={bus:'#1976d2',bike:'#169b62',trash:'#ef7d23',metro:'#d62d45'};
