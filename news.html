@@ -41,7 +41,7 @@ opacity:.9}
 <footer>智慧藍田 LIVE 一點通</footer>
 <script>
 let all=[];
-const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
+const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function render(){
  const q=document.getElementById('q').value.trim().toLowerCase();
  const a=all.filter(x=>x.published!==false).filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q))
