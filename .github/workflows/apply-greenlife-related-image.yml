@@ -1,0 +1,48 @@
+name: Apply Greenlife Related Image Repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-greenlife-related-image.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update related image source only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f assets/greenlife-related-links-hd.jpg
+          test -f greenlife-map-v16.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('greenlife-map-v16.html')
+          s=p.read_text(encoding='utf-8')
+          assert s.count('id="greenlife-related-links-interactive"') == 1
+          assert s.count('class="greenlife-related-hotspot"') == 11
+          assert s.count('./assets/greenlife-related-links.jpg') == 1
+          assert './assets/greenlife-related-links-hd.jpg' not in s
+          new=s.replace('./assets/greenlife-related-links.jpg','./assets/greenlife-related-links-hd.jpg')
+          assert new.count('id="greenlife-related-links-interactive"') == 1
+          assert new.count('class="greenlife-related-hotspot"') == 11
+          assert new.count('./assets/greenlife-related-links-hd.jpg') == 1
+          assert 'greenlife-row-layout-20261004' in new
+          assert 'green-travel-links-20261004' in new
+          p.write_text(new,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Commit source repair and self-remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v16.html
+          git rm .github/workflows/apply-greenlife-related-image.yml
+          git commit -m "Use verified HD Greenlife related image"
+          git push
