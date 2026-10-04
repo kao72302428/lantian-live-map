@@ -290,4 +290,36 @@ L.marker([22.709,120.307]).bindPopup('<b>R18 油廠國小站</b>').addTo(groups.
 const d={r56:'<h3>紅56科技幹線</h3><p>2026/8/17起主線站位已有調整；藍田高大生活圈以最新站站時刻資料呈現。</p>',r56s:'<h3>紅56區間</h3><p>提供藍田高大生活圈與捷運楠梓科技園區方向接駁；班次依現行營運資料。</p>',245:'<h3>245</h3><p>沿線站點與行駛方向逐站核對中；未核實班次不顯示。</p>',r53:'<h3>紅53梓官幹線</h3><p>與藍田高大生活圈的轉乘關係核對後顯示，不把附近經過誤標成直達。</p>'};
 let rd=document.querySelector('#routeDetail');rd.innerHTML=d.r56;document.querySelectorAll('.route').forEach(b=>b.onclick=()=>{document.querySelectorAll('.route').forEach(x=>x.classList.remove('on'));b.classList.add('on');rd.innerHTML=d[b.dataset.route]});
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');Object.values(groups).forEach(g=>map.removeLayer(g));groups[b.dataset.layer].addTo(map)});
-</script></body></html>
+</script><script id="mobile-map-lock-20261004">
+(function(){
+  if(!window.matchMedia('(max-width:650px)').matches) return;
+  const mapEl=document.getElementById('map');
+  if(!mapEl || typeof map==='undefined') return;
+  const tabs=Array.from(document.querySelectorAll('.tabs button[data-layer]'));
+  let unlocked=false;
+  let activeLayer=document.querySelector('.tabs button.on[data-layer]')?.dataset.layer || null;
+  const handlers=[map.dragging,map.touchZoom,map.scrollWheelZoom,map.doubleClickZoom,map.boxZoom,map.keyboard,map.tap].filter(Boolean);
+  function lockMap(){
+    handlers.forEach(h=>{if(typeof h.disable==='function') h.disable();});
+    mapEl.style.pointerEvents='none';
+    mapEl.style.touchAction='pan-y';
+    mapEl.setAttribute('data-mobile-map-state','locked');
+    unlocked=false;
+  }
+  function unlockMap(){
+    handlers.forEach(h=>{if(typeof h.enable==='function') h.enable();});
+    mapEl.style.pointerEvents='auto';
+    mapEl.style.touchAction='none';
+    mapEl.setAttribute('data-mobile-map-state','unlocked');
+    unlocked=true;
+  }
+  lockMap();
+  tabs.forEach(btn=>btn.addEventListener('click',()=>{
+    const layer=btn.dataset.layer;
+    if(!unlocked){activeLayer=layer;unlockMap();return;}
+    if(activeLayer===layer){lockMap();return;}
+    activeLayer=layer;
+  }));
+})();
+</script>
+</body></html>
