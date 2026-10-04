@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="682" viewBox="0 0 2048 682">
+<defs>
+  <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#eef8df"/><stop offset="1" stop-color="#bfe6a6"/></linearGradient>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#5b8f57" flood-opacity=".18"/></filter>
+</defs>
+<rect width="2048" height="682" rx="28" fill="url(#bg)"/>
+<path d="M0 116 Q180 70 360 118 T720 106 T1080 100 T1440 106 T1800 90 T2048 94 V0 H0Z" fill="#d9efbe"/>
+<g fill="#7abf58" opacity=".75"><circle cx="80" cy="88" r="34"/><circle cx="188" cy="48" r="43"/><circle cx="420" cy="70" r="38"/><circle cx="1110" cy="62" r="30"/><circle cx="1228" cy="46" r="40"/><circle cx="1460" cy="70" r="32"/><circle cx="1740" cy="54" r="34"/><circle cx="1900" cy="82" r="42"/></g>
+<g stroke="#4c9f52" stroke-width="8" stroke-linecap="round" opacity=".75"><path d="M188 94V20"/><path d="M420 106V34"/><path d="M1228 96V12"/><path d="M1740 94V18"/></g>
+<rect x="18" y="118" width="2012" height="536" rx="28" fill="#c9eeb4" fill-opacity=".55" stroke="#fff" stroke-width="5"/>
+<g><rect x="24" y="120" width="368" height="534" rx="28" fill="#f4f9e9" fill-opacity=".9"/>
+<text x="80" y="208" font-family="Arial,'Noto Sans TC',sans-serif" font-size="34" font-weight="700" fill="#317b4c">Related Links</text><line x1="80" y1="224" x2="270" y2="224" stroke="#65a946" stroke-width="5"/>
+<text x="78" y="304" font-family="'Noto Sans TC',Arial,sans-serif" font-size="58" font-weight="900" fill="#145a35">綠生活</text><text x="78" y="376" font-family="'Noto Sans TC',Arial,sans-serif" font-size="58" font-weight="900" fill="#145a35">相關連結</text>
+<g fill="#58a947"><ellipse cx="54" cy="500" rx="18" ry="45" transform="rotate(35 54 500)"/><ellipse cx="108" cy="544" rx="17" ry="40" transform="rotate(-28 108 544)"/><ellipse cx="292" cy="452" rx="19" ry="50" transform="rotate(28 292 452)"/></g></g>
+<g font-family="'Noto Sans TC',Arial,sans-serif" text-anchor="middle" fill="#0e5535" font-weight="700">
+<!-- top row -->
+<g filter="url(#shadow)"><rect x="414" y="154" width="250" height="196" rx="24" fill="#fff"/><text x="539" y="246" font-size="56">🌱</text><text x="539" y="316" font-size="25">環保集點</text></g>
+<g filter="url(#shadow)"><rect x="680" y="154" width="250" height="196" rx="24" fill="#fff"/><text x="805" y="246" font-size="56">♻</text><text x="805" y="316" font-size="25">資源回收網</text></g>
+<g filter="url(#shadow)"><rect x="946" y="154" width="250" height="196" rx="24" fill="#fff"/><text x="1071" y="246" font-size="56">☕</text><text x="1071" y="316" font-size="25">奉茶</text></g>
+<g filter="url(#shadow)"><rect x="1212" y="154" width="268" height="196" rx="24" fill="#fff"/><text x="1346" y="240" font-size="54">🏡</text><text x="1346" y="314" font-size="22">環境衛生管理資訊系統</text></g>
+<g filter="url(#shadow)"><rect x="1496" y="154" width="250" height="196" rx="24" fill="#fff"/><text x="1621" y="246" font-size="56">📊</text><text x="1621" y="316" font-size="24">環境智能儀表板</text></g>
+<g filter="url(#shadow)"><rect x="1762" y="154" width="250" height="196" rx="24" fill="#fff"/><text x="1887" y="246" font-size="56">📖</text><text x="1887" y="316" font-size="25">環境探索館</text></g>
+<!-- bottom row -->
+<g filter="url(#shadow)"><rect x="438" y="388" width="282" height="198" rx="24" fill="#fff"/><text x="579" y="478" font-size="58">🚲</text><text x="579" y="552" font-size="25">低碳永續家園</text></g>
+<g filter="url(#shadow)"><rect x="740" y="388" width="282" height="198" rx="24" fill="#fff"/><text x="881" y="478" font-size="55">CO₂</text><text x="881" y="552" font-size="24">產品碳足跡資訊網</text></g>
+<g filter="url(#shadow)"><rect x="1042" y="388" width="292" height="198" rx="24" fill="#fff"/><text x="1188" y="478" font-size="56">🌊</text><text x="1188" y="552" font-size="24">海岸清理資訊平台</text></g>
+<g filter="url(#shadow)"><rect x="1354" y="388" width="292" height="198" rx="24" fill="#fff"/><text x="1500" y="478" font-size="56">✂</text><text x="1500" y="552" font-size="23">源頭減量生活行動網</text></g>
+<g filter="url(#shadow)"><rect x="1666" y="388" width="328" height="198" rx="24" fill="#fff"/><text x="1830" y="478" font-size="56">🛒</text><text x="1830" y="552" font-size="22">循環採購推動媒合平台</text></g>
+</g>
+</svg>
