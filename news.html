@@ -5,21 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>地方大小事｜藍田高大社區消息</title>
 <style>
-*{box-sizing:border-box}body{position:relative;min-height:100vh;margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:linear-gradient(135deg,#eef7fc 0%,#f7f2fb 52%,#eef8fb 100%);color:#17324d}
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:url("news-hero.png?v=20260930") center top/cover no-repeat;opacity:.075;filter:saturate(.65) brightness(1.18)}
-header,main,footer{position:relative;z-index:1}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:#f4f8fb;color:#17324d}
 header{margin:0;padding:0;background:none}
 header img{display:block;width:100%;height:auto}
 main{width:calc(100% - 48px);max-width:none;margin:0 24px;padding:18px 0}
 input{width:100%;padding:13px 16px 13px 46px;border:1px solid #ccdbe4;border-radius:14px;font-size:17px;margin-bottom:14px;background-color:rgba(255,255,255,.97);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23718493' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.7-3.7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:16px 50%;background-size:20px 20px}
 #news{position:relative}
-.card{background:rgba(255,255,255,.94);border:1px solid rgba(207,221,231,.92);border-radius:15px;margin-bottom:12px;overflow:hidden;cursor:pointer;box-shadow:0 3px 12px rgba(23,50,77,.035)}
+.card{position:relative;background:rgba(255,255,255,.95);border:1px solid rgba(207,221,231,.92);border-radius:15px;margin-bottom:12px;overflow:hidden;cursor:pointer;box-shadow:0 3px 12px rgba(23,50,77,.035)}
+.card::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(135deg,rgba(226,241,250,.28),rgba(244,239,251,.22) 52%,rgba(236,247,251,.28)),url("news-hero.png?v=20260930") center/cover no-repeat;opacity:.085;filter:saturate(.68) brightness(1.15)}
+.card>.head,.card>.detail{position:relative;z-index:1}
 .head{position:relative;padding:16px 56px 16px 18px;min-height:118px}
 .date{font-size:13px;color:#718493;margin-bottom:5px}
 .title{font-size:20px;font-weight:800;line-height:1.4;margin-bottom:5px}
 .summary{font-size:16px;line-height:1.55;color:#526a7c}
 .arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:32px;color:#7a8e9d;line-height:1}
-.detail{display:none;border-top:1px solid #edf1f4;padding:16px 18px;line-height:1.75;white-space:pre-wrap;background:rgba(251,253,254,.96)}
+.detail{display:none;border-top:1px solid #edf1f4;padding:16px 18px;line-height:1.75;white-space:pre-wrap;background:rgba(251,253,254,.94)}
 .card.open .detail{display:block}.card.open .arrow{transform:translateY(-50%) rotate(90deg)}
 .detail img{max-width:100%;border-radius:10px;margin-top:10px}.detail iframe{width:100%;height:320px;border:0;border-radius:10px;margin-top:10px}
 .empty{text-align:center;padding:36px;color:#718493}footer{text-align:center;color:#789;padding:18px;font-size:13px}
