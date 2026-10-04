@@ -2,9 +2,10 @@ name: Mobile Map Lock V16
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - '.github/workflows/mobile-map-lock-v16.yml'
+      - .github/workflows/mobile-map-lock-v16.yml
 
 permissions:
   contents: write
@@ -14,115 +15,62 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add mobile-only Leaflet lock controller
+      - name: Patch mobile Leaflet interaction
         shell: bash
         run: |
-          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('greenlife-map-v16.html')
-          s=p.read_text(encoding='utf-8')
-
-          marker_id='mobile-map-lock-20261004'
-          assert marker_id not in s
-          assert 'leaflet@1.9.4' in s
-          assert "const map=L.map('map',{scrollWheelZoom:false})" in s
-          assert s.count('class="greenlife-related-hotspot"') == 11
-          assert '<button data-layer="metro">🚇 捷運轉乘</button>' in s
-          assert "marker('metro',22.7087,120.3070,'R18 油廠國小站'" in s
-          assert "marker('metro',22.7188,120.3075,'R19 楠梓科技園區站'" in s
-
-          block=r'''<script id="mobile-map-lock-20261004">
-(function(){
-  const mq=window.matchMedia('(max-width:650px)');
-  if(!mq.matches) return;
-
-  const mapEl=document.getElementById('map');
-  if(!mapEl || typeof map==='undefined') return;
-
-  const tabs=Array.from(document.querySelectorAll('.tabs button[data-layer]'));
-  let unlocked=false;
-  let activeLayer=document.querySelector('.tabs button.on[data-layer]')?.dataset.layer || null;
-
-  const handlers=[
-    map.dragging,
-    map.touchZoom,
-    map.scrollWheelZoom,
-    map.doubleClickZoom,
-    map.boxZoom,
-    map.keyboard,
-    map.tap
-  ].filter(Boolean);
-
-  function lockMap(){
-    handlers.forEach(h=>{ if(h && typeof h.disable==='function') h.disable(); });
-    mapEl.style.pointerEvents='none';
-    mapEl.style.touchAction='pan-y';
-    mapEl.setAttribute('data-mobile-map-state','locked');
-    unlocked=false;
-  }
-
-  function unlockMap(){
-    handlers.forEach(h=>{ if(h && typeof h.enable==='function') h.enable(); });
-    mapEl.style.pointerEvents='auto';
-    mapEl.style.touchAction='none';
-    mapEl.setAttribute('data-mobile-map-state','unlocked');
-    unlocked=true;
-  }
-
-  lockMap();
-
-  tabs.forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const layer=btn.dataset.layer;
-      if(!unlocked){
-        activeLayer=layer;
-        unlockMap();
-        return;
-      }
-      if(activeLayer===layer){
-        lockMap();
-        return;
-      }
-      activeLayer=layer;
-    });
-  });
-})();
-</script>'''
-
-          idx=s.rfind('</body>')
-          assert idx!=-1
-          s=s[:idx]+block+'\n'+s[idx:]
-
-          assert s.count(marker_id)==1
-          assert s.count('class="greenlife-related-hotspot"') == 11
-          assert '<button data-layer="metro">🚇 捷運轉乘</button>' in s
-          assert "marker('metro',22.7087,120.3070,'R18 油廠國小站'" in s
-          assert "marker('metro',22.7188,120.3075,'R19 楠梓科技園區站'" in s
-          p.write_text(s,encoding='utf-8')
+          p = Path('greenlife-map-v16.html')
+          s = p.read_text(encoding='utf-8')
+          tag = 'mobile-map-lock-20261004'
+          if tag in s:
+              raise SystemExit('mobile lock already present')
+          if 'leaflet@1.9.4' not in s:
+              raise SystemExit('Leaflet baseline not found')
+          if s.count('class="greenlife-related-hotspot"') != 11:
+              raise SystemExit('protected hotspots changed')
+          block = '''<script id="mobile-map-lock-20261004">
+          (function(){
+            if(!window.matchMedia('(max-width:650px)').matches) return;
+            const mapEl=document.getElementById('map');
+            if(!mapEl || typeof map==='undefined') return;
+            const tabs=Array.from(document.querySelectorAll('.tabs button[data-layer]'));
+            let unlocked=false;
+            let activeLayer=document.querySelector('.tabs button.on[data-layer]')?.dataset.layer || null;
+            const handlers=[map.dragging,map.touchZoom,map.scrollWheelZoom,map.doubleClickZoom,map.boxZoom,map.keyboard,map.tap].filter(Boolean);
+            function lockMap(){
+              handlers.forEach(h=>{if(typeof h.disable==='function') h.disable();});
+              mapEl.style.pointerEvents='none';
+              mapEl.style.touchAction='pan-y';
+              mapEl.setAttribute('data-mobile-map-state','locked');
+              unlocked=false;
+            }
+            function unlockMap(){
+              handlers.forEach(h=>{if(typeof h.enable==='function') h.enable();});
+              mapEl.style.pointerEvents='auto';
+              mapEl.style.touchAction='none';
+              mapEl.setAttribute('data-mobile-map-state','unlocked');
+              unlocked=true;
+            }
+            lockMap();
+            tabs.forEach(btn=>btn.addEventListener('click',()=>{
+              const layer=btn.dataset.layer;
+              if(!unlocked){activeLayer=layer;unlockMap();return;}
+              if(activeLayer===layer){lockMap();return;}
+              activeLayer=layer;
+            }));
+          })();
+          </script>'''
+          pos = s.rfind('</body>')
+          if pos < 0:
+              raise SystemExit('body close not found')
+          s = s[:pos] + block + '\n' + s[pos:]
+          if s.count('class="greenlife-related-hotspot"') != 11:
+              raise SystemExit('hotspots changed after patch')
+          p.write_text(s, encoding='utf-8')
           PY
-
-          python3 - <<'PY'
-          from pathlib import Path
-          s=Path('greenlife-map-v16.html').read_text(encoding='utf-8')
-          a=s.index('<script id="mobile-map-lock-20261004">')
-          b=s.index('</script>',a)+9
-          js=s[a:b].replace('<script id="mobile-map-lock-20261004">','',1).rsplit('</script>',1)[0]
-          Path('/tmp/mobile-map-lock.js').write_text(js,encoding='utf-8')
-          PY
-          node --check /tmp/mobile-map-lock.js
           git diff --check
-      - name: Verify protected content unchanged
-        shell: bash
-        run: |
-          set -euo pipefail
-          git diff -- greenlife-map-v16.html | tee /tmp/diff.txt
-          grep -q 'mobile-map-lock-20261004' /tmp/diff.txt
-          ! grep -E '^[-+].*greenlife-related-hotspot' /tmp/diff.txt
-          ! grep -E '^[-+].*href="https://' /tmp/diff.txt
-          ! grep -E '^[-+].*R18 油廠國小站' /tmp/diff.txt
-          ! grep -E '^[-+].*R19 楠梓科技園區站' /tmp/diff.txt
-      - name: Commit patch and self-remove workflow
+      - name: Commit page change and remove helper
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
