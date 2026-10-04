@@ -1,0 +1,79 @@
+name: Add Greenlife Related Links
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-greenlife-related-links.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add image and 11 interactive hotspots below green travel
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f greenlife-map-v16.html
+          test -f assets/greenlife-related-links.jpg
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('greenlife-map-v16.html')
+          s=p.read_text(encoding='utf-8')
+          assert s.count('id="green-travel-links"') == 1
+          assert 'id="greenlife-related-links-interactive"' not in s
+          start=s.index('<section class="panel" id="green-travel-links">')
+          end=s.index('</section>', start)+len('</section>')
+          block='''
+
+<section class="panel" id="greenlife-related-links-interactive">
+<style id="greenlife-related-links-style-20261004">
+.greenlife-related-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:14px;border-radius:18px}
+.greenlife-related-stage{position:relative;width:100%;min-width:960px;line-height:0}
+.greenlife-related-stage img{display:block;width:100%;height:auto;border-radius:18px}
+.greenlife-related-hotspot{position:absolute;display:block;z-index:2;border-radius:16px;outline-offset:2px}
+.greenlife-related-hotspot:focus-visible{outline:3px solid #176f46;background:rgba(255,255,255,.14)}
+@media(max-width:650px){.greenlife-related-stage{min-width:960px}.greenlife-related-scroll{border-radius:14px}}
+</style>
+<div class="greenlife-related-scroll" aria-label="綠生活相關連結，可左右滑動">
+<div class="greenlife-related-stage">
+<img src="./assets/greenlife-related-links.jpg" alt="綠生活相關連結，共十一項官方服務入口">
+<a class="greenlife-related-hotspot" href="https://www.greenpoint.org.tw/" target="_blank" rel="noopener" aria-label="環保集點" title="環保集點" style="left:20.2%;top:22.7%;width:12.2%;height:28.8%"></a>
+<a class="greenlife-related-hotspot" href="https://recycle.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="資源回收網" title="資源回收網" style="left:33.2%;top:22.7%;width:12.2%;height:28.8%"></a>
+<a class="greenlife-related-hotspot" href="https://www.circuplus.org/water-refill-map/" target="_blank" rel="noopener" aria-label="奉茶" title="奉茶" style="left:46.2%;top:22.7%;width:12.3%;height:28.8%"></a>
+<a class="greenlife-related-hotspot" href="https://esms.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="環境衛生管理資訊系統" title="環境衛生管理資訊系統" style="left:59.3%;top:22.7%;width:12.9%;height:28.8%"></a>
+<a class="greenlife-related-hotspot" href="https://env.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="環境智能儀表板" title="環境智能儀表板" style="left:72.9%;top:22.7%;width:12.5%;height:28.8%"></a>
+<a class="greenlife-related-hotspot" href="https://eeis.moenv.gov.tw/front/" target="_blank" rel="noopener" aria-label="環境探索館" title="環境探索館" style="left:86.2%;top:22.7%;width:12.0%;height:28.8%"></a>
+<a class="greenlife-related-hotspot" href="https://lcss.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="低碳永續家園" title="低碳永續家園" style="left:21.5%;top:56.9%;width:13.9%;height:29.2%"></a>
+<a class="greenlife-related-hotspot" href="https://cfp.moenv.gov.tw/WebPage/Index.aspx" target="_blank" rel="noopener" aria-label="產品碳足跡資訊網" title="產品碳足跡資訊網" style="left:36.1%;top:56.9%;width:13.2%;height:29.2%"></a>
+<a class="greenlife-related-hotspot" href="https://ecolife2.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="海岸清理資訊平台" title="海岸清理資訊平台" style="left:50.1%;top:56.9%;width:14.2%;height:29.2%"></a>
+<a class="greenlife-related-hotspot" href="https://sup.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="源頭減量生活行動網" title="源頭減量生活行動網" style="left:65.3%;top:56.9%;width:14.4%;height:29.2%"></a>
+<a class="greenlife-related-hotspot" href="https://tcpip.moenv.gov.tw/" target="_blank" rel="noopener" aria-label="循環採購推動媒合平台" title="循環採購推動媒合平台" style="left:80.6%;top:56.9%;width:16.2%;height:29.2%"></a>
+</div>
+</div>
+</section>'''
+          new=s[:end]+block+s[end:]
+          assert new.count('id="greenlife-related-links-interactive"') == 1
+          assert new.count('class="greenlife-related-hotspot"') == 11
+          assert new.count('assets/greenlife-related-links.jpg') == 1
+          # Existing verified features must remain.
+          assert 'greenlife-row-layout-20261004' in new
+          assert 'green-travel-links-20261004' in new
+          assert new.count('id="green-travel-links"') == 1
+          p.write_text(new,encoding='utf-8')
+          PY
+          git diff --check
+          git diff --stat
+      - name: Commit page update and self-remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add greenlife-map-v16.html
+          git rm .github/workflows/add-greenlife-related-links.yml
+          git commit -m "Add interactive Greenlife related links image"
+          git push
