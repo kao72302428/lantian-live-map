@@ -11,23 +11,16 @@ header img{display:block;width:100%;height:auto}
 main{width:calc(100% - 48px);max-width:none;margin:0 24px;padding:18px 0}
 input{width:100%;padding:13px 16px 13px 46px;border:1px solid #ccdbe4;border-radius:14px;font-size:17px;margin-bottom:14px;background-color:rgba(255,255,255,.97);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23718493' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.7-3.7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:16px 50%;background-size:20px 20px}
 #news{position:relative}
-.card{position:relative;background:#fff;border:1px solid rgba(207,221,231,.92);border-radius:15px;margin-bottom:12px;overflow:hidden;cursor:pointer;box-shadow:0 3px 12px rgba(23,50,77,.035)}
-.card::before{content:"";position:absolute;top:0;right:0;bottom:0;width:25%;z-index:0;pointer-events:none;background:
-radial-gradient(circle at 22% 28%,rgba(118,179,226,.18) 0 10px,transparent 11px),
-radial-gradient(circle at 58% 68%,rgba(183,153,220,.16) 0 13px,transparent 14px),
-radial-gradient(circle at 82% 34%,rgba(241,185,207,.14) 0 9px,transparent 10px),
-linear-gradient(145deg,rgba(222,239,250,.52) 0%,rgba(236,230,248,.48) 52%,rgba(250,230,239,.42) 100%);
-opacity:.9}
+.card{position:relative;background:#fff;border:1px solid rgba(207,221,231,.92);border-radius:15px;margin-bottom:12px;overflow:hidden;box-shadow:0 3px 12px rgba(23,50,77,.035)}
+.card::before{content:"";position:absolute;top:0;right:0;bottom:0;width:25%;z-index:0;pointer-events:none;background:radial-gradient(circle at 22% 28%,rgba(118,179,226,.18) 0 10px,transparent 11px),radial-gradient(circle at 58% 68%,rgba(183,153,220,.16) 0 13px,transparent 14px),radial-gradient(circle at 82% 34%,rgba(241,185,207,.14) 0 9px,transparent 10px),linear-gradient(145deg,rgba(222,239,250,.52) 0%,rgba(236,230,248,.48) 52%,rgba(250,230,239,.42) 100%);opacity:.9}
 .card::after{content:"";position:absolute;right:2.5%;bottom:18%;width:20%;height:34%;z-index:0;pointer-events:none;border-top:2px solid rgba(129,170,210,.18);border-right:2px solid rgba(177,147,211,.16);transform:skewX(-28deg) rotate(-7deg);transform-origin:center}
-.card>.head,.card>.detail{position:relative;z-index:1}
+.card>.head{position:relative;z-index:1}
 .head{position:relative;padding:16px calc(25% + 42px) 16px 18px;min-height:118px;background:linear-gradient(90deg,#fff 0%,#fff 74%,rgba(255,255,255,.72) 84%,rgba(255,255,255,.18) 100%)}
 .date{font-size:13px;color:#718493;margin-bottom:5px}
 .title{font-size:20px;font-weight:800;line-height:1.4;margin-bottom:5px}
+.title a{color:#17324d;text-decoration:none}.title a:hover,.title a:focus{text-decoration:underline;color:#0b67a3}
 .summary{font-size:16px;line-height:1.55;color:#526a7c}
-.arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:32px;color:#7a8e9d;line-height:1}
-.detail{display:none;border-top:1px solid #edf1f4;padding:16px 18px;line-height:1.75;white-space:pre-wrap;background:rgba(251,253,254,.97)}
-.card.open .detail{display:block}.card.open .arrow{transform:translateY(-50%) rotate(90deg)}
-.detail img{max-width:100%;border-radius:10px;margin-top:10px}.detail iframe{width:100%;height:320px;border:0;border-radius:10px;margin-top:10px}
+.arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:32px;color:#7a8e9d;line-height:1;text-decoration:none}
 .empty{text-align:center;padding:36px;color:#718493}footer{text-align:center;color:#789;padding:18px;font-size:13px}
 @media(max-width:768px){main{width:calc(100% - 24px);margin:0 12px;padding:12px 0}input{padding:12px 14px 12px 43px;background-position:14px 50%;background-size:19px 19px}.card::before{width:28%}.card::after{right:3%;width:22%;height:30%;bottom:20%}.head{padding:14px calc(28% + 34px) 14px 16px;min-height:108px}.title{font-size:18px}.summary{font-size:15px}.arrow{right:16px;font-size:30px}}
 </style>
@@ -42,29 +35,13 @@ opacity:.9}
 <script>
 let all=[];
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const detailUrl=id=>'news-detail.html?id='+encodeURIComponent(String(id??''));
 function render(){
  const q=document.getElementById('q').value.trim().toLowerCase();
- const a=all.filter(x=>x.published!==false).filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q))
- .sort((a,b)=>String(b.date).localeCompare(String(a.date)));
- document.getElementById('news').innerHTML=a.length?a.map(x=>`
- <article class="card" onclick="toggle(this)">
-  <div class="head">
-   <div class="date">${E(x.date)}</div>
-   <div class="title">${E(x.title)}</div>
-   <div class="summary">${E(x.summary)}</div>
-   <span class="arrow">›</span>
-  </div>
-  <div class="detail" onclick="event.stopPropagation()">
-   <div>${E(x.content)}</div>
-   ${x.image?`<img src="${E(x.image)}" alt="">`:''}
-   ${x.map?`<iframe loading="lazy" src="${E(x.map)}"></iframe>`:''}
-   ${x.link?`<p><a href="${E(x.link)}" target="_blank" rel="noopener">${E(x.linkText||'相關連結')} ＞</a></p>`:''}
-  </div>
- </article>`).join(''):'<div class="empty">目前沒有符合的消息</div>';
+ const a=all.filter(x=>x.published!==false).filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+ document.getElementById('news').innerHTML=a.length?a.map(x=>'<article class="card"><div class="head"><div class="date">'+E(x.date)+'</div><div class="title"><a href="'+detailUrl(x.id)+'">'+E(x.title)+'</a></div><div class="summary">'+E(x.summary)+'</div><a class="arrow" href="'+detailUrl(x.id)+'" aria-label="查看詳情">›</a></div></article>').join(''):'<div class="empty">目前沒有符合的消息</div>';
 }
-function toggle(card){card.classList.toggle('open')}
 document.getElementById('q').addEventListener('input',render);
-fetch('news.json?v='+Date.now()).then(r=>{if(!r.ok)throw Error();return r.json()}).then(x=>{all=x;render()})
-.catch(()=>document.getElementById('news').innerHTML='<div class="empty">消息資料載入失敗，請稍後再試。</div>');
+fetch('news.json?v='+Date.now()).then(r=>{if(!r.ok)throw Error();return r.json()}).then(x=>{all=x;render()}).catch(()=>document.getElementById('news').innerHTML='<div class="empty">消息資料載入失敗，請稍後再試。</div>');
 </script>
 </body></html>
