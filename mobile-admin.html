@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b75c9">
+<title>智慧藍田管理中心｜手機版</title>
+<link rel="stylesheet" href="./mobile-admin.css?v=20261007-1">
+</head>
+<body>
+<header class="mobile-topbar">
+  <div>
+    <div class="brand-title">智慧藍田管理中心</div>
+    <div class="brand-sub">手機專用入口｜LIVE 一點通</div>
+  </div>
+  <span class="secure-badge">管理員專用</span>
+</header>
+
+<main class="mobile-shell">
+  <section class="login-card">
+    <div class="login-icon" aria-hidden="true">登入</div>
+    <div class="login-copy">
+      <p class="eyebrow">ADMIN ACCESS</p>
+      <h1>管理中心登入</h1>
+      <p>先完成 LINE 管理員驗證，再進入下方管理項目。</p>
+    </div>
+    <div id="authStatus" class="status">正在初始化 LINE LIFF…</div>
+    <button id="loginBtn" class="login-btn" type="button" disabled>LINE 管理員登入</button>
+  </section>
+
+  <section class="menu-section">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">MANAGEMENT</p>
+        <h2>管理項目</h2>
+      </div>
+      <span class="count">6 項</span>
+    </div>
+
+    <div class="mobile-menu">
+      <a class="module-action menu-card" href="./admin-news.html">
+        <span class="menu-icon">訊</span>
+        <span class="menu-text"><strong>地方大小事管理</strong><small>消息新增、修改、發布、下架與刪除</small></span>
+        <span class="chev">›</span>
+      </a>
+
+      <a class="module-action menu-card" href="./admin-cases.html">
+        <span class="menu-icon">案</span>
+        <span class="menu-text"><strong>建言與合作案件管理</strong><small>案件查詢、狀態、內容與回覆</small></span>
+        <span class="chev">›</span>
+      </a>
+
+      <a class="module-action menu-card" href="./admin-merchant.html">
+        <span class="menu-icon">店</span>
+        <span class="menu-text"><strong>高大好店家管理</strong><small>店家資料、分類、地圖與公開狀態</small></span>
+        <span class="chev">›</span>
+      </a>
+
+      <a class="module-action menu-card" href="./admin-whitepaper.html">
+        <span class="menu-icon">白</span>
+        <span class="menu-text"><strong>商圈白皮書管理</strong><small>章節、版本、附件與公開狀態</small></span>
+        <span class="chev">›</span>
+      </a>
+
+      <a class="module-action menu-card" href="./admin-greenlife.html">
+        <span class="menu-icon">綠</span>
+        <span class="menu-text"><strong>低碳綠生活管理</strong><small>活動、文章、宣導資訊與相關連結</small></span>
+        <span class="chev">›</span>
+      </a>
+
+      <a class="module-action menu-card" href="./admin-vision.html">
+        <span class="menu-icon">願</span>
+        <span class="menu-text"><strong>藍田新願景管理</strong><small>願景、政策、建設與進度管理</small></span>
+        <span class="chev">›</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="tip-card">
+    <strong>手機快速進入</strong>
+    <p>可將本頁加入手機主畫面，之後直接點桌面圖示進入管理中心。</p>
+  </section>
+</main>
+
+<footer>智慧藍田 LIVE 一點通｜手機管理中心</footer>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="./admin.js?v=20261007-relogin1"></script>
+</body>
+</html>
