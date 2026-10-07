@@ -13,11 +13,13 @@ module.exports=async function handler(req,res){
  const idToken=String(req.body?.idToken||'').trim();
  const action=String(req.body?.action||'').trim();
  if(!idToken||!action)return res.status(400).json({ok:false,code:'MISSING_ARGUMENT'});
+ const gatewaySecret=String(process.env.CASES_ADMIN_GATEWAY_SECRET||'').trim();
+ if(!gatewaySecret)return res.status(503).json({ok:false,code:'CASE_GATEWAY_NOT_CONFIGURED'});
  try{
-  // The Apps Script admin endpoint performs the authoritative LINE admin
-  // verification before reading or changing any case data. Avoid verifying
-  // the same LINE ID token again here immediately before that check.
-  const form=new URLSearchParams({adminAction:action,idToken});
+  const auth=await fetch('https://lantian-live-map.vercel.app/api/admin-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken})});
+  const authData=await auth.json().catch(()=>({}));
+  if(!auth.ok||!authData.ok)return res.status(401).json({ok:false,code:'NOT_AUTHORIZED'});
+  const form=new URLSearchParams({adminAction:action,gatewaySecret});
   if(req.body?.id)form.set('id',String(req.body.id));
   if(req.body?.status)form.set('status',String(req.body.status));
   if(req.body?.reply)form.set('reply',String(req.body.reply));
