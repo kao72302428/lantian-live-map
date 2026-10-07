@@ -45,16 +45,9 @@ async function currentLiffToken(){
  return liff.getIDToken()||'';
 }
 
-async function reverify(){
+function reverify(){
  clearToken();
- try{
-  await liff.init({liffId:LIFF_ID});
-  if(liff.isLoggedIn())liff.logout();
-  liff.login({redirectUri:window.location.href.split('#')[0]});
- }catch(e){
-  console.error(e);
-  setState(false,'無法啟動重新驗證，請返回管理中心登入。');
- }
+ location.href=new URL('./admin.html?reauth=1',window.location.href).href;
 }
 
 async function init(){

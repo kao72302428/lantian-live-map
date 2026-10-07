@@ -79,6 +79,13 @@ async function initLiff(){
   setLocked('正在初始化 LINE LIFF…');
   try{
     await liff.init({liffId:LIFF_ID});
+    const params=new URLSearchParams(location.search);
+    if(params.get('reauth')==='1'){
+      history.replaceState(null,'',new URL('./admin.html',location.href).pathname);
+      try{ if(liff.isLoggedIn()) liff.logout(); }catch(e){ console.error(e); }
+      liff.login({redirectUri:new URL('./admin.html',location.href).href});
+      return;
+    }
     if(!liff.isLoggedIn()){
       setLocked('尚未登入 LINE。請使用管理員 LINE 帳號登入。',true);
       loginBtn.onclick=()=>liff.login({redirectUri:window.location.href.split('#')[0]});
