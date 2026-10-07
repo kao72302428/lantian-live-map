@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>智慧藍田管理中心</title>
-<link rel="stylesheet" href="./admin.css?v=20260930-2">
+<link rel="stylesheet" href="./admin.css?v=20261007-1">
 </head>
 <body>
 <header class="topbar">
@@ -16,14 +16,17 @@
 </header>
 
 <main class="shell">
-  <section class="gate" aria-labelledby="gateTitle">
-    <div>
-      <p class="eyebrow">ADMIN ACCESS</p>
-      <h1 id="gateTitle">管理員登入</h1>
-      <p class="lead">管理功能統一由本頁進入。未完成管理員身分驗證前，所有管理入口維持鎖定。</p>
+  <section class="gate login-entry" aria-labelledby="gateTitle">
+    <div class="login-entry-head">
+      <div class="login-icon" aria-hidden="true">登入</div>
+      <div>
+        <p class="eyebrow">ADMIN ACCESS</p>
+        <h1 id="gateTitle">管理中心登入</h1>
+        <p class="lead">這是獨立的管理員登入入口。登入驗證成功後，下方各管理項目才會開放。</p>
+      </div>
     </div>
     <div id="authStatus" class="status status-warn">正在初始化 LINE LIFF…</div>
-    <button id="loginBtn" class="primary" type="button" disabled>LINE 管理員登入</button>
+    <button id="loginBtn" class="primary login-main-btn" type="button" disabled>LINE 管理員登入</button>
   </section>
 
   <section class="overview" aria-labelledby="moduleTitle">
@@ -32,7 +35,7 @@
         <p class="eyebrow">MODULES</p>
         <h2 id="moduleTitle">功能管理</h2>
       </div>
-      <span id="moduleCount" class="count">6 個模組</span>
+      <span id="moduleCount" class="count">6 個管理項目</span>
     </div>
 
     <div class="grid" id="moduleGrid">
@@ -99,8 +102,8 @@
   </section>
 
   <section class="rulebox">
-    <strong>第一階段</strong>
-    <p>六格基本管理入口與欄位架構先完成；正式新增、修改、刪除、發布及資料寫入列入第二階段。</p>
+    <strong>管理中心操作方式</strong>
+    <p>先使用上方「管理中心登入」完成 LINE 管理員驗證，再從下方六個獨立項目進入各自管理頁面。</p>
   </section>
 </main>
 
