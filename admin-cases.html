@@ -1,6 +1,24 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>建言與合作案件管理｜智慧藍田管理中心</title><link rel="stylesheet" href="./admin-module.css?v=20260930-1"></head><body>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>建言與合作案件管理｜智慧藍田管理中心</title>
+<link rel="stylesheet" href="./admin-module.css?v=20260930-1"><link rel="stylesheet" href="./admin-cases.css?v=20261007-phase2">
+</head><body>
 <header class="topbar"><a class="back" href="./admin.html">← 返回管理中心</a><div><div class="title">建言與合作案件管理</div><div class="sub">智慧藍田 LIVE 一點通</div></div><span class="badge">管理員專用</span></header>
-<main class="shell"><section class="gate"><p class="eyebrow">AUTH STATUS</p><h1 id="authTitle">管理員驗證中</h1><p class="lead">第一階段先建立案件查看、搜尋、狀態與回覆入口；案件資料讀取與回覆寫入留到第二階段。</p><div id="authStatus" class="status">驗證中…</div></section>
-<section class="panel"><p class="eyebrow">BASIC MODULE</p><h2>案件基本管理</h2><div class="module-grid"><div class="card"><h3>案件查詢</h3><p>案件編號、姓名、電話、內容關鍵字。</p></div><div class="card"><h3>狀態管理</h3><p>未處理、處理中、已完成。</p></div><div class="card"><h3>案件內容</h3><p>留言內容、聯絡資料、建立時間。</p></div><div class="card"><h3>後續回覆</h3><p>回覆內容與處理紀錄。</p></div></div><div class="toolbar"><span class="btn-disabled">載入案件｜第二階段</span><span class="btn-disabled">更新狀態｜第二階段</span><span class="btn-disabled">回覆案件｜第二階段</span></div></section></main>
-<footer>智慧藍田 LIVE 一點通｜建言與合作案件管理</footer><script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script><script src="./admin-module.js?v=20260930-1"></script></body></html>
+<main class="shell">
+<section class="gate"><p class="eyebrow">AUTH STATUS</p><h1 id="authTitle">管理員驗證中</h1><p class="lead">管理中心驗證成功後，可直接載入案件、更新處理狀態及回覆案件。</p><div id="authStatus" class="status">驗證中…</div></section>
+<section class="panel" id="casePanel">
+ <div class="case-head"><div><p class="eyebrow">CASE MANAGEMENT</p><h2>案件管理</h2></div><button id="loadBtn" class="primary" type="button" disabled>載入案件</button></div>
+ <div class="filters">
+  <label>搜尋<input id="searchInput" type="search" placeholder="案件編號、姓名、電話、Email、內容關鍵字"></label>
+  <label>處理狀態<select id="statusFilter"><option value="">全部</option><option>未處理</option><option>處理中</option><option>已完成</option></select></label>
+ </div>
+ <div id="caseMessage" class="case-message">等待管理員驗證後載入案件。</div>
+ <div id="caseCount" class="case-count"></div>
+ <div id="caseList" class="case-list"></div>
+</section>
+</main>
+<footer>智慧藍田 LIVE 一點通｜建言與合作案件管理</footer>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="./admin-module.js?v=20261007-session1"></script>
+<script src="./admin-cases.js?v=20261007-phase2"></script>
+</body></html>
