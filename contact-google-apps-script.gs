@@ -2,7 +2,6 @@ const SHEET_ID = '1OsP6JygCRd5FN4XHZsba8TM6hEU8h96k3cqHTJfr6Sk';
 const SHEET_NAME = '案件紀錄';
 const NOTIFY_EMAIL = 'kao72302428@gmail.com';
 const PHOTO_FOLDER_ID = '1EVW-eWrvDlhsDFR7IFN6KlGOQ7OADnUT';
-const ADMIN_AUTH_URL = 'https://lantian-live-map.vercel.app/api/admin-auth';
 
 function doPost(e) {
   try {
@@ -45,7 +44,7 @@ function doPost(e) {
 }
 
 function handleAdmin_(p){
-  if(!verifyAdmin_(p.idToken))return json_({ok:false,code:'NOT_AUTHORIZED'});
+  if(!verifyAdminGateway_(p.gatewaySecret))return json_({ok:false,code:'NOT_AUTHORIZED'});
   const action=clean_(p.adminAction), sheet=SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
   if(!sheet)return json_({ok:false,code:'SHEET_NOT_FOUND'});
   if(action==='list')return json_({ok:true,items:readCases_(sheet)});
@@ -73,13 +72,13 @@ function handleAdmin_(p){
   return json_({ok:false,code:'UNKNOWN_ACTION'});
 }
 
-function verifyAdmin_(idToken){
-  if(!idToken)return false;
-  try{
-    const r=UrlFetchApp.fetch(ADMIN_AUTH_URL,{method:'post',contentType:'application/json',payload:JSON.stringify({idToken:String(idToken)}),muteHttpExceptions:true});
-    if(r.getResponseCode()!==200)return false;
-    const d=JSON.parse(r.getContentText()); return !!d.ok;
-  }catch(e){return false;}
+function verifyAdminGateway_(providedSecret){
+  const expected=String(PropertiesService.getScriptProperties().getProperty('CASES_ADMIN_GATEWAY_SECRET')||'').trim();
+  const provided=String(providedSecret||'').trim();
+  if(!expected||!provided||expected.length!==provided.length)return false;
+  let diff=0;
+  for(let i=0;i<expected.length;i++)diff|=expected.charCodeAt(i)^provided.charCodeAt(i);
+  return diff===0;
 }
 function readCases_(sheet){
   const last=sheet.getLastRow(); if(last<2)return [];
