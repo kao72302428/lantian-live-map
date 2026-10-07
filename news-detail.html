@@ -10,7 +10,7 @@ header{background:#fff;border-bottom:1px solid #dfe8ee;padding:14px 20px;positio
 main{width:min(920px,calc(100% - 32px));margin:24px auto}.article{background:#fff;border:1px solid #dfe8ee;border-radius:18px;padding:24px;box-shadow:0 6px 20px rgba(23,50,77,.05)}
 .date{font-size:14px;color:#718493;margin-bottom:8px}h1{font-size:30px;line-height:1.4;margin:0 0 14px}.summary{font-size:18px;line-height:1.7;color:#526a7c;padding:14px 16px;background:#f6f9fb;border-radius:12px;margin-bottom:20px}
 .content{font-size:17px;line-height:1.9;white-space:pre-wrap}.article img{display:block;max-width:100%;height:auto;border-radius:14px;margin:20px auto 0}.article iframe{width:100%;height:420px;border:0;border-radius:14px;margin-top:20px}
-.link{display:inline-block;margin-top:20px;padding:11px 16px;border-radius:10px;background:#0b75c9;color:#fff;text-decoration:none;font-weight:800}.back-bottom{display:block;width:max-content;max-width:100%;margin-top:24px;padding:12px 18px;border:1px solid #cbdce8;border-radius:10px;background:#f0f7fc;color:#0b67a3;text-decoration:none;font-weight:800}.back-bottom:hover,.back-bottom:focus{background:#e0effb}.empty{text-align:center;color:#718493;padding:50px 20px;background:#fff;border:1px solid #dfe8ee;border-radius:18px}
+.link{display:inline-block;margin-top:20px;padding:11px 16px;border-radius:10px;background:#0b75c9;color:#fff;text-decoration:none;font-weight:800}.empty{text-align:center;color:#718493;padding:50px 20px;background:#fff;border:1px solid #dfe8ee;border-radius:18px}
 footer{text-align:center;color:#789;padding:18px;font-size:13px}@media(max-width:700px){main{width:calc(100% - 20px);margin:10px auto}.article{padding:18px}h1{font-size:24px}.summary{font-size:16px}.content{font-size:16px}.article iframe{height:320px}}
 </style>
 </head>
@@ -28,7 +28,6 @@ function render(item){
  if(item.image) html+='<img src="'+E(item.image)+'" alt="">';
  if(item.map) html+='<iframe loading="lazy" src="'+E(item.map)+'"></iframe>';
  if(item.link) html+='<a class="link" href="'+E(item.link)+'" target="_blank" rel="noopener">'+E(item.linkText||'相關連結')+' ＞</a>';
- html+='<a class="back-bottom" href="./news.html">← 返回地方大小事</a>';
  document.getElementById('main').innerHTML=html+'</article>';
 }
 fetch('news.json?v='+Date.now()).then(r=>{if(!r.ok)throw Error();return r.json()}).then(items=>render(Array.isArray(items)?items.find(x=>String(x.id)===String(id)):null)).catch(()=>document.getElementById('main').innerHTML='<div class="empty">消息資料載入失敗，請稍後再試。</div>');
