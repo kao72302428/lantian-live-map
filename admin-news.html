@@ -1,6 +1,105 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>地方大小事管理｜智慧藍田管理中心</title><link rel="stylesheet" href="./admin-module.css?v=20260930-1"></head><body>
-<header class="topbar"><a class="back" href="./admin.html">← 返回管理中心</a><div><div class="title">地方大小事管理</div><div class="sub">智慧藍田 LIVE 一點通</div></div><span class="badge">管理員專用</span></header>
-<main class="shell"><section class="gate"><p class="eyebrow">AUTH STATUS</p><h1 id="authTitle">管理員驗證中</h1><p class="lead">第一階段先建立消息管理入口、欄位與列表架構；正式新增、修改、刪除、上下架與資料寫入留到第二階段。</p><div id="authStatus" class="status">驗證中…</div></section>
-<section class="panel"><p class="eyebrow">BASIC MODULE</p><h2>地方大小事基本管理</h2><div class="module-grid"><div class="card"><h3>消息資料</h3><p>日期、標題、摘要、完整內容。</p></div><div class="card"><h3>圖片與連結</h3><p>圖片、地圖、外部連結與連結文字。</p></div><div class="card"><h3>消息列表</h3><p>依日期顯示消息，提供後續查詢與管理入口。</p></div><div class="card"><h3>公開狀態</h3><p>草稿、公開、下架與排序。</p></div></div><div class="toolbar"><span class="btn-disabled">新增消息｜第二階段</span><span class="btn-disabled">修改消息｜第二階段</span><span class="btn-disabled">上下架｜第二階段</span><span class="btn-disabled">刪除消息｜第二階段</span></div><div class="phase-note">第二階段既有開發程式保留，但第一階段不啟用資料寫入。</div></section></main>
-<footer>智慧藍田 LIVE 一點通｜地方大小事管理</footer><script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script><script src="./admin-module.js?v=20260930-1"></script></body></html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>地方大小事管理｜智慧藍田管理中心</title>
+<link rel="stylesheet" href="./admin-news.css?v=20261007-1">
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="./admin.html">← 返回管理中心</a>
+  <div>
+    <div class="title">地方大小事管理</div>
+    <div class="sub">智慧藍田 LIVE 一點通</div>
+  </div>
+  <span class="badge">管理員專用</span>
+</header>
+
+<main class="shell">
+  <section class="lockbox">
+    <div>
+      <p class="eyebrow">AUTH STATUS</p>
+      <h1 id="authTitle">管理員驗證中</h1>
+      <p id="authText">驗證完成後才會開放消息新增、修改、下架、重新發布與刪除。</p>
+    </div>
+    <div id="authStatus" class="status">驗證中…</div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">NEWS EDITOR</p>
+        <h2 id="formTitle">新增消息</h2>
+      </div>
+      <button id="newBtn" class="secondary" type="button" disabled>新增消息</button>
+    </div>
+
+    <form id="newsForm">
+      <input id="id" type="hidden">
+      <div class="form-grid">
+        <label>
+          日期
+          <input id="date" type="date" required disabled>
+        </label>
+        <label>
+          標題
+          <input id="title" type="text" maxlength="120" placeholder="輸入消息標題" required disabled>
+        </label>
+        <label class="wide">
+          摘要
+          <textarea id="summary" rows="3" maxlength="300" placeholder="前台消息卡顯示的簡短摘要" required disabled></textarea>
+        </label>
+        <label class="wide">
+          完整內容
+          <textarea id="content" rows="8" placeholder="輸入完整消息內容" required disabled></textarea>
+        </label>
+        <label class="wide">
+          圖片網址（可選）
+          <input id="image" type="url" placeholder="https://..." disabled>
+        </label>
+        <label class="wide">
+          地圖嵌入網址（可選）
+          <input id="map" type="url" placeholder="Google Maps Embed URL" disabled>
+        </label>
+        <label class="wide">
+          外部連結（可選）
+          <input id="link" type="url" placeholder="https://..." disabled>
+        </label>
+        <label class="wide">
+          連結文字（可選）
+          <input id="linkText" type="text" maxlength="80" placeholder="例如：查看活動詳情" disabled>
+        </label>
+        <label class="publish-toggle wide">
+          <input id="published" type="checkbox" checked disabled>
+          公開狀態
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="saveDraftBtn" class="secondary" type="button" disabled>儲存為未公開</button>
+        <button id="publishBtn" class="primary" type="submit" disabled>儲存並發布</button>
+      </div>
+      <div id="formMessage" class="form-message" hidden></div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">NEWS LIST</p>
+        <h2>消息列表</h2>
+      </div>
+      <span id="count" class="count">載入中</span>
+    </div>
+    <div id="list" class="news-list">
+      <div class="empty">等待管理員驗證與資料載入…</div>
+    </div>
+  </section>
+</main>
+
+<footer>智慧藍田 LIVE 一點通｜地方大小事管理</footer>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="./admin-news.js?v=20261007-1"></script>
+</body>
+</html>
