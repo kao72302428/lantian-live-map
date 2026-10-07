@@ -4,6 +4,7 @@ const AUTH_API='https://lantian-live-map.vercel.app/api/admin-auth';
 const authStatus=document.getElementById('authStatus');
 const loginBtn=document.getElementById('loginBtn');
 const actions=[...document.querySelectorAll('.module-action')];
+const SESSION_TOKEN='lantianAdminIdToken';
 
 function setLocked(message, allowLogin=false){
   if(authStatus) authStatus.textContent=message;
@@ -21,7 +22,8 @@ function setLocked(message, allowLogin=false){
   });
 }
 
-function setAuthorized(name){
+function setAuthorized(name,idToken){
+  try{ if(idToken) sessionStorage.setItem(SESSION_TOKEN,idToken); }catch(e){ console.warn(e); }
   if(authStatus) authStatus.textContent=`管理員驗證成功${name?`：${name}`:''}`;
   if(loginBtn){ loginBtn.disabled=true; loginBtn.textContent='已驗證'; loginBtn.onclick=null; }
   actions.forEach(el=>{
@@ -35,6 +37,7 @@ function setAuthorized(name){
 }
 
 function enableRelogin(message){
+  try{ sessionStorage.removeItem(SESSION_TOKEN); }catch(e){ console.warn(e); }
   setLocked(message,true);
   if(loginBtn){
     loginBtn.textContent='重新登入 LINE';
@@ -55,7 +58,7 @@ async function verifyAdmin(idToken){
   const data=await r.json().catch(()=>({}));
 
   if(r.ok && data.ok){
-    setAuthorized(data.user?.name||'');
+    setAuthorized(data.user?.name||'',idToken);
     return;
   }
 

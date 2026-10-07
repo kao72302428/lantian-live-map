@@ -3,6 +3,8 @@ const LIFF_ID='2011802000-aDp14e0D';
 const API='https://lantian-live-map.vercel.app/api/news-admin';
 let idToken='';
 let items=[];
+const SESSION_TOKEN='lantianAdminIdToken';
+let reverifyBtn=null;
 
 const $=id=>document.getElementById(id);
 const fields=['date','title','summary','content','image','map','link','linkText','published'];
@@ -15,11 +17,28 @@ function setEnabled(enabled){
  $('publishBtn').disabled=!enabled;
 }
 
+function ensureReverifyButton(){
+ if(reverifyBtn)return reverifyBtn;
+ reverifyBtn=document.createElement('button');
+ reverifyBtn.type='button';
+ reverifyBtn.textContent='重新驗證';
+ reverifyBtn.style.cssText='display:none;margin-top:12px;border:1px solid #b9cfdd;background:#fff;color:#0f5d9d;border-radius:999px;padding:9px 14px;font:inherit;font-weight:800;cursor:pointer';
+ const host=$('authStatus')?.parentElement||document.querySelector('.gate');
+ host?.appendChild(reverifyBtn);
+ reverifyBtn.addEventListener('click',reverify);
+ return reverifyBtn;
+}
+function showReverify(show){const b=ensureReverifyButton();if(b)b.style.display=show?'inline-block':'none';}
+function cacheToken(token){try{if(token)sessionStorage.setItem(SESSION_TOKEN,token);}catch(e){console.warn(e);}}
+function cachedToken(){try{return sessionStorage.getItem(SESSION_TOKEN)||'';}catch(e){return '';}}
+function clearToken(){try{sessionStorage.removeItem(SESSION_TOKEN);}catch(e){console.warn(e);}}
+
 function setAuth(ok,msg){
  $('authStatus').textContent=msg;
  $('authTitle').textContent=ok?'管理員驗證成功':'管理權限尚未啟用';
  $('authText').textContent=ok?'已通過 LINE 管理員白名單驗證，可進行消息新增、修改、下架、重新發布與刪除。':'驗證未完成前，本頁所有寫入操作維持鎖定。';
  setEnabled(ok);
+ showReverify(!ok);
 }
 
 function resetForm(){
@@ -147,23 +166,42 @@ $('list').addEventListener('click',async e=>{
  finally{setEnabled(true);}
 });
 
-async function init(){
+async function loadWithToken(token){
+ idToken=token;
+ await refresh();
+ cacheToken(token);
+ setAuth(true,'管理員驗證成功');
+}
+async function reverify(){
+ clearToken();
  setEnabled(false);
  try{
-   await liff.init({liffId:LIFF_ID});
-   if(!liff.isLoggedIn()){
-     setAuth(false,'尚未登入 LINE');
-     return;
-   }
-   idToken=liff.getIDToken()||'';
-   if(!idToken){setAuth(false,'未取得 LINE ID token');return;}
-   await refresh();
-   setAuth(true,'管理員驗證成功');
+  await liff.init({liffId:LIFF_ID});
+  if(liff.isLoggedIn())liff.logout();
+  liff.login({redirectUri:window.location.href.split('#')[0]});
  }catch(e){
-   console.error(e);
-   setAuth(false,e.code==='STORAGE_NOT_CONFIGURED'?'管理員已驗證，但後端儲存尚未設定':'管理員驗證或資料載入失敗');
+  console.error(e);
+  setAuth(false,'無法啟動重新驗證，請返回管理中心登入。');
  }
 }
-
+async function init(){
+ setEnabled(false);
+ showReverify(false);
+ const saved=cachedToken();
+ if(saved){
+  try{await loadWithToken(saved);return;}
+  catch(e){console.warn(e);clearToken();}
+ }
+ try{
+   await liff.init({liffId:LIFF_ID});
+   if(!liff.isLoggedIn()){setAuth(false,'管理員驗證已失效，請按「重新驗證」');return;}
+   const token=liff.getIDToken()||'';
+   if(!token){setAuth(false,'管理員驗證已失效，請按「重新驗證」');return;}
+   await loadWithToken(token);
+ }catch(e){
+   console.error(e);
+   setAuth(false,e.code==='STORAGE_NOT_CONFIGURED'?'管理員已驗證，但後端儲存尚未設定':'管理員驗證已失效，請按「重新驗證」');
+ }
+}
 if(window.liff)init(); else setAuth(false,'LINE LIFF SDK 載入失敗');
 })();
