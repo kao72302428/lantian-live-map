@@ -23,7 +23,7 @@ function setLocked(message, allowLogin=false){
 
 function setAuthorized(name){
   if(authStatus) authStatus.textContent=`管理員驗證成功${name?`：${name}`:''}`;
-  if(loginBtn){ loginBtn.disabled=true; loginBtn.textContent='已驗證'; }
+  if(loginBtn){ loginBtn.disabled=true; loginBtn.textContent='已驗證'; loginBtn.onclick=null; }
   actions.forEach(el=>{
     if(el.tagName==='BUTTON') el.disabled=false;
     if(el.tagName==='A'){
@@ -32,6 +32,18 @@ function setAuthorized(name){
       el.classList.remove('disabled-link');
     }
   });
+}
+
+function enableRelogin(message){
+  setLocked(message,true);
+  if(loginBtn){
+    loginBtn.textContent='重新登入 LINE';
+    loginBtn.onclick=()=>{
+      try{ if(window.liff&&liff.isLoggedIn()) liff.logout(); }catch(e){ console.error(e); }
+      const redirectUri=window.location.href.split('#')[0];
+      liff.login({redirectUri});
+    };
+  }
 }
 
 async function verifyAdmin(idToken){
@@ -53,11 +65,11 @@ async function verifyAdmin(idToken){
   }
 
   if(data.code==='NOT_AUTHORIZED'){
-    setLocked('LINE 身分驗證成功，但此帳號不在管理員白名單。');
+    enableRelogin('LINE 身分驗證成功，但此帳號不在管理員白名單。可重新登入其他管理員帳號。');
     return;
   }
 
-  setLocked('後端管理員驗證失敗，管理功能維持鎖定。');
+  enableRelogin('後端管理員驗證失敗。請重新登入 LINE 後再試。');
 }
 
 async function initLiff(){
@@ -82,7 +94,7 @@ async function initLiff(){
     await verifyAdmin(idToken);
   }catch(err){
     console.error(err);
-    setLocked('LIFF 初始化或後端驗證失敗，請稍後再試。');
+    enableRelogin('LIFF 初始化或後端驗證失敗。請重新登入 LINE 後再試。');
   }
 }
 
