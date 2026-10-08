@@ -10,8 +10,8 @@ header{background:#fff;border-bottom:1px solid #dfe8ee;padding:14px 20px;positio
 main{width:min(920px,calc(100% - 32px));margin:24px auto}.article{background:#fff;border:1px solid #dfe8ee;border-radius:18px;padding:24px;box-shadow:0 6px 20px rgba(23,50,77,.05)}
 .date{font-size:14px;color:#718493;margin-bottom:8px}h1{font-size:30px;line-height:1.4;margin:0 0 14px}.summary{font-size:18px;line-height:1.7;color:#526a7c;padding:14px 16px;background:#f6f9fb;border-radius:12px;margin-bottom:20px}
 .content{font-size:17px;line-height:1.9;white-space:pre-wrap}.article img{display:block;max-width:100%;height:auto;border-radius:14px;margin:20px auto 0}.article iframe{width:100%;height:420px;border:0;border-radius:14px;margin-top:20px}
-.map-open-mobile{display:none}.link{display:inline-block;margin-top:20px;padding:11px 16px;border-radius:10px;background:#0b75c9;color:#fff;text-decoration:none;font-weight:800}.empty{text-align:center;color:#718493;padding:50px 20px;background:#fff;border:1px solid #dfe8ee;border-radius:18px}
-footer{text-align:center;color:#789;padding:18px;font-size:13px}@media(max-width:700px){main{width:calc(100% - 20px);margin:10px auto}.article{padding:18px}h1{font-size:24px}.summary{font-size:16px}.content{font-size:16px}.article iframe{height:320px;max-width:100%;display:block}.map-open-mobile{display:inline-block;margin-top:12px;padding:11px 16px;border-radius:10px;background:#0b75c9;color:#fff;text-decoration:none;font-weight:800}}
+.link{display:inline-block;margin-top:20px;padding:11px 16px;border-radius:10px;background:#0b75c9;color:#fff;text-decoration:none;font-weight:800}.empty{text-align:center;color:#718493;padding:50px 20px;background:#fff;border:1px solid #dfe8ee;border-radius:18px}
+footer{text-align:center;color:#789;padding:18px;font-size:13px}@media(max-width:700px){main{width:calc(100% - 20px);margin:10px auto}.article{padding:18px}h1{font-size:24px}.summary{font-size:16px}.content{font-size:16px}.article iframe{height:320px;max-width:100%;display:block}}
 </style>
 </head>
 <body>
@@ -26,11 +26,7 @@ function render(item){
  document.title=(item.title||'消息詳情')+'｜智慧藍田 LIVE 一點通';
  let html='<article class="article"><div class="date">'+E(item.date)+'</div><h1>'+E(item.title)+'</h1><div class="summary">'+E(item.summary)+'</div><div class="content">'+E(item.content)+'</div>';
  if(item.image) html+='<img src="'+E(item.image)+'" alt="">';
- if(item.map){
-  let mapOpen=item.map;
-  try{const u=new URL(item.map);if(['www.google.com','google.com','maps.google.com'].includes(u.hostname)&&u.pathname==='/maps'&&u.searchParams.has('q'))mapOpen='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(u.searchParams.get('q'));}catch(e){}
-  html+='<iframe loading="lazy" src="'+E(item.map)+'"></iframe><a class="map-open-mobile" href="'+E(mapOpen)+'" target="_blank" rel="noopener noreferrer">開啟 Google 地圖 ↗</a>';
- }
+ if(item.map) html+='<iframe loading="lazy" src="'+E(item.map)+'"></iframe>';
  if(item.link) html+='<a class="link" href="'+E(item.link)+'" target="_blank" rel="noopener">'+E(item.linkText||'相關連結')+' ＞</a>';
  document.getElementById('main').innerHTML=html+'</article>';
 }
