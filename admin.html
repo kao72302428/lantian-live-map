@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>智慧藍田管理中心</title>
-<link rel="stylesheet" href="./admin.css?v=20261007-1">
+<link rel="stylesheet" href="./admin.css?v=20261009-logout1">
 </head>
 <body>
 <header class="topbar">
@@ -12,13 +12,12 @@
     <div class="brand-title">智慧藍田管理中心</div>
     <div class="brand-sub">LIVE 一點通｜統一後台</div>
   </div>
-  <span class="secure-badge">管理員專用</span>
+  <button id="logoutBtn" class="logout-btn" type="button" hidden>登出</button>
 </header>
 
 <main class="shell">
   <section class="gate login-entry" aria-labelledby="gateTitle">
     <div class="login-entry-head">
-      <div class="login-icon" aria-hidden="true">登入</div>
       <div>
         <p class="eyebrow">ADMIN ACCESS</p>
         <h1 id="gateTitle">管理中心登入</h1>
@@ -109,6 +108,6 @@
 
 <footer>智慧藍田 LIVE 一點通｜管理中心</footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="./admin.js?v=20260930-liff2"></script>
+<script src="./admin.js?v=20261009-logout1"></script>
 </body>
 </html>
