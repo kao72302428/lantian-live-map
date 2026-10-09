@@ -89,7 +89,8 @@ async function initLiff(){
   // Reuse only a token already verified by the server; a cached token alone grants no access.
   let savedToken='';
   try{savedToken=sessionStorage.getItem(SESSION_TOKEN)||'';}catch(e){console.warn(e);}
-  if(savedToken){
+  const forceReauth=new URLSearchParams(location.search).get('reauth')==='1';
+  if(savedToken&&!forceReauth){
     try{
       const response=await fetch(AUTH_API,{
         method:'POST',
@@ -101,7 +102,7 @@ async function initLiff(){
         setAuthorized(data.user?.name||'',savedToken);
         return;
       }
-      if(response.status===401||response.status===403){
+      if(!response.ok){
         try{sessionStorage.removeItem(SESSION_TOKEN);}catch(e){console.warn(e);}
       }
     }catch(e){console.warn('Cached authorization check failed; falling back to LIFF.',e);}
@@ -147,7 +148,11 @@ async function initLiff(){
         loginBtn.onclick=()=>window.location.reload();
       }
     }else{
-      enableRelogin('LIFF 初始化或後端驗證失敗。請重新登入 LINE 後再試。');
+      setLocked('LINE 初始化失敗，請重新載入管理中心；權限尚未驗證。',true);
+      if(loginBtn){
+        loginBtn.textContent='重新載入驗證';
+        loginBtn.onclick=()=>window.location.reload();
+      }
     }
   }
 }
