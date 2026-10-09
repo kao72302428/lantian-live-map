@@ -7,7 +7,7 @@ const logoutBtn=document.getElementById('logoutBtn');
 if(logoutBtn)logoutBtn.addEventListener('click',()=>{
   try{sessionStorage.removeItem('lantianAdminIdToken');}catch(e){console.warn(e);}
   try{if(window.liff&&liff.isLoggedIn())liff.logout();}catch(e){console.error(e);}
-  window.location.replace(new URL('./admin.html',window.location.href).href);
+  window.location.replace(new URL('./contact.html',window.location.href).href);
 });
 const actions=[...document.querySelectorAll('.module-action')];
 const SESSION_TOKEN='lantianAdminIdToken';
