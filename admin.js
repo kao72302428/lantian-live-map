@@ -89,8 +89,13 @@ async function initLiff(){
   // Reuse only a token already verified by the server; a cached token alone grants no access.
   let savedToken='';
   try{savedToken=sessionStorage.getItem(SESSION_TOKEN)||'';}catch(e){console.warn(e);}
-  const forceReauth=new URLSearchParams(location.search).get('reauth')==='1';
-  if(savedToken&&!forceReauth){
+  const paramsBeforeInit=new URLSearchParams(location.search);
+  const forceReauth=paramsBeforeInit.get('reauth')==='1';
+  // LINE primary redirect must be initialized before using a cached session.
+  // Do not inspect or log the confidential token values in the URL fragment.
+  const isLiffRedirect=paramsBeforeInit.has('liff.state') ||
+    /(?:^|[&#])(?:access_token|id_token|context_token|feature_token)=/.test(location.hash);
+  if(savedToken&&!forceReauth&&!isLiffRedirect){
     try{
       const response=await fetch(AUTH_API,{
         method:'POST',
