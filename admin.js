@@ -86,8 +86,13 @@ async function verifyAdmin(idToken){
 
 async function initLiff(){
   setLocked('正在初始化 LINE LIFF…');
+  let initTimer;
   try{
-    await liff.init({liffId:LIFF_ID});
+    await Promise.race([
+      liff.init({liffId:LIFF_ID}),
+      new Promise((_,reject)=>{initTimer=setTimeout(()=>reject(new Error('LIFF_INIT_TIMEOUT')),15000);})
+    ]);
+    clearTimeout(initTimer);
     const params=new URLSearchParams(location.search);
     if(params.get('reauth')==='1'){
       history.replaceState(null,'',new URL('./admin.html',location.href).pathname);
@@ -112,8 +117,17 @@ async function initLiff(){
     setLocked('LINE 登入成功，正在進行後端管理員驗證…');
     await verifyAdmin(idToken);
   }catch(err){
+    clearTimeout(initTimer);
     console.error(err);
-    enableRelogin('LIFF 初始化或後端驗證失敗。請重新登入 LINE 後再試。');
+    if(err?.message==='LIFF_INIT_TIMEOUT'){
+      setLocked('LINE LIFF 初始化逾時，請重新載入管理中心；權限尚未驗證。',true);
+      if(loginBtn){
+        loginBtn.textContent='重新載入驗證';
+        loginBtn.onclick=()=>window.location.reload();
+      }
+    }else{
+      enableRelogin('LIFF 初始化或後端驗證失敗。請重新登入 LINE 後再試。');
+    }
   }
 }
 
