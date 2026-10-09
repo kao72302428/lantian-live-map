@@ -19,7 +19,9 @@ module.exports=async function handler(req,res){
  try{
   const auth=await verifyAdminToken(idToken);
   if(!auth.body.ok)return res.status(auth.status).json({ok:false,code:auth.body.code,source:'line_admin_whitelist'});
-  const form=new URLSearchParams({adminAction:action,gatewaySecret});
+  // Pass both validated identity and server-only gateway credential for compatibility
+  // with old LINE-token and new gateway-secret Apps Script deployments.
+  const form=new URLSearchParams({adminAction:action,idToken,gatewaySecret});
   if(req.body?.id)form.set('id',String(req.body.id));
   if(req.body?.status)form.set('status',String(req.body.status));
   if(req.body?.reply)form.set('reply',String(req.body.reply));
