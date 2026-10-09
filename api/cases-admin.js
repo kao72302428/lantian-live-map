@@ -1,3 +1,4 @@
+const { verifyAdminToken } = require('./_admin-verify');
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwimGrgk9jKgIAA2G7K0VDSDahmFZ_Q0o-WZQ0o9heeBxH7BvN9sGHk3Ee-CipZkNIa/exec';
 
 module.exports=async function handler(req,res){
@@ -16,9 +17,8 @@ module.exports=async function handler(req,res){
  const gatewaySecret=String(process.env.CASES_ADMIN_GATEWAY_SECRET||'').trim();
  if(!gatewaySecret)return res.status(503).json({ok:false,code:'CASE_GATEWAY_NOT_CONFIGURED'});
  try{
-  const auth=await fetch('https://lantian-live-map.vercel.app/api/admin-auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken})});
-  const authData=await auth.json().catch(()=>({}));
-  if(!auth.ok||!authData.ok)return res.status(401).json({ok:false,code:'NOT_AUTHORIZED'});
+  const auth=await verifyAdminToken(idToken);
+  if(!auth.body.ok)return res.status(auth.status).json({ok:false,code:auth.body.code});
   const form=new URLSearchParams({adminAction:action,gatewaySecret});
   if(req.body?.id)form.set('id',String(req.body.id));
   if(req.body?.status)form.set('status',String(req.body.status));
