@@ -86,34 +86,11 @@ async function verifyAdmin(idToken){
 
 async function initLiff(){
   setLocked('正在驗證管理員身分…');
-  // Reuse only a token already verified by the server; a cached token alone grants no access.
-  let savedToken='';
-  try{savedToken=sessionStorage.getItem(SESSION_TOKEN)||'';}catch(e){console.warn(e);}
-  const paramsBeforeInit=new URLSearchParams(location.search);
-  const forceReauth=paramsBeforeInit.get('reauth')==='1';
+  // Never grant access from a stored ID token on entry. The token is kept
+  // only for authorized submodules during the current signed-in session.
   let explicitLogout=false;
   try{explicitLogout=localStorage.getItem(LOGOUT_MARKER)==='1';}catch(e){console.warn(e);}
-  // LINE primary redirect must be initialized before using a cached session.
-  // Do not inspect or log the confidential token values in the URL fragment.
-  const isLiffRedirect=paramsBeforeInit.has('liff.state') ||
-    /(?:^|[&#])(?:access_token|id_token|context_token|feature_token)=/.test(location.hash);
-  if(savedToken&&!forceReauth&&!isLiffRedirect&&!explicitLogout){
-    try{
-      const response=await fetch(AUTH_API,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({idToken:savedToken})
-      });
-      const data=await response.json().catch(()=>({}));
-      if(response.ok&&data.ok){
-        setAuthorized(data.user?.name||'',savedToken);
-        return;
-      }
-      if(!response.ok){
-        try{sessionStorage.removeItem(SESSION_TOKEN);}catch(e){console.warn(e);}
-      }
-    }catch(e){console.warn('Cached authorization check failed; falling back to LIFF.',e);}
-  }
+  try{sessionStorage.removeItem(SESSION_TOKEN);}catch(e){console.warn(e);}
   setLocked('正在初始化 LINE LIFF…');
   let initTimer;
   try{
