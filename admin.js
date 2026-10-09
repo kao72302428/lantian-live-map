@@ -3,12 +3,20 @@ const LIFF_ID='2011802000-aDp14e0D';
 const AUTH_API='https://lantian-live-map.vercel.app/api/admin-auth';
 const authStatus=document.getElementById('authStatus');
 const loginBtn=document.getElementById('loginBtn');
+const logoutBtn=document.getElementById('logoutBtn');
+if(logoutBtn)logoutBtn.addEventListener('click',()=>{
+  try{sessionStorage.removeItem('lantianAdminIdToken');}catch(e){console.warn(e);}
+  try{if(window.liff&&liff.isLoggedIn())liff.logout();}catch(e){console.error(e);}
+  window.location.replace(new URL('./admin.html',window.location.href).href);
+});
 const actions=[...document.querySelectorAll('.module-action')];
 const SESSION_TOKEN='lantianAdminIdToken';
 
 function setLocked(message, allowLogin=false){
   if(authStatus) authStatus.textContent=message;
+  if(logoutBtn)logoutBtn.hidden=true;
   if(loginBtn){
+    loginBtn.hidden=false;
     loginBtn.disabled=!allowLogin;
     loginBtn.textContent='LINE 管理員登入';
   }
@@ -25,7 +33,8 @@ function setLocked(message, allowLogin=false){
 function setAuthorized(name,idToken){
   try{ if(idToken) sessionStorage.setItem(SESSION_TOKEN,idToken); }catch(e){ console.warn(e); }
   if(authStatus) authStatus.textContent=`管理員驗證成功${name?`：${name}`:''}`;
-  if(loginBtn){ loginBtn.disabled=true; loginBtn.textContent='已驗證'; loginBtn.onclick=null; }
+  if(logoutBtn)logoutBtn.hidden=false;
+  if(loginBtn){ loginBtn.disabled=true; loginBtn.hidden=true; loginBtn.onclick=null; }
   actions.forEach(el=>{
     if(el.tagName==='BUTTON') el.disabled=false;
     if(el.tagName==='A'){
