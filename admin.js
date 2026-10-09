@@ -85,6 +85,27 @@ async function verifyAdmin(idToken){
 }
 
 async function initLiff(){
+  setLocked('正在驗證管理員身分…');
+  // Reuse only a token already verified by the server; a cached token alone grants no access.
+  let savedToken='';
+  try{savedToken=sessionStorage.getItem(SESSION_TOKEN)||'';}catch(e){console.warn(e);}
+  if(savedToken){
+    try{
+      const response=await fetch(AUTH_API,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({idToken:savedToken})
+      });
+      const data=await response.json().catch(()=>({}));
+      if(response.ok&&data.ok){
+        setAuthorized(data.user?.name||'',savedToken);
+        return;
+      }
+      if(response.status===401||response.status===403){
+        try{sessionStorage.removeItem(SESSION_TOKEN);}catch(e){console.warn(e);}
+      }
+    }catch(e){console.warn('Cached authorization check failed; falling back to LIFF.',e);}
+  }
   setLocked('正在初始化 LINE LIFF…');
   let initTimer;
   try{
