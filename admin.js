@@ -16,7 +16,6 @@ const SESSION_TOKEN='lantianAdminIdToken';
 
 function setLocked(message, allowLogin=false){
   if(authStatus) authStatus.textContent=message;
-  if(logoutBtn)logoutBtn.hidden=true;
   if(loginBtn){
     loginBtn.hidden=false;
     loginBtn.disabled=!allowLogin;
@@ -35,7 +34,6 @@ function setLocked(message, allowLogin=false){
 function setAuthorized(name,idToken){
   try{ if(idToken) sessionStorage.setItem(SESSION_TOKEN,idToken); }catch(e){ console.warn(e); }
   if(authStatus) authStatus.textContent=`管理員驗證成功${name?`：${name}`:''}`;
-  if(logoutBtn)logoutBtn.hidden=false;
   if(loginBtn){ loginBtn.disabled=true; loginBtn.hidden=true; loginBtn.onclick=null; }
   actions.forEach(el=>{
     if(el.tagName==='BUTTON') el.disabled=false;
