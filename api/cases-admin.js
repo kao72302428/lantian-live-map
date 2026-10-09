@@ -18,7 +18,7 @@ module.exports=async function handler(req,res){
  if(!gatewaySecret)return res.status(503).json({ok:false,code:'CASE_GATEWAY_NOT_CONFIGURED'});
  try{
   const auth=await verifyAdminToken(idToken);
-  if(!auth.body.ok)return res.status(auth.status).json({ok:false,code:auth.body.code});
+  if(!auth.body.ok)return res.status(auth.status).json({ok:false,code:auth.body.code,source:'line_admin_whitelist'});
   const form=new URLSearchParams({adminAction:action,gatewaySecret});
   if(req.body?.id)form.set('id',String(req.body.id));
   if(req.body?.status)form.set('status',String(req.body.status));
@@ -26,7 +26,7 @@ module.exports=async function handler(req,res){
   const upstream=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:form,redirect:'follow'});
   const text=await upstream.text();
   let data;try{data=JSON.parse(text);}catch{return res.status(502).json({ok:false,code:'CASE_SERVICE_BAD_RESPONSE'});}
-  if(!data.ok)return res.status(400).json(data);
+  if(!data.ok)return res.status(400).json({ok:false,code:data.code==='NOT_AUTHORIZED'?'CASE_GATEWAY_NOT_AUTHORIZED':(data.code||'CASE_SERVICE_REJECTED'),source:'google_apps_script'});
   return res.status(200).json(data);
  }catch(e){
   console.error(e);
