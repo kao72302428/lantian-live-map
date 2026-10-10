@@ -101,3 +101,16 @@ test('unsupported merchant action and unknown IDs never write',async()=>{
  ]){const r=await invoke(action,extra);assert.equal(r.code,expected,action);}
  assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
 });
+
+test('two newly created merchants receive distinct IDs and retain original data',async()=>{
+ const s=setup();
+ const first=await invoke('upsert',{item:{name:'UAT shop one',address:'Test road 1',group:'美食餐飲'}});
+ const second=await invoke('upsert',{item:{name:'UAT shop two',address:'Test road 2',group:'購物零售'}});
+ assert.equal(first.code,200);assert.equal(second.code,200);
+ assert.notEqual(first.body.item.id,second.body.item.id);
+ assert.match(first.body.item.id,/^NEW[0-9a-f]{32}$/);
+ assert.match(second.body.item.id,/^NEW[0-9a-f]{32}$/);
+ assert.equal(first.body.item.published,false);assert.equal(second.body.item.published,false);
+ assert.equal(s.data.length,159);assert.equal(new Set(s.data.map(x=>x.id)).size,159);
+ assert.deepEqual(s.data.slice(0,157),initial);assert.equal(s.writes,2);
+});
