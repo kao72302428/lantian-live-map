@@ -130,3 +130,33 @@ test('writes without editor version are rejected',async()=>{
  const s=setup();const r=await invoke('setPublished',{id:initial[0].id,published:false,expectedSha:''});
  assert.equal(r.code,400);assert.equal(r.body.code,'MISSING_EXPECTED_SHA');assert.equal(s.writes,0);
 });
+
+test('phase 2 integration: saved draft stays hidden until published, then saved sort order reaches storefront',async()=>{
+ const s=setup();
+ const created=await invoke('upsert',{item:{name:'Phase2 integration shop',address:'UAT address',group:'美食餐飲',sub:'正餐小吃'}});
+ assert.equal(created.code,200);
+ const id=created.body.item.id;
+ assert.equal(created.body.item.published,false);
+ const storefront=fs.readFileSync(require('node:path').join(__dirname,'../merchant-app.js'),'utf8');
+ function render(items){
+   const element=()=>({innerHTML:'',textContent:'',value:'',classList:{add(){},remove(){},toggle(){}},addEventListener(){},querySelectorAll(){return []}});
+   const nodes={list:element(),hint:element(),mapbox:element(),search:element(),subfilters:element()};
+   const document={getElementById:k=>nodes[k],querySelectorAll:()=>[],querySelector:()=>({classList:{add(){}}})};
+   vm.runInNewContext(storefront,{window:{MERCHANTS:items},document,encodeURIComponent});
+   return nodes.list.innerHTML;
+ }
+ let loaded=await invoke('list');
+ assert.equal(loaded.code,200);
+ assert.doesNotMatch(render(loaded.body.items),/Phase2 integration shop/);
+ const published=await invoke('setPublished',{id,published:true});
+ assert.equal(published.code,200);
+ const sorted=await invoke('setSortOrder',{id,sortOrder:0});
+ assert.equal(sorted.code,200);
+ loaded=await invoke('list');
+ assert.equal(loaded.code,200);
+ const html=render(loaded.body.items);
+ assert.match(html,/Phase2 integration shop/);
+ assert.ok(html.indexOf('Phase2 integration shop')<html.indexOf(initial[0].name));
+ assert.equal(s.data.length,158);
+ assert.deepEqual(s.data.slice(0,157),initial);
+});
