@@ -10,7 +10,9 @@ const initial=JSON.parse(JSON.stringify(sandbox.window.MERCHANTS));
 const LINE_SUB='offline-test-admin';
 const ADMIN_HASH=crypto.createHash('sha256').update(LINE_SUB).digest('hex');
 function response(status,body){return {ok:status>=200&&status<300,status,json:async()=>body};}
+let fixtureSha='test-sha';
 function setup({allow=true,stale=false}={}){
+ fixtureSha='test-sha';
  let data=JSON.parse(JSON.stringify(initial)),sha='test-sha',writes=0;
  process.env.GITHUB_CONTENT_TOKEN='offline-test-token';
  process.env.VERCEL_ENV='preview';
@@ -27,7 +29,7 @@ function setup({allow=true,stale=false}={}){
     const raw=Buffer.from(body.content,'base64').toString('utf8');
     const match=/^window\.MERCHANTS = (\[[\s\S]*\]);\n$/.exec(raw);
     assert.ok(match,'must serialize a merchant array');
-    data=JSON.parse(match[1]);sha='new-sha';writes++;
+    data=JSON.parse(match[1]);sha='new-sha-'+(writes+1);fixtureSha=sha;writes++;
     return response(200,{content:{sha}});
    }
    const ref=new URL(url).searchParams.get('ref');
@@ -39,7 +41,7 @@ function setup({allow=true,stale=false}={}){
  return {get data(){return data},get writes(){return writes}};
 }
 async function invoke(action,extra={},token='offline-token'){
- const req={method:'POST',headers:{origin:'https://kao72302428.github.io'},body:{idToken:token,action,...extra}};
+ const req={method:'POST',headers:{origin:'https://kao72302428.github.io'},body:{idToken:token,action,expectedSha:fixtureSha,...extra}};
  const res={headers:{},setHeader(k,v){this.headers[k]=v;return this},status(n){this.code=n;return this},json(obj){this.body=obj;return this},end(){return this}};
  await handler(req,res);return res;
 }
@@ -113,4 +115,18 @@ test('two newly created merchants receive distinct IDs and retain original data'
  assert.equal(first.body.item.published,false);assert.equal(second.body.item.published,false);
  assert.equal(s.data.length,159);assert.equal(new Set(s.data.map(x=>x.id)).size,159);
  assert.deepEqual(s.data.slice(0,157),initial);assert.equal(s.writes,2);
+});
+
+test('stale editor version is rejected before any write',async()=>{
+ const s=setup();
+ let r=await invoke('setPublished',{id:initial[0].id,published:false});assert.equal(r.code,200);
+ const latest=r.body.sha;assert.equal(typeof latest,'string');
+ r=await invoke('setSortOrder',{id:initial[0].id,sortOrder:8,expectedSha:'test-sha'});
+ assert.equal(r.code,409);assert.equal(r.body.code,'STALE_DATA');assert.equal(s.writes,1);
+ r=await invoke('setSortOrder',{id:initial[0].id,sortOrder:8,expectedSha:latest});
+ assert.equal(r.code,200);assert.equal(s.writes,2);
+});
+test('writes without editor version are rejected',async()=>{
+ const s=setup();const r=await invoke('setPublished',{id:initial[0].id,published:false,expectedSha:''});
+ assert.equal(r.code,400);assert.equal(r.body.code,'MISSING_EXPECTED_SHA');assert.equal(s.writes,0);
 });
