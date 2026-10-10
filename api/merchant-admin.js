@@ -1,9 +1,12 @@
 const { verifyAdminToken } = require('./_admin-verify');
 const REPO='kao72302428/lantian-live-map';
 const PATH='merchants.js';
+// UAT-only: never write the production main branch from this endpoint.
+const TARGET_BRANCH='feature/merchant-admin-phase2-access-20261010';
 const ORIGIN='https://kao72302428.github.io';
 const GROUPS=new Set(['美食餐飲','購物零售','居家服務','醫療保健','生活服務','教育休閒']);
 const LIMIT=2000;
+const SORT_LIMIT=100000;
 function headers(token){return {'Accept':'application/vnd.github+json','Authorization':'Bearer '+token,'Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'};}
 function decode(source){
  const match=/^window\.MERCHANTS\s*=\s*(\[[\s\S]*\]);?\s*$/.exec(source.trim());
@@ -21,10 +24,12 @@ function sanitize(raw,old){
  for(const field of ['map','website','social']){
    if(value[field]&&!/^https:\/\//i.test(value[field]))throw Error('INVALID_URL');
  }
+ if(Object.prototype.hasOwnProperty.call(raw,'published'))value.published=raw.published===true;
+ if(Object.prototype.hasOwnProperty.call(raw,'sortOrder')){const order=Number(raw.sortOrder);if(!Number.isInteger(order)||order<0||order>SORT_LIMIT)throw Error('INVALID_SORT_ORDER');value.sortOrder=order;}
  return value;
 }
 async function read(token){
- const response=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+PATH+'?ref=main',{headers:headers(token)});
+ const response=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+PATH+'?ref='+encodeURIComponent(TARGET_BRANCH),{headers:headers(token)});
  const body=await response.json().catch(()=>({}));
  if(!response.ok||!body.sha||!body.content)throw Error('STORAGE_READ_FAILED');
  const source=Buffer.from(body.content.replace(/\s/g,''),'base64').toString('utf8');
@@ -32,7 +37,7 @@ async function read(token){
 }
 async function write(token,items,sha,description){
  const source='window.MERCHANTS = '+JSON.stringify(items,null,2)+';\n';
- const response=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+PATH,{method:'PUT',headers:headers(token),body:JSON.stringify({message:description,content:Buffer.from(source).toString('base64'),sha,branch:'main'})});
+ const response=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+PATH,{method:'PUT',headers:headers(token),body:JSON.stringify({message:description,content:Buffer.from(source).toString('base64'),sha,branch:TARGET_BRANCH})});
  if(response.status===409)return {ok:false,code:'STALE_DATA'};
  if(!response.ok)throw Error('STORAGE_WRITE_FAILED');
  return {ok:true};
@@ -53,8 +58,24 @@ module.exports=async(req,res)=>{
  const action=String(req.body?.action||'');
  try{
   const {items,sha}=await read(storageToken);
-  if(action==='list')return res.status(200).json({ok:true,items});
+  if(action==='list')return res.status(200).json({ok:true,items,branch:TARGET_BRANCH});
   // No deletion action: preserve every existing merchant record.
+  if(action==='setPublished'||action==='setSortOrder'){
+    const id=String(req.body?.id||'').trim();
+    const index=items.findIndex(x=>x.id===id);
+    if(index<0)return res.status(404).json({ok:false,code:'NOT_FOUND'});
+    if(action==='setPublished'){
+      if(typeof req.body?.published!=='boolean')return res.status(400).json({ok:false,code:'INVALID_PUBLISHED'});
+      items[index]={...items[index],published:req.body.published};
+    }else{
+      const order=req.body?.sortOrder;
+      if(!Number.isInteger(order)||order<0||order>SORT_LIMIT)return res.status(400).json({ok:false,code:'INVALID_SORT_ORDER'});
+      items[index]={...items[index],sortOrder:order};
+    }
+    const written=await write(storageToken,items,sha,'UAT merchant '+action+' '+id);
+    if(!written.ok)return res.status(409).json(written);
+    return res.status(200).json({ok:true,items,item:items[index]});
+  }
   if(action==='upsert'){
     const raw=req.body?.item;
     if(!raw||typeof raw!=='object'||Array.isArray(raw))return res.status(400).json({ok:false,code:'INVALID_ITEM'});
@@ -71,7 +92,7 @@ module.exports=async(req,res)=>{
   }
   return res.status(400).json({ok:false,code:'UNKNOWN_ACTION'});
  }catch(error){
-  if(['INVALID_FIELDS','INVALID_URL','INVALID_ITEM'].includes(error.message))return res.status(400).json({ok:false,code:error.message});
+  if(['INVALID_FIELDS','INVALID_URL','INVALID_ITEM','INVALID_SORT_ORDER'].includes(error.message))return res.status(400).json({ok:false,code:error.message});
   console.error('merchant admin operation failed',error.message);
   return res.status(502).json({ok:false,code:'STORAGE_UNAVAILABLE'});
  }
