@@ -40,7 +40,8 @@ async function write(token,items,sha,description){
  const response=await fetch('https://api.github.com/repos/'+REPO+'/contents/'+PATH,{method:'PUT',headers:headers(token),body:JSON.stringify({message:description,content:Buffer.from(source).toString('base64'),sha,branch:TARGET_BRANCH})});
  if(response.status===409)return {ok:false,code:'STALE_DATA'};
  if(!response.ok)throw Error('STORAGE_WRITE_FAILED');
- return {ok:true};
+ const result=await response.json().catch(()=>({}));
+ return {ok:true,sha:result.content?.sha||null};
 }
 module.exports=async(req,res)=>{
  const origin=req.headers?.origin||'';
@@ -61,7 +62,10 @@ module.exports=async(req,res)=>{
   return res.status(403).json({ok:false,code:'UAT_WRITE_DISABLED'});
  try{
   const {items,sha}=await read(storageToken);
-  if(action==='list')return res.status(200).json({ok:true,items,branch:TARGET_BRANCH});
+  if(action==='list')return res.status(200).json({ok:true,items,sha,branch:TARGET_BRANCH});
+  // Require the exact version originally loaded by the editor, not only the latest read-before-write SHA.
+  if(typeof req.body?.expectedSha!=='string'||!req.body.expectedSha.trim())return res.status(400).json({ok:false,code:'MISSING_EXPECTED_SHA'});
+  if(req.body.expectedSha!==sha)return res.status(409).json({ok:false,code:'STALE_DATA'});
   // No deletion action: preserve every existing merchant record.
   if(action==='setPublished'||action==='setSortOrder'){
     const id=String(req.body?.id||'').trim();
@@ -77,7 +81,7 @@ module.exports=async(req,res)=>{
     }
     const written=await write(storageToken,items,sha,'UAT merchant '+action+' '+id);
     if(!written.ok)return res.status(409).json(written);
-    return res.status(200).json({ok:true,items,item:items[index]});
+    return res.status(200).json({ok:true,items,item:items[index],sha:written.sha});
   }
   if(action==='upsert'){
     const raw=req.body?.item;
@@ -93,7 +97,7 @@ module.exports=async(req,res)=>{
     if(index>=0)items[index]=item;else items.push(item);
     const written=await write(storageToken,items,sha,'Admin '+(index>=0?'update':'add')+' merchant '+newId);
     if(!written.ok)return res.status(409).json(written);
-    return res.status(200).json({ok:true,items,item});
+    return res.status(200).json({ok:true,items,item,sha:written.sha});
   }
   return res.status(400).json({ok:false,code:'UNKNOWN_ACTION'});
  }catch(error){
