@@ -13,6 +13,8 @@ function response(status,body){return {ok:status>=200&&status<300,status,json:as
 function setup({allow=true,stale=false}={}){
  let data=JSON.parse(JSON.stringify(initial)),sha='test-sha',writes=0;
  process.env.GITHUB_CONTENT_TOKEN='offline-test-token';
+ process.env.VERCEL_ENV='preview';
+ process.env.MERCHANT_UAT_WRITES_ENABLED='true';
  process.env.ADMIN_LINE_USER_HASHES=allow?ADMIN_HASH:'0'.repeat(64);
  global.fetch=async(url,options={})=>{
   if(url.includes('api.line.me'))return response(200,{sub:LINE_SUB,name:'Offline Admin'});
@@ -51,3 +53,7 @@ test('invalid sort order rejected',async()=>{const s=setup();const r=await invok
 test('editing existing merchant preserves all other entries',async()=>{const s=setup();const changed={...initial[0],name:'Offline UAT merchant'};const r=await invoke('upsert',{item:changed});assert.equal(r.code,200);assert.equal(s.data.length,157);assert.deepEqual(s.data.slice(1),initial.slice(1))});
 test('unknown ID cannot overwrite or create record',async()=>{const s=setup();const r=await invoke('upsert',{item:{...initial[0],id:'unknown'}});assert.equal(r.code,404);assert.equal(s.writes,0)});
 test('GitHub SHA conflict returns 409 and does not overwrite',async()=>{const s=setup({stale:true});const r=await invoke('setPublished',{id:initial[0].id,published:false});assert.equal(r.code,409);assert.equal(s.writes,0)});
+
+test('production deployment rejects writes even with admin token',async()=>{const s=setup();process.env.VERCEL_ENV='production';const r=await invoke('setPublished',{id:initial[0].id,published:false});assert.equal(r.code,403);assert.equal(r.body.code,'UAT_WRITE_DISABLED');assert.equal(s.writes,0)});
+test('preview deployment requires explicit write enablement',async()=>{const s=setup();delete process.env.MERCHANT_UAT_WRITES_ENABLED;const r=await invoke('setSortOrder',{id:initial[0].id,sortOrder:2});assert.equal(r.code,403);assert.equal(s.writes,0)});
+test('new merchant starts unpublished',async()=>{const s=setup();const r=await invoke('upsert',{item:{name:'Offline new shop',address:'UAT street',group:'美食餐飲'}});assert.equal(r.code,200);assert.equal(r.body.item.published,false);assert.equal(s.data.length,158)});
