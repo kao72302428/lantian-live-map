@@ -21,3 +21,14 @@ test('initial merchant map embeds a Google Maps search for the local district',(
  assert.match(mapbox.innerHTML,/https:\/\/www\.google\.com\/maps\?q=/);
  assert.match(mapbox.innerHTML,/output=embed/);
 });
+
+test('phase 2 admin website and social links are visible with safe link attributes',()=>{
+ const l=element(),doc={getElementById(id){return ({list:l,hint:element(),mapbox:element(),search:element(),subfilters:element()})[id]},querySelectorAll(){return []},querySelector(){return {classList:{add(){}}}}};
+ const rows=[{id:'phase2',name:'Phase2 Shop',address:'UAT',group:'美食餐飲',sub:'正餐小吃',website:'https://example.com/shop?x=1&y=2',social:'https://example.com/social',description:'UAT',published:true},{id:'draft',name:'Draft',address:'UAT',group:'美食餐飲',published:false,website:'https://example.com/draft'}];
+ vm.runInNewContext(source,{window:{MERCHANTS:rows},document:doc,encodeURIComponent});
+ assert.match(l.innerHTML,/官方網站/);
+ assert.match(l.innerHTML,/社群連結/);
+ assert.match(l.innerHTML,/x=1&amp;y=2/);
+ assert.match(l.innerHTML,/rel="noopener noreferrer"/);
+ assert.doesNotMatch(l.innerHTML,/Draft|example.com\/draft/);
+});
