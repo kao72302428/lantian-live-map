@@ -83,3 +83,21 @@ test('preview without write flag blocks every merchant write operation',async()=
  for(const [action,extra] of attempts){const r=await invoke(action,extra);assert.equal(r.code,403,action);assert.equal(r.body.code,'UAT_WRITE_DISABLED',action);}
  assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
 });
+
+test('publishing and sorting never alter unrelated merchant records',async()=>{
+ const s=setup(),id=initial[0].id;
+ let r=await invoke('setPublished',{id,published:false});assert.equal(r.code,200);
+ r=await invoke('setSortOrder',{id,sortOrder:42});assert.equal(r.code,200);
+ assert.equal(s.data.length,157);assert.equal(s.data[0].published,false);assert.equal(s.data[0].sortOrder,42);
+ assert.deepEqual(s.data.slice(1),initial.slice(1));
+ assert.equal(s.writes,2);
+});
+test('unsupported merchant action and unknown IDs never write',async()=>{
+ const s=setup();
+ for(const [action,extra,expected] of [
+  ['delete',{id:initial[0].id},400],
+  ['setPublished',{id:'missing-merchant',published:false},404],
+  ['setSortOrder',{id:'missing-merchant',sortOrder:1},404]
+ ]){const r=await invoke(action,extra);assert.equal(r.code,expected,action);}
+ assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
+});
