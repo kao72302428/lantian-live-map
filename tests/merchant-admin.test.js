@@ -16,6 +16,7 @@ function setup({allow=true,stale=false}={}){
  let data=JSON.parse(JSON.stringify(initial)),sha='test-sha',writes=0;
  process.env.MERCHANT_UAT_GITHUB_TOKEN='offline-test-token';
  process.env.VERCEL_ENV='preview';
+ process.env.VERCEL_GIT_COMMIT_REF='feature/merchant-admin-phase2-access-20261010';
  process.env.MERCHANT_UAT_WRITES_ENABLED='true';
  process.env.ADMIN_LINE_USER_HASHES=allow?ADMIN_HASH:'0'.repeat(64);
  global.fetch=async(url,options={})=>{
@@ -159,4 +160,15 @@ test('phase 2 integration: saved draft stays hidden until published, then saved 
  assert.ok(html.indexOf('Phase2 integration shop')<html.indexOf(initial[0].name));
  assert.equal(s.data.length,158);
  assert.deepEqual(s.data.slice(0,157),initial);
+});
+
+test('preview deployment from any other branch cannot modify the isolated merchant branch',async()=>{
+ const s=setup();process.env.VERCEL_GIT_COMMIT_REF='main';
+ const r=await invoke('setPublished',{id:initial[0].id,published:false});
+ assert.equal(r.code,403);assert.equal(r.body.code,'UAT_WRITE_DISABLED');assert.equal(s.writes,0);
+});
+test('preview deployment without verified Git branch identity cannot write',async()=>{
+ const s=setup();delete process.env.VERCEL_GIT_COMMIT_REF;
+ const r=await invoke('setSortOrder',{id:initial[0].id,sortOrder:1});
+ assert.equal(r.code,403);assert.equal(r.body.code,'UAT_WRITE_DISABLED');assert.equal(s.writes,0);
 });
