@@ -23,7 +23,7 @@ function setup({allow=true,stale=false}={}){
     assert.equal(body.sha,sha);
     if(stale)return response(409,{message:'conflict'});
     const raw=Buffer.from(body.content,'base64').toString('utf8');
-    const match=/^window\\.MERCHANTS = (\\[[\\s\\S]*\\]);\\n$/.exec(raw);
+    const match=/^window\.MERCHANTS = (\[[\s\S]*\]);\n$/.exec(raw);
     assert.ok(match,'must serialize a merchant array');
     data=JSON.parse(match[1]);sha='new-sha';writes++;
     return response(200,{content:{sha}});
