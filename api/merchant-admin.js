@@ -58,7 +58,7 @@ module.exports=async(req,res)=>{
  if(!storageToken)return res.status(503).json({ok:false,code:'STORAGE_NOT_CONFIGURED'});
  const action=String(req.body?.action||'');
  // Explicit preview-only gate. Never permit writes from a production deployment.
- if(action!=='list'&&(process.env.VERCEL_ENV!=='preview'||process.env.MERCHANT_UAT_WRITES_ENABLED!=='true'))
+ if(action!=='list'&&(process.env.VERCEL_ENV!=='preview'||process.env.VERCEL_GIT_COMMIT_REF!==TARGET_BRANCH||process.env.MERCHANT_UAT_WRITES_ENABLED!=='true'))
   return res.status(403).json({ok:false,code:'UAT_WRITE_DISABLED'});
  try{
   const {items,sha}=await read(storageToken);
