@@ -56,6 +56,9 @@ module.exports=async(req,res)=>{
  const storageToken=String(process.env.GITHUB_CONTENT_TOKEN||'').trim();
  if(!storageToken)return res.status(503).json({ok:false,code:'STORAGE_NOT_CONFIGURED'});
  const action=String(req.body?.action||'');
+ // Explicit preview-only gate. Never permit writes from a production deployment.
+ if(action!=='list'&&(process.env.VERCEL_ENV!=='preview'||process.env.MERCHANT_UAT_WRITES_ENABLED!=='true'))
+  return res.status(403).json({ok:false,code:'UAT_WRITE_DISABLED'});
  try{
   const {items,sha}=await read(storageToken);
   if(action==='list')return res.status(200).json({ok:true,items,branch:TARGET_BRANCH});
@@ -84,7 +87,7 @@ module.exports=async(req,res)=>{
     if(id&&index<0)return res.status(404).json({ok:false,code:'UNKNOWN_ID'});
     if(items.length>=LIMIT&&index<0)return res.status(400).json({ok:false,code:'MERCHANT_LIMIT'});
     const newId=index>=0?id:'NEW'+Date.now().toString(36);
-    const item={...sanitize(raw,index>=0?items[index]:{}),id:newId};
+    const item={...sanitize(raw,index>=0?items[index]:{published:false}),id:newId};
     if(index>=0)items[index]=item;else items.push(item);
     const written=await write(storageToken,items,sha,'Admin '+(index>=0?'update':'add')+' merchant '+newId);
     if(!written.ok)return res.status(409).json(written);
