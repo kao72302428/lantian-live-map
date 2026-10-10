@@ -86,7 +86,7 @@ module.exports=async(req,res)=>{
     const index=items.findIndex(x=>x.id===id);
     if(id&&index<0)return res.status(404).json({ok:false,code:'UNKNOWN_ID'});
     if(items.length>=LIMIT&&index<0)return res.status(400).json({ok:false,code:'MERCHANT_LIMIT'});
-    const newId=index>=0?id:'NEW'+Date.now().toString(36);
+    const newId=index>=0?id:'NEW'+require('node:crypto').randomUUID().replace(/-/g,'');
     const item={...sanitize(raw,index>=0?items[index]:{published:false}),id:newId};
     // Publication changes must use the dedicated action, never an upsert payload.
     item.published=index>=0?items[index].published!==false:false;
