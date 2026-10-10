@@ -30,7 +30,7 @@ function setup({allow=true,stale=false}={}){
    }
    const ref=new URL(url).searchParams.get('ref');
    assert.equal(ref,'feature/merchant-admin-phase2-access-20261010');
-   return response(200,{sha,content:Buffer.from('window.MERCHANTS = '+JSON.stringify(data)+';\\n').toString('base64')});
+   return response(200,{sha,content:Buffer.from('window.MERCHANTS = '+JSON.stringify(data)+';\n').toString('base64')});
   }
   throw Error('Unexpected URL: '+url);
  };
