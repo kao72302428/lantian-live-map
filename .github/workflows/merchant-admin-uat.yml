@@ -25,3 +25,5 @@ jobs:
           node -e "const fs=require('fs'),vm=require('vm'),s={window:{}};vm.runInNewContext(fs.readFileSync('merchants.js','utf8'),s);const d=s.window.MERCHANTS;if(d.length!==157||new Set(d.map(x=>x.id)).size!==157)process.exit(1);console.log('157 merchants verified')"
       - name: Merchant admin security and preservation tests
         run: node --test tests/merchant-admin.test.js
+      - name: Merchant storefront visibility and ordering tests
+        run: node --test tests/merchant-storefront.test.js
