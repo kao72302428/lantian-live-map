@@ -32,3 +32,28 @@ test('phase 2 admin website and social links are visible with safe link attribut
  assert.match(l.innerHTML,/rel="noopener noreferrer"/);
  assert.doesNotMatch(l.innerHTML,/Draft|example.com\/draft/);
 });
+
+test('phase2 Preview fetches latest isolated branch data without changing static production behavior',async()=>{
+ const make=()=>({innerHTML:'',textContent:'',value:'',classList:{add(){},remove(){},toggle(){}},addEventListener(){},querySelectorAll(){return []}});
+ const nodes={list:make(),hint:make(),mapbox:make(),search:make(),subfilters:make()};
+ const doc={getElementById:id=>nodes[id],querySelectorAll:()=>[],querySelector:()=>({classList:{add(){}}})};
+ const latest=[...data,{id:'preview-new',name:'Fresh Preview Merchant',group:'美食餐飲',sub:'正餐小吃',address:'UAT',published:true,sortOrder:0}];
+ const baseline=Array.from({length:157},(_,i)=>({id:'base-'+i,name:'Original '+i,group:'美食餐飲',sub:'正餐小吃',address:'UAT'}));
+ const incoming=[...baseline,{id:'preview-new',name:'Fresh Preview Merchant',group:'美食餐飲',sub:'正餐小吃',address:'UAT',published:true,sortOrder:0}];
+ let requested='';
+ const context={window:{MERCHANTS:baseline},document:doc,encodeURIComponent,location:{hostname:'preview-branch.vercel.app'},fetch:async url=>{requested=url;return {ok:true,text:async()=> 'window.MERCHANTS = '+JSON.stringify(incoming)+';'};}};
+ vm.runInNewContext(source,context);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.match(requested,/feature\/merchant-admin-phase2-access-20261010\/merchants.js/);
+ assert.match(nodes.list.innerHTML,/Fresh Preview Merchant/);
+ assert.ok(nodes.list.innerHTML.indexOf('Fresh Preview Merchant')<nodes.list.innerHTML.indexOf('Original 0'));
+ assert.equal(context.window.MERCHANTS.length,158);
+});
+test('production hostname does not fetch Preview merchant records',()=>{
+ const make=()=>({innerHTML:'',textContent:'',value:'',classList:{add(){},remove(){},toggle(){}},addEventListener(){},querySelectorAll(){return []}});
+ const nodes={list:make(),hint:make(),mapbox:make(),search:make(),subfilters:make()};
+ const doc={getElementById:id=>nodes[id],querySelectorAll:()=>[],querySelector:()=>({classList:{add(){}}})};
+ let calls=0;
+ vm.runInNewContext(source,{window:{MERCHANTS:data},document:doc,encodeURIComponent,location:{hostname:'lantian-live-map.vercel.app'},fetch:()=>{calls++;throw Error('should not fetch');}});
+ assert.equal(calls,0);assert.match(nodes.list.innerHTML,/Alpha/);
+});
