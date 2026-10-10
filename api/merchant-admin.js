@@ -54,7 +54,7 @@ module.exports=async(req,res)=>{
  const tokenId=String(req.body?.idToken||'');
  const auth=await verifyAdminToken(tokenId);
  if(!auth.body.ok)return res.status(auth.status).json({ok:false,code:auth.body.code});
- const storageToken=String(process.env.GITHUB_CONTENT_TOKEN||'').trim();
+ const storageToken=String(process.env.MERCHANT_UAT_GITHUB_TOKEN||'').trim();
  if(!storageToken)return res.status(503).json({ok:false,code:'STORAGE_NOT_CONFIGURED'});
  const action=String(req.body?.action||'');
  // Explicit preview-only gate. Never permit writes from a production deployment.
