@@ -62,3 +62,24 @@ test('upsert cannot publish a new merchant or change existing publication state'
 
 test('invalid external merchant links are rejected without modifying records',async()=>{const s=setup();const r=await invoke('upsert',{item:{...initial[0],website:'javascript:alert(1)'}});assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_URL');assert.equal(s.writes,0);assert.deepEqual(s.data,initial)});
 test('invalid category and non-integer sorting are rejected without writes',async()=>{const s=setup();let r=await invoke('upsert',{item:{...initial[0],group:'不合法分類'}});assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_FIELDS');r=await invoke('setSortOrder',{id:initial[0].id,sortOrder:1.5});assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_SORT_ORDER');assert.equal(s.writes,0);assert.deepEqual(s.data,initial)});
+
+test('production gate blocks every merchant write operation',async()=>{
+ const s=setup();process.env.VERCEL_ENV='production';
+ const attempts=[
+  ['upsert',{item:{...initial[0],name:'Should not change'}}],
+  ['setPublished',{id:initial[0].id,published:false}],
+  ['setSortOrder',{id:initial[0].id,sortOrder:2}]
+ ];
+ for(const [action,extra] of attempts){const r=await invoke(action,extra);assert.equal(r.code,403,action);assert.equal(r.body.code,'UAT_WRITE_DISABLED',action);}
+ assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
+});
+test('preview without write flag blocks every merchant write operation',async()=>{
+ const s=setup();delete process.env.MERCHANT_UAT_WRITES_ENABLED;
+ const attempts=[
+  ['upsert',{item:{...initial[0],name:'Should not change'}}],
+  ['setPublished',{id:initial[0].id,published:false}],
+  ['setSortOrder',{id:initial[0].id,sortOrder:2}]
+ ];
+ for(const [action,extra] of attempts){const r=await invoke(action,extra);assert.equal(r.code,403,action);assert.equal(r.body.code,'UAT_WRITE_DISABLED',action);}
+ assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
+});
