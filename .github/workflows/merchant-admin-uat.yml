@@ -1,0 +1,27 @@
+name: Merchant Admin UAT Tests
+on:
+  pull_request:
+    paths:
+      - 'api/merchant-admin.js'
+      - 'api/_admin-verify.js'
+      - 'admin-merchant.js'
+      - 'admin-merchant.html'
+      - 'merchants.js'
+      - 'tests/merchant-admin.test.js'
+      - '.github/workflows/merchant-admin-uat.yml'
+  workflow_dispatch:
+jobs:
+  merchant-admin-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify original merchant dataset
+        run: |
+          node -e "const fs=require('fs'),vm=require('vm'),s={window:{}};vm.runInNewContext(fs.readFileSync('merchants.js','utf8'),s);const d=s.window.MERCHANTS;if(d.length!==157||new Set(d.map(x=>x.id)).size!==157)process.exit(1);console.log('157 merchants verified')"
+      - name: Merchant admin security and preservation tests
+        run: node --test tests/merchant-admin.test.js
