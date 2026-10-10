@@ -88,6 +88,8 @@ module.exports=async(req,res)=>{
     if(items.length>=LIMIT&&index<0)return res.status(400).json({ok:false,code:'MERCHANT_LIMIT'});
     const newId=index>=0?id:'NEW'+Date.now().toString(36);
     const item={...sanitize(raw,index>=0?items[index]:{published:false}),id:newId};
+    // Publication changes must use the dedicated action, never an upsert payload.
+    item.published=index>=0?items[index].published!==false:false;
     if(index>=0)items[index]=item;else items.push(item);
     const written=await write(storageToken,items,sha,'Admin '+(index>=0?'update':'add')+' merchant '+newId);
     if(!written.ok)return res.status(409).json(written);
