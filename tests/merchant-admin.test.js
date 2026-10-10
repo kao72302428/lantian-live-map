@@ -14,7 +14,7 @@ let fixtureSha='test-sha';
 function setup({allow=true,stale=false}={}){
  fixtureSha='test-sha';
  let data=JSON.parse(JSON.stringify(initial)),sha='test-sha',writes=0;
- process.env.GITHUB_CONTENT_TOKEN='offline-test-token';
+ process.env.MERCHANT_UAT_GITHUB_TOKEN='offline-test-token';
  process.env.VERCEL_ENV='preview';
  process.env.MERCHANT_UAT_WRITES_ENABLED='true';
  process.env.ADMIN_LINE_USER_HASHES=allow?ADMIN_HASH:'0'.repeat(64);
