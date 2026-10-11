@@ -29,7 +29,7 @@
   if(host.endsWith('.vercel.app')&&host!=='lantian-live-map.vercel.app'&&typeof fetch==='function'){
     const sourceUrl='https://raw.githubusercontent.com/kao72302428/lantian-live-map/feature/merchant-admin-phase2-access-20261010/merchants.js';
     fetch(sourceUrl,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('UAT_READ_FAILED');return r.text();}).then(source=>{
-      const match=/^window\\.MERCHANTS\\s*=\\s*(\\[[\\s\\S]*\\]);?\\s*$/.exec(source.trim());
+      const match=/^window\.MERCHANTS\s*=\s*(\[[\s\S]*\]);?\s*$/.exec(source.trim());
       if(!match)return;
       const latest=JSON.parse(match[1]);
       const current=Array.isArray(window.MERCHANTS)?window.MERCHANTS:[];
