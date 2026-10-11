@@ -57,3 +57,16 @@ test('production hostname does not fetch Preview merchant records',()=>{
  vm.runInNewContext(source,{window:{MERCHANTS:data},document:doc,encodeURIComponent,location:{hostname:'lantian-live-map.vercel.app'},fetch:()=>{calls++;throw Error('should not fetch');}});
  assert.equal(calls,0);assert.match(nodes.list.innerHTML,/Alpha/);
 });
+
+test('phase2 website clicks do not also select merchant map, while card clicks still work',()=>{
+ const make=()=>({innerHTML:'',textContent:'',value:'',classList:{add(){},remove(){},toggle(){}},addEventListener(){},querySelectorAll(){return []}});
+ const nodes={list:make(),hint:make(),mapbox:make(),search:make(),subfilters:make()};
+ const handlers={};nodes.list.addEventListener=(event,fn)=>{handlers[event]=fn};
+ const doc={getElementById:id=>nodes[id],querySelectorAll:()=>[],querySelector:()=>({classList:{add(){}}})};
+ vm.runInNewContext(source,{window:{MERCHANTS:data},document:doc,encodeURIComponent});
+ let prevented=0;const card={dataset:{id:'a'}};
+ handlers.click({target:{closest:selector=>selector==='a[href]'?{}:card},preventDefault:()=>prevented++});
+ assert.equal(prevented,0);
+ handlers.click({target:{closest:selector=>selector==='a[href]'?null:card},preventDefault:()=>prevented++});
+ assert.equal(prevented,1);
+});
