@@ -63,7 +63,7 @@ test('phase2 website clicks do not also select merchant map, while card clicks s
  const nodes={list:make(),hint:make(),mapbox:make(),search:make(),subfilters:make()};
  const handlers={};nodes.list.addEventListener=(event,fn)=>{handlers[event]=fn};
  const doc={getElementById:id=>nodes[id],querySelectorAll:()=>[],querySelector:()=>({classList:{add(){}}})};
- vm.runInNewContext(source,{window:{MERCHANTS:data},document:doc,encodeURIComponent});
+ vm.runInNewContext(source,{window:{MERCHANTS:data,matchMedia:()=>({matches:false})},document:doc,encodeURIComponent});
  let prevented=0;const card={dataset:{id:'a'}};
  handlers.click({target:{closest:selector=>selector==='a[href]'?{}:card},preventDefault:()=>prevented++});
  assert.equal(prevented,0);
