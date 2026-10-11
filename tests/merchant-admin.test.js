@@ -190,3 +190,9 @@ test('Preview write permission requires BOTH exact branch and enabled write flag
   assert.equal(s.writes,entry.allow?1:0);
  }
 });
+
+test('admin editor rejects an empty sort field rather than treating it as zero',()=>{
+ const ui=fs.readFileSync(require('node:path').join(__dirname,'../admin-merchant.js'),'utf8');
+ assert.match(ui,/rawOrder===\x27\x27\?NaN:Number\(rawOrder\)/);
+ assert.match(ui,/Number\.isInteger\(payload\.sortOrder\)/);
+});
