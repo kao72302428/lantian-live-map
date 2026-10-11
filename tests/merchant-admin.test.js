@@ -172,3 +172,21 @@ test('preview deployment without verified Git branch identity cannot write',asyn
  const r=await invoke('setSortOrder',{id:initial[0].id,sortOrder:1});
  assert.equal(r.code,403);assert.equal(r.body.code,'UAT_WRITE_DISABLED');assert.equal(s.writes,0);
 });
+
+test('Preview write permission requires BOTH exact branch and enabled write flag',async()=>{
+ const cases=[
+  {env:'production',branch:'feature/merchant-admin-phase2-access-20261010',flag:'true',allow:false},
+  {env:'preview',branch:'main',flag:'true',allow:false},
+  {env:'preview',branch:'feature/merchant-admin-phase2-access-20261010',flag:'false',allow:false},
+  {env:'preview',branch:'feature/merchant-admin-phase2-access-20261010',flag:'true',allow:true}
+ ];
+ for(const entry of cases){
+  const s=setup();
+  process.env.VERCEL_ENV=entry.env;
+  process.env.VERCEL_GIT_COMMIT_REF=entry.branch;
+  process.env.MERCHANT_UAT_WRITES_ENABLED=entry.flag;
+  const result=await invoke('setSortOrder',{id:initial[0].id,sortOrder:70});
+  assert.equal(result.code,entry.allow?200:403,JSON.stringify(entry));
+  assert.equal(s.writes,entry.allow?1:0);
+ }
+});
