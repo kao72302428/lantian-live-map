@@ -93,6 +93,7 @@ async function initLiff(){
   try{sessionStorage.removeItem(SESSION_TOKEN);}catch(e){console.warn(e);}
   setLocked('正在初始化 LINE LIFF…');
   let initTimer;
+  let stage='LINE_INIT';
   try{
     await Promise.race([
       liff.init({liffId:LIFF_ID}),
@@ -129,6 +130,7 @@ async function initLiff(){
       return;
     }
 
+    stage='ADMIN_VERIFY';
     setLocked('LINE 登入成功，正在進行後端管理員驗證…');
     await verifyAdmin(idToken);
   }catch(err){
@@ -141,7 +143,10 @@ async function initLiff(){
         loginBtn.onclick=()=>window.location.reload();
       }
     }else{
-      setLocked('LINE 初始化失敗，請重新載入管理中心；權限尚未驗證。',true);
+      const rawCode=String(err?.code||err?.name||'UNKNOWN_ERROR');
+      const safeCode=/^[A-Za-z0-9_-]{1,60}$/.test(rawCode)?rawCode:'UNKNOWN_ERROR';
+      const label=stage==='ADMIN_VERIFY'?'後端管理員驗證連線失敗':'LINE 初始化失敗';
+      setLocked(`${label}（${safeCode}），請重新載入管理中心；權限尚未驗證。`,true);
       if(loginBtn){
         loginBtn.textContent='重新載入驗證';
         loginBtn.onclick=()=>window.location.reload();
