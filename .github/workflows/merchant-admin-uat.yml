@@ -8,6 +8,7 @@ on:
       - 'admin-merchant.html'
       - 'merchants.js'
       - 'tests/merchant-admin.test.js'
+      - 'tests/merchant-editor.test.js'
       - '.github/workflows/merchant-admin-uat.yml'
   workflow_dispatch:
 jobs:
@@ -27,3 +28,6 @@ jobs:
         run: node --test tests/merchant-admin.test.js
       - name: Merchant storefront visibility and ordering tests
         run: node --test tests/merchant-storefront.test.js
+
+      - name: Merchant editor pending-save protection
+        run: node --test tests/merchant-editor.test.js
