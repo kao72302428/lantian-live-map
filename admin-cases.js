@@ -59,7 +59,10 @@ async function act(btn,action){
   const d=await api(action,{id,status,reply});
   items=d.items||items;
   render();
-  setMessage(action==='reply'?'回覆已寄出並寫入承辦紀錄。':'案件狀態已更新。');
+  const updatedCard=Array.from(document.querySelectorAll('.case-card')).find(x=>x.dataset.id===id);
+  const completedButton=updatedCard?.querySelector(action==='reply'?'.reply-btn':'.status-btn');
+  if(completedButton)completedButton.textContent=action==='reply'?'已送出':'已更新';
+  setMessage(action==='reply'?'已送出。回覆已寄出並寫入承辦紀錄。':'已更新。案件狀態已儲存。');
  }catch(e){setMessage('操作失敗：'+e.code,true);}
  finally{setBusy(false);}
 }
