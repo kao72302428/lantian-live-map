@@ -1255,5 +1255,19 @@ window.MERCHANTS = [
     "name": "景騰系統科技股份有限公司",
     "address": "大學二十二街32號",
     "area": "高大特區"
+  },
+  {
+    "published": false,
+    "name": "銘哥",
+    "address": "大學十街200號",
+    "group": "教育休閒",
+    "sub": "其他",
+    "area": "其他",
+    "phone": "0900-000-000",
+    "description": "冷泡茶",
+    "map": "https://www.google.com/maps?q=高雄市楠梓區&output=embed",
+    "website": "https://www.facebook.com/groups/nantai2024/",
+    "social": "https://www.facebook.com/minic1314",
+    "id": "NEWb848df542d3c44c788ceca64a44dfce8"
   }
 ];
