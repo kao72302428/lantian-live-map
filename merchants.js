@@ -1257,7 +1257,7 @@ window.MERCHANTS = [
     "area": "高大特區"
   },
   {
-    "published": true,
+    "published": false,
     "name": "銘哥",
     "address": "大學十街200號",
     "group": "教育休閒",
