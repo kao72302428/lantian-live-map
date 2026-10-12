@@ -1,0 +1,30 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const source=fs.readFileSync(require('node:path').join(__dirname,'../admin-merchant.js'),'utf8');
+test('pending merchant save blocks duplicate writes and editing; rejection unlocks controls',async()=>{
+ const nodes={},handlers={};
+ const get=id=>nodes[id]??=( {value:'',textContent:'',innerHTML:'',disabled:false,addEventListener(type,fn){(handlers[id+':'+type]??=[]).push(fn);}} );
+ const rowButton={disabled:false},rowInput={disabled:false};
+ let writes=0,rejectSave;
+ const context={location:{hostname:'preview.vercel.app',origin:'https://preview.vercel.app'},document:{getElementById:get,querySelectorAll:()=>[rowButton,rowInput]},sessionStorage:{getItem:()=> 'mock-token',setItem(){}},window:{scrollTo(){}},confirm:()=>true,fetch:async(url,options)=>{
+  const body=JSON.parse(options.body);
+  if(body.action==='list')return {ok:true,json:async()=>({ok:true,items:[{id:'one',name:'Shop',address:'A'}],sha:'v1'})};
+  writes++;
+  return new Promise((resolve,reject)=>{rejectSave=reject;});
+ }};
+ vm.runInNewContext(source,context);
+ await new Promise(resolve=>setImmediate(resolve));
+ get('name').value='Draft';get('address').value='A';get('group').value='美食餐飲';
+ const submit=handlers['merchantForm:submit'][0];
+ const pending=submit({preventDefault(){}});
+ assert.equal(writes,1);assert.equal(get('saveBtn').disabled,true);assert.equal(rowButton.disabled,true);assert.equal(rowInput.disabled,true);
+ await submit({preventDefault(){}});
+ for(const fn of handlers['list:click'])await fn({target:{closest:()=>({dataset:{publish:'one',id:'one'}})}});
+ handlers['newBtn:click'][0]();
+ assert.equal(writes,1);assert.equal(get('name').value,'Draft');
+ rejectSave(Error('NETWORK_FAILED'));await pending;
+ assert.equal(get('saveBtn').disabled,false);assert.equal(rowButton.disabled,false);assert.equal(rowInput.disabled,false);
+ assert.equal(get('name').value,'Draft');assert.match(get('message').textContent,/NETWORK_FAILED/);
+});
