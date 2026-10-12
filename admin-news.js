@@ -3,6 +3,7 @@ const LIFF_ID='2011802000-aDp14e0D';
 const API='https://lantian-live-map.vercel.app/api/news-admin';
 let idToken='';
 let items=[];
+let versionSha='',busy=false;
 const SESSION_TOKEN='lantianAdminIdToken';
 let reverifyBtn=null;
 
@@ -11,6 +12,8 @@ const fields=['date','title','summary','content','image','map','link','linkText'
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 function setEnabled(enabled){
+ busy=!enabled;
+ document.querySelectorAll('#list button').forEach(el=>el.disabled=!enabled);
  fields.forEach(id=>{const el=$(id); if(el) el.disabled=!enabled;});
  $('newBtn').disabled=!enabled;
  $('saveDraftBtn').disabled=!enabled;
@@ -42,6 +45,7 @@ function setAuth(ok,msg){
 }
 
 function resetForm(){
+ if(busy)return;
  $('newsForm').reset();
  $('id').value='';
  $('published').checked=true;
@@ -68,7 +72,7 @@ async function api(action,extra={}){
  const r=await fetch(API,{
    method:'POST',
    headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({idToken,action,...extra})
+   body:JSON.stringify({idToken,action,expectedSha:versionSha,...extra})
  });
  const data=await r.json().catch(()=>({}));
  if(!r.ok||!data.ok){
@@ -96,6 +100,7 @@ function render(){
 }
 
 function editItem(item){
+ if(busy)return;
  $('id').value=item.id||'';
  $('date').value=item.date||'';
  $('title').value=item.title||'';
@@ -114,10 +119,12 @@ async function refresh(){
  $('count').textContent='載入中';
  const data=await api('list');
  items=data.items||[];
+ versionSha=data.sha||'';
  render();
 }
 
 async function saveItem(published){
+ if(busy)return;
  const item=getFormItem(published);
  if(!item.date||!item.title||!item.summary||!item.content){
    $('formMessage').hidden=false;
@@ -130,13 +137,15 @@ async function saveItem(published){
  try{
    const data=await api('upsert',{item});
    items=data.items||[];
+ versionSha=data.sha||'';
    render();
+   setEnabled(true);
    resetForm();
    $('formMessage').hidden=false;
    $('formMessage').textContent=published?'已儲存並發布。':'已儲存為未公開。';
  }catch(e){
    $('formMessage').hidden=false;
-   $('formMessage').textContent=e.code==='STORAGE_NOT_CONFIGURED'?'後端儲存尚未設定。':'儲存失敗，請稍後再試。';
+   $('formMessage').textContent=e.code==='STALE_DATA'?'資料已被其他管理員更新，本次未儲存。請先保留編輯內容，再重新整理後確認最新資料。':e.code==='STORAGE_NOT_CONFIGURED'?'後端儲存尚未設定。':'儲存失敗，請稍後再試。';
  }finally{setEnabled(true);}
 }
 
@@ -145,7 +154,7 @@ $('saveDraftBtn').addEventListener('click',()=>saveItem(false));
 $('newBtn').addEventListener('click',resetForm);
 $('list').addEventListener('click',async e=>{
  const btn=e.target.closest('button[data-action]');
- if(!btn)return;
+ if(!btn||busy)return;
  const card=btn.closest('.news-item');
  const item=items.find(x=>String(x.id)===card.dataset.id);
  if(!item)return;
@@ -157,9 +166,11 @@ $('list').addEventListener('click',async e=>{
    if(action==='toggle'){
      const data=await api('setPublished',{id:item.id,published:item.published===false});
      items=data.items||[];
+ versionSha=data.sha||'';
    }else if(action==='delete'){
      const data=await api('delete',{id:item.id});
      items=data.items||[];
+ versionSha=data.sha||'';
    }
    render();
  }catch(e){alert('操作失敗：'+(e.code||'請稍後再試'));}

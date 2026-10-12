@@ -65,7 +65,8 @@ async function writeNews(token, items, sha, message) {
   };
   const r = await fetch(url, { method: 'PUT', headers: ghHeaders(token), body: JSON.stringify(body) });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data?.message || 'WRITE_FAILED');
+  if (r.status === 409) throw new Error('STALE_DATA');
+  if (!r.ok) throw new Error('WRITE_FAILED');
   return data;
 }
 
@@ -107,7 +108,12 @@ module.exports = async function handler(req, res) {
     const { items, sha } = await readNews(token);
 
     if (action === 'list') {
-      return res.status(200).json({ ok: true, items });
+      return res.status(200).json({ ok: true, items, sha });
+    }
+
+    if (['upsert','setPublished','delete'].includes(action)) {
+      if (!req.body?.expectedSha) return res.status(400).json({ok:false,code:'MISSING_EXPECTED_SHA'});
+      if (req.body.expectedSha !== sha) return res.status(409).json({ok:false,code:'STALE_DATA'});
     }
 
     if (action === 'upsert') {
@@ -121,8 +127,8 @@ module.exports = async function handler(req, res) {
       if (index >= 0) items[index] = incoming;
       else items.push(incoming);
       items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
-      await writeNews(token, items, sha, `Admin ${index >= 0 ? 'update' : 'publish'} news: ${incoming.title}`);
-      return res.status(200).json({ ok: true, items, item: incoming });
+      const written = await writeNews(token, items, sha, `Admin ${index >= 0 ? 'update' : 'publish'} news: ${incoming.title}`);
+      return res.status(200).json({ ok: true, items, item: incoming, sha: written.content?.sha });
     }
 
     if (action === 'setPublished') {
@@ -131,8 +137,8 @@ module.exports = async function handler(req, res) {
       const index = items.findIndex(x => String(x.id) === id);
       if (index < 0) return res.status(404).json({ ok: false, code: 'NOT_FOUND' });
       items[index] = { ...items[index], published };
-      await writeNews(token, items, sha, `Admin ${published ? 'publish' : 'unpublish'} news: ${id}`);
-      return res.status(200).json({ ok: true, items, item: items[index] });
+      const written = await writeNews(token, items, sha, `Admin ${published ? 'publish' : 'unpublish'} news: ${id}`);
+      return res.status(200).json({ ok: true, items, item: items[index], sha: written.content?.sha });
     }
 
     if (action === 'delete') {
@@ -140,12 +146,13 @@ module.exports = async function handler(req, res) {
       if (!id) return res.status(400).json({ ok: false, code: 'MISSING_ID' });
       const next = items.filter(x => String(x.id) !== id);
       if (next.length === items.length) return res.status(404).json({ ok: false, code: 'NOT_FOUND' });
-      await writeNews(token, next, sha, `Admin delete news: ${id}`);
-      return res.status(200).json({ ok: true, items: next });
+      const written = await writeNews(token, next, sha, `Admin delete news: ${id}`);
+      return res.status(200).json({ ok: true, items: next, sha: written.content?.sha });
     }
 
     return res.status(400).json({ ok: false, code: 'UNKNOWN_ACTION' });
   } catch (err) {
+    if (err.message === 'STALE_DATA') return res.status(409).json({ok:false,code:'STALE_DATA'});
     console.error(err);
     return res.status(502).json({ ok: false, code: 'GITHUB_WRITE_FAILED' });
   }

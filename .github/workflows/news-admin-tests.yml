@@ -1,0 +1,22 @@
+name: News Admin Tests
+on:
+  pull_request:
+    paths:
+      - 'api/news-admin.js'
+      - 'admin-news.js'
+      - 'admin-news.html'
+      - 'tests/news-admin.test.js'
+      - '.github/workflows/news-admin-tests.yml'
+  workflow_dispatch:
+jobs:
+  news-admin-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check admin-news.js
+      - run: node --test tests/news-admin.test.js
