@@ -49,7 +49,7 @@ async function invoke(action,extra={},token='offline-token'){
  await handler(req,res);return res;
 }
 test('all 157 original merchant IDs preserved in fixture',()=>{assert.equal(initial.length,157);assert.equal(new Set(initial.map(x=>x.id)).size,157)});
-test('non-admin cannot list or modify',async()=>{const s=setup({allow:false});for(const action of ['list','upsert','setPublished','setSortOrder']){const r=await invoke(action,{id:initial[0].id,published:false,sortOrder:3,item:initial[0]});assert.equal(r.code,403)}assert.equal(s.writes,0)});
+test('non-admin cannot list or modify',async()=>{const s=setup({allow:false});for(const action of ['list','upsert','setPublished','setSortOrder','delete']){const r=await invoke(action,{id:initial[0].id,published:false,sortOrder:3,item:initial[0]});assert.equal(r.code,403)}assert.equal(s.writes,0)});
 test('missing token rejected',async()=>{const s=setup();const r=await invoke('list',{},'');assert.equal(r.code,400);assert.equal(s.writes,0)});
 test('admin can read without writes',async()=>{const s=setup();const r=await invoke('list');assert.equal(r.code,200);assert.equal(r.body.items.length,157);assert.equal(s.writes,0)});
 test('publish toggle persists without losing original records',async()=>{const s=setup();const id=initial[0].id;const r=await invoke('setPublished',{id,published:false});assert.equal(r.code,200);assert.equal(s.data.length,157);assert.equal(s.data.find(x=>x.id===id).published,false);assert.equal(s.writes,1)});
@@ -73,7 +73,8 @@ test('production gate blocks every merchant write operation',async()=>{
  const attempts=[
   ['upsert',{item:{...initial[0],name:'Should not change'}}],
   ['setPublished',{id:initial[0].id,published:false}],
-  ['setSortOrder',{id:initial[0].id,sortOrder:2}]
+  ['setSortOrder',{id:initial[0].id,sortOrder:2}],
+  ['delete',{id:initial[0].id}]
  ];
  for(const [action,extra] of attempts){const r=await invoke(action,extra);assert.equal(r.code,403,action);assert.equal(r.body.code,'UAT_WRITE_DISABLED',action);}
  assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
@@ -83,7 +84,8 @@ test('preview without write flag blocks every merchant write operation',async()=
  const attempts=[
   ['upsert',{item:{...initial[0],name:'Should not change'}}],
   ['setPublished',{id:initial[0].id,published:false}],
-  ['setSortOrder',{id:initial[0].id,sortOrder:2}]
+  ['setSortOrder',{id:initial[0].id,sortOrder:2}],
+  ['delete',{id:initial[0].id}]
  ];
  for(const [action,extra] of attempts){const r=await invoke(action,extra);assert.equal(r.code,403,action);assert.equal(r.body.code,'UAT_WRITE_DISABLED',action);}
  assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
@@ -100,7 +102,8 @@ test('publishing and sorting never alter unrelated merchant records',async()=>{
 test('unsupported merchant action and unknown IDs never write',async()=>{
  const s=setup();
  for(const [action,extra,expected] of [
-  ['delete',{id:initial[0].id},400],
+  ['unsupported',{id:initial[0].id},400],
+  ['delete',{id:'missing-merchant'},404],
   ['setPublished',{id:'missing-merchant',published:false},404],
   ['setSortOrder',{id:'missing-merchant',sortOrder:1},404]
  ]){const r=await invoke(action,extra);assert.equal(r.code,expected,action);}
@@ -218,3 +221,17 @@ test('admin editor rejects an empty sort field rather than treating it as zero',
   setup({production:true});delete process.env.GITHUB_CONTENT_TOKEN;
   const r=await invoke('list');assert.equal(r.code,503);assert.equal(r.body.code,'STORAGE_NOT_CONFIGURED');
  });
+
+test('production delete removes one shop from admin and public lists while preserving original records',async()=>{
+ const s=setup({production:true}),id=initial[0].id;
+ const r=await invoke('delete',{id});assert.equal(r.code,200);assert.equal(r.body.items.length,156);assert.ok(!r.body.items.some(x=>x.id===id));
+ assert.equal(s.data.length,157);assert.equal(s.data[0].deleted,true);assert.equal(s.data[0].published,false);assert.ok(!Number.isNaN(Date.parse(s.data[0].deletedAt)));assert.deepEqual(s.data.slice(1),initial.slice(1));
+ assert.ok(!s.data.filter(x=>x.published!==false).some(x=>x.id===id));
+ const loaded=await invoke('list');assert.equal(loaded.body.items.length,156);
+ for(const [action,extra] of [['delete',{id}],['setPublished',{id,published:true}],['setSortOrder',{id,sortOrder:1}],['upsert',{item:initial[0]}]])assert.equal((await invoke(action,extra)).code,404);
+ assert.equal(s.writes,1);
+});
+test('delete requires editor version and rejects stale edits or storage conflicts without changing records',async()=>{
+ let s=setup();assert.equal((await invoke('delete',{id:initial[0].id,expectedSha:''})).code,400);assert.equal((await invoke('delete',{id:initial[0].id,expectedSha:'old-sha'})).code,409);assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
+ s=setup({stale:true});assert.equal((await invoke('delete',{id:initial[0].id})).code,409);assert.equal(s.writes,0);assert.deepEqual(s.data,initial);
+});

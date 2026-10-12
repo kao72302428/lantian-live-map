@@ -64,15 +64,24 @@ module.exports=async(req,res)=>{
   return res.status(403).json({ok:false,code:'UAT_WRITE_DISABLED'});
  try{
   const {items,sha}=await read(storageToken,targetBranch);
-  if(action==='list')return res.status(200).json({ok:true,items,sha,branch:targetBranch});
+  if(action==='list')return res.status(200).json({ok:true,items:items.filter(x=>x.deleted!==true),sha,branch:targetBranch});
   // Require the exact version originally loaded by the editor, not only the latest read-before-write SHA.
   if(typeof req.body?.expectedSha!=='string'||!req.body.expectedSha.trim())return res.status(400).json({ok:false,code:'MISSING_EXPECTED_SHA'});
   if(req.body.expectedSha!==sha)return res.status(409).json({ok:false,code:'STALE_DATA'});
-  // No deletion action: preserve every existing merchant record.
+  // Keep original IDs for audit and dataset integrity; deleted rows leave both public and admin lists.
+  if(action==='delete'){
+    const id=String(req.body?.id||'').trim();
+    const index=items.findIndex(x=>x.id===id&&x.deleted!==true);
+    if(index<0)return res.status(404).json({ok:false,code:'NOT_FOUND'});
+    items[index]={...items[index],deleted:true,published:false,deletedAt:new Date().toISOString()};
+    const written=await write(storageToken,items,sha,'Admin delete merchant '+id,targetBranch);
+    if(!written.ok)return res.status(409).json(written);
+    return res.status(200).json({ok:true,items:items.filter(x=>x.deleted!==true),sha:written.sha});
+  }
   if(action==='setPublished'||action==='setSortOrder'){
     const id=String(req.body?.id||'').trim();
     const index=items.findIndex(x=>x.id===id);
-    if(index<0)return res.status(404).json({ok:false,code:'NOT_FOUND'});
+    if(index<0||items[index].deleted===true)return res.status(404).json({ok:false,code:'NOT_FOUND'});
     if(action==='setPublished'){
       if(typeof req.body?.published!=='boolean')return res.status(400).json({ok:false,code:'INVALID_PUBLISHED'});
       items[index]={...items[index],published:req.body.published};
@@ -83,14 +92,14 @@ module.exports=async(req,res)=>{
     }
     const written=await write(storageToken,items,sha,'Merchant '+action+' '+id,targetBranch);
     if(!written.ok)return res.status(409).json(written);
-    return res.status(200).json({ok:true,items,item:items[index],sha:written.sha});
+    return res.status(200).json({ok:true,items:items.filter(x=>x.deleted!==true),item:items[index],sha:written.sha});
   }
   if(action==='upsert'){
     const raw=req.body?.item;
     if(!raw||typeof raw!=='object'||Array.isArray(raw))return res.status(400).json({ok:false,code:'INVALID_ITEM'});
     const id=String(raw.id||'').trim();
     const index=items.findIndex(x=>x.id===id);
-    if(id&&index<0)return res.status(404).json({ok:false,code:'UNKNOWN_ID'});
+    if(id&&(index<0||items[index].deleted===true))return res.status(404).json({ok:false,code:'UNKNOWN_ID'});
     if(items.length>=LIMIT&&index<0)return res.status(400).json({ok:false,code:'MERCHANT_LIMIT'});
     const newId=index>=0?id:'NEW'+require('node:crypto').randomUUID().replace(/-/g,'');
     const item={...sanitize(raw,index>=0?items[index]:{published:false}),id:newId};
@@ -99,7 +108,7 @@ module.exports=async(req,res)=>{
     if(index>=0)items[index]=item;else items.push(item);
     const written=await write(storageToken,items,sha,'Admin '+(index>=0?'update':'add')+' merchant '+newId,targetBranch);
     if(!written.ok)return res.status(409).json(written);
-    return res.status(200).json({ok:true,items,item,sha:written.sha});
+    return res.status(200).json({ok:true,items:items.filter(x=>x.deleted!==true),item,sha:written.sha});
   }
   return res.status(400).json({ok:false,code:'UNKNOWN_ACTION'});
  }catch(error){
