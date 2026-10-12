@@ -1,15 +1,15 @@
 [
   {
     "id": "news-1791347552656",
-    "date": "2026-10-07",
-    "title": "line@測試1",
-    "summary": "line@測試1",
-    "content": "line@測試1",
+    "date": "2026-10-12",
+    "title": "line@測試12",
+    "summary": "line@測試12",
+    "content": "line@測試12",
     "image": "https://kao72302428.github.io/lantian-live-map/news-hero.png",
     "map": "https://www.google.com/maps?q=高雄市楠梓區&output=embed",
     "link": "https://kao72302428.github.io/lantian-live-map/",
     "linkText": "查看更多智慧藍田生活資訊",
-    "published": false
+    "published": true
   },
   {
     "id": "test-003",
