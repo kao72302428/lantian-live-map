@@ -11,7 +11,8 @@ test('six main categories replace all and reset search when switching',()=>{
  const adminGroups=[...admin.matchAll(/<option>([^<]+)<\/option>/g)].map(x=>x[1]);
  assert.deepEqual(labels,adminGroups);assert.deepEqual(labels,groups);
  for(const group of groups)assert.ok(html.includes(' '+group+'</button>'));
- assert.doesNotMatch(html,/data-g="全部"/);
+ assert.doesNotMatch(html,/data-g="全部"|id="subfilters"/);
+ assert.doesNotMatch(source,/data-sub=|function renderSubs/);
  const sample=groups.map((group,i)=>({id:'cat-'+i,name:'CategoryShop'+i,group,sub:'',address:'A'}));
  const l=element(),s=element(),subs=element();
  const buttons=groups.map(g=>{const b=element();b.dataset={g};b.addEventListener=(type,fn)=>{if(type==='click')b.click=fn};return b});
