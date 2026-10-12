@@ -1268,6 +1268,7 @@ window.MERCHANTS = [
     "map": "https://www.google.com/maps?q=高雄市楠梓區&output=embed",
     "website": "https://www.facebook.com/groups/nantai2024/",
     "social": "https://www.facebook.com/minic1314",
-    "id": "NEWb848df542d3c44c788ceca64a44dfce8"
+    "id": "NEWb848df542d3c44c788ceca64a44dfce8",
+    "sortOrder": 99901
   }
 ];
