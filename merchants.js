@@ -1269,6 +1269,8 @@ window.MERCHANTS = [
     "website": "https://www.facebook.com/groups/nantai2024/",
     "social": "https://www.facebook.com/minic1314",
     "id": "NEWb848df542d3c44c788ceca64a44dfce8",
-    "sortOrder": 99901
+    "sortOrder": 99901,
+    "deleted": true,
+    "deletedAt": "2026-10-12T16:39:52.880Z"
   }
 ];
