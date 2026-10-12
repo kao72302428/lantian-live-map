@@ -137,6 +137,14 @@ async function initLiff(){
     clearTimeout(initTimer);
     console.error(err);
     if(err?.message==='LIFF_INIT_TIMEOUT'){
+      if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&/Line\//i.test(navigator.userAgent)){
+        setLocked('LINE 初始化逾時，請開啟 LINE 管理員登入。',true);
+        if(loginBtn){
+          loginBtn.textContent='開啟 LINE 管理員登入';
+          loginBtn.onclick=()=>window.location.assign('https://liff.line.me/'+LIFF_ID);
+        }
+        return;
+      }
       setLocked('LINE LIFF 初始化逾時，請重新載入管理中心；權限尚未驗證。',true);
       if(loginBtn){
         loginBtn.textContent='重新載入驗證';
