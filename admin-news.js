@@ -92,6 +92,7 @@ function render(){
    <div class="news-title">${E(x.title)}</div>
    <div class="news-summary">${E(x.summary)}</div>
    <div class="item-actions">
+    ${x.published!==false?`<a href="./news-detail.html?id=${encodeURIComponent(String(x.id))}" target="_blank" rel="noopener" style="display:inline-block;padding:10px 14px;border-radius:12px;background:#eaf3f8;color:#526a7c;font-weight:800;text-decoration:none">查看內頁</a>`:'<span style="align-self:center;color:#718493">未公開：發布後可查看內頁</span>'}
     <button type="button" data-action="edit">修改</button>
     <button type="button" data-action="toggle">${x.published===false?'重新發布':'下架'}</button>
     <button type="button" data-action="delete" class="danger">刪除</button>
