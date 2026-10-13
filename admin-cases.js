@@ -1,19 +1,30 @@
 (()=>{
 const API='https://lantian-live-map.vercel.app/api/cases-admin';
 const SESSION_TOKEN='lantianAdminIdToken';
-let items=[];
+let items=[],busy=false,loadedOnce=false;
 const $=id=>document.getElementById(id);
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 function token(){try{return sessionStorage.getItem(SESSION_TOKEN)||'';}catch(e){return '';}}
+function isVerified(){return !!token()&&$('authStatus')?.classList.contains('ok');}
+function invalidateAuth(){
+ try{sessionStorage.removeItem(SESSION_TOKEN);}catch(e){}
+ const status=$('authStatus');
+ if(status){status.textContent='管理員驗證已失效，請按「重新驗證」。';status.classList.remove('ok');const button=status.parentElement?.querySelector('button');if(button)button.style.display='inline-block';}
+ if($('authTitle'))$('authTitle').textContent='管理權限尚未啟用';
+}
+function errorMessage(e,prefix){return ['AUTH_REQUIRED','INVALID_LINE_ID_TOKEN','MISSING_ID_TOKEN','NOT_AUTHORIZED'].includes(e.code)?'管理員驗證已失效，請使用上方「重新驗證」。':prefix+e.code;}
 function setMessage(text,error=false){$('caseMessage').textContent=text;$('caseMessage').classList.toggle('error',error);}
-function setBusy(busy){$('loadBtn').disabled=busy||!token();document.querySelectorAll('.case-action').forEach(b=>b.disabled=busy);}
+function setBusy(value){busy=value;const locked=busy||!isVerified();$('loadBtn').disabled=locked;document.querySelectorAll('.case-action').forEach(b=>b.disabled=locked);}
 async function api(action,extra={}){
  const idToken=token();
- if(!idToken)throw Object.assign(new Error('AUTH_REQUIRED'),{code:'AUTH_REQUIRED'});
+ if(!idToken||!isVerified())throw Object.assign(new Error('AUTH_REQUIRED'),{code:'AUTH_REQUIRED'});
  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken,action,...extra})});
  const data=await r.json().catch(()=>({}));
- if(!r.ok||!data.ok)throw Object.assign(new Error(data.code||'REQUEST_FAILED'),{code:data.code||'REQUEST_FAILED'});
+ if(!r.ok||!data.ok){
+  if(['INVALID_LINE_ID_TOKEN','MISSING_ID_TOKEN','NOT_AUTHORIZED'].includes(data.code)&&token()===idToken)invalidateAuth();
+  throw Object.assign(new Error(data.code||'REQUEST_FAILED'),{code:data.code||'REQUEST_FAILED'});
+ }
  return data;
 }
 function filtered(){
@@ -48,7 +59,7 @@ function render(){
 async function load(){
  setBusy(true);setMessage('案件載入中…');
  try{const d=await api('list');items=d.items||[];render();setMessage('案件已載入。');}
- catch(e){setMessage(e.code==='AUTH_REQUIRED'?'管理員驗證已失效，請使用上方「重新驗證」。':'案件載入失敗：'+e.code,true);}
+ catch(e){setMessage(errorMessage(e,'案件載入失敗：'),true);}
  finally{setBusy(false);}
 }
 async function deleteCase(btn){
@@ -58,7 +69,7 @@ async function deleteCase(btn){
  try{
   const d=await api('delete',{id});
   items=d.items||items.filter(x=>x.id!==id);render();setMessage('已刪除。');
- }catch(e){setMessage('刪除失敗：'+e.code,true);}
+ }catch(e){setMessage(errorMessage(e,'刪除失敗：'),true);}
  finally{setBusy(false);}
 }
 async function act(btn,action){
@@ -73,7 +84,7 @@ async function act(btn,action){
   const completedButton=updatedCard?.querySelector(action==='reply'?'.reply-btn':'.status-btn');
   if(completedButton)completedButton.textContent=action==='reply'?'已送出':'已更新';
   setMessage(action==='reply'?'已送出。回覆已寄出並寫入承辦紀錄。':'已更新。案件狀態已儲存。');
- }catch(e){setMessage('操作失敗：'+e.code,true);}
+ }catch(e){setMessage(errorMessage(e,'操作失敗：'),true);}
  finally{setBusy(false);}
 }
 $('loadBtn').addEventListener('click',load);
@@ -81,6 +92,11 @@ $('searchInput').addEventListener('input',render);
 $('statusFilter').addEventListener('change',render);
 $('caseList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.classList.contains('status-btn'))act(b,'setStatus');if(b.classList.contains('reply-btn'))act(b,'reply');if(b.classList.contains('delete-btn'))deleteCase(b);});
 
-let checks=0;
-const wait=setInterval(()=>{checks++;if(token()){clearInterval(wait);$('loadBtn').disabled=false;load();}else if(checks>30){clearInterval(wait);setMessage('管理員驗證已失效，請使用上方「重新驗證」。',true);}},200);
+function syncAuth(){
+ if(isVerified()&&!loadedOnce){loadedOnce=true;load();}
+ else if(!busy)setBusy(false);
+}
+const authStatus=$('authStatus');
+if(authStatus)new MutationObserver(syncAuth).observe(authStatus,{attributes:true,attributeFilter:['class'],childList:true});
+syncAuth();
 })();

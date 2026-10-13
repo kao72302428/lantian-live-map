@@ -26,11 +26,11 @@ test('read failure permits retry without claiming success',async()=>{const c=con
 test('preview and remove clear attachment fields',()=>{const c=contact();c.els.photoInput.files=[{type:'image/png',size:3}];c.els.photoInput.events.change();assert.equal(c.els.photoPreview.hidden,false);c.els.photoBase64.value='old';c.els.removePhotoBtn.events.click();assert.equal(c.els.photoPreview.hidden,true);assert.equal(c.els.photoBase64.value,'');assert.equal(c.els.photoInput.value,'');});
 test('double submission is ignored while waiting',async()=>{const c=contact();await c.send();await c.send();assert.equal(c.count(),1);});
 function cases(){
- const ids=['loadBtn','caseMessage','searchInput','statusFilter','caseCount','caseList'];const els=Object.fromEntries(ids.map(id=>[id,node()]));
- let confirm=true,fail=false,calls=[];
+ const ids=['loadBtn','caseMessage','searchInput','statusFilter','caseCount','caseList','authStatus','authTitle'];const els=Object.fromEntries(ids.map(id=>[id,node()]));
+ let confirm=true,fail=false,calls=[],verified=false;els.authStatus.classList.contains=()=>verified;
  const card={dataset:{id:'LT-1'}},button={closest:()=>card};
- const context={document:{getElementById:id=>els[id],querySelectorAll:()=>[]},window:{confirm:()=>confirm},sessionStorage:{getItem:()=> 'valid-token'},setInterval:()=>1,clearInterval(){},fetch:async(url,options)=>{calls.push(JSON.parse(options.body));if(fail)return {ok:false,json:async()=>({ok:false,code:'SERVICE_FAILURE'})};return {ok:true,json:async()=>({ok:true,items:[]})};}};
- const source=read('admin-cases.js').replace(/\}\)\(\);\s*$/,"globalThis.hooks={deleteCase,render,setItems:x=>items=x};})();");vm.runInNewContext(source,context);
+ const context={document:{getElementById:id=>els[id],querySelectorAll:()=>[]},window:{confirm:()=>confirm},MutationObserver:class{observe(){}},sessionStorage:{getItem:()=> 'valid-token'},setInterval:()=>1,clearInterval(){},fetch:async(url,options)=>{calls.push(JSON.parse(options.body));if(fail)return {ok:false,json:async()=>({ok:false,code:'SERVICE_FAILURE'})};return {ok:true,json:async()=>({ok:true,items:[]})};}};
+ const source=read('admin-cases.js').replace(/\}\)\(\);\s*$/,"globalThis.hooks={deleteCase,render,setItems:x=>items=x};})();");vm.runInNewContext(source,context);verified=true;
  return {els,button,hooks:context.hooks,calls,cancel:()=>confirm=false,fail:()=>fail=true};
 }
 test('cancel delete sends no request',async()=>{const c=cases();c.cancel();await c.hooks.deleteCase(c.button);assert.equal(c.calls.length,0);});
