@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>智慧藍田｜建言與合作</title>
 <link rel="stylesheet" href="./contact.css?v=20261003-buttons-purple">
-<style>.hero-admin-entry{position:absolute;right:2.5%;bottom:5%;z-index:2;display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:999px;background:#fff;color:#28369b;border:2px solid #493cb7;box-shadow:0 3px 12px rgba(26,24,90,.25);font:800 15px/1.3 system-ui,-apple-system,"Noto Sans TC",sans-serif;text-decoration:none;white-space:nowrap}.hero-admin-entry:focus-visible{outline:3px solid #ff9b32;outline-offset:3px}@media(max-width:768px){.hero-admin-entry{right:2%;bottom:4%;padding:5px 8px;border-width:1px;font-size:10px;box-shadow:0 2px 6px rgba(26,24,90,.25)}}.site-footer{text-align:center;padding:18px 12px 22px;color:#6f8391;font:14px/1.5 system-ui,-apple-system,"Noto Sans TC",sans-serif}@media(max-width:768px){.site-footer{font-size:13px;padding:16px 10px 20px}}</style>
+<style>#photoPreview[hidden]{display:none}.hero-admin-entry{position:absolute;right:2.5%;bottom:5%;z-index:2;display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:999px;background:#fff;color:#28369b;border:2px solid #493cb7;box-shadow:0 3px 12px rgba(26,24,90,.25);font:800 15px/1.3 system-ui,-apple-system,"Noto Sans TC",sans-serif;text-decoration:none;white-space:nowrap}.hero-admin-entry:focus-visible{outline:3px solid #ff9b32;outline-offset:3px}@media(max-width:768px){.hero-admin-entry{right:2%;bottom:4%;padding:5px 8px;border-width:1px;font-size:10px;box-shadow:0 2px 6px rgba(26,24,90,.25)}}.site-footer{text-align:center;padding:18px 12px 22px;color:#6f8391;font:14px/1.5 system-ui,-apple-system,"Noto Sans TC",sans-serif}@media(max-width:768px){.site-footer{font-size:13px;padding:16px 10px 20px}}</style>
 <script>
 if('scrollRestoration' in history) history.scrollRestoration='manual';
 window.addEventListener('pageshow',()=>{
@@ -33,6 +33,13 @@ window.addEventListener('pageshow',()=>{
 <label>電話 <em>*</em><input id="phoneInput" name="電話" type="tel" required autocomplete="off"></label>
 <label>信箱 <em>*</em><input id="emailInput" name="email" type="email" required autocomplete="off"></label>
 <label class="full" id="contentLabel"><span id="contentLabelText">留言內容</span> <em>*</em><div id="contentGuide" class="contentGuide"></div><textarea id="contentText" name="事實內容" rows="8" required autocomplete="off" placeholder="請依照上方提示項目填寫內容"></textarea></label>
+<div class="full uploadBox">
+<label for="photoInput">上傳照片 <span class="optional">（選填）</span></label>
+<input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="photoHelp">
+<small id="photoHelp">可附上一張 JPG、PNG 或 WebP 照片，檔案不超過 2.5 MB；不附照片也可送出。</small>
+<div id="photoPreview" class="photoPreview" hidden><img id="photoPreviewImage" alt="待上傳照片預覽"><button id="removePhotoBtn" type="button">移除照片</button></div>
+<input id="photoBase64" type="hidden" name="照片Base64"><input id="photoName" type="hidden" name="照片檔名"><input id="photoMime" type="hidden" name="照片格式">
+</div>
 <button class="submit" type="submit">送出資料</button><p id="formMsg" class="msg" role="status"></p>
 </form>
 <iframe name="contactReceiver" id="contactReceiver" title="聯絡表單送出結果" style="display:none"></iframe>
@@ -41,7 +48,7 @@ window.addEventListener('pageshow',()=>{
 <section class="notice"><h2>服務說明</h2><p>本平台提供地方資訊交流、意見蒐集及協助聯繫服務。地方公共設施問題將視內容協助整理或轉達相關單位，本平台並非政府機關正式報修或緊急通報系統；涉及緊急安全事件，請直接聯絡相關主管機關。（高雄直撥1999服務專線）</p><p><b>預防詐騙提醒：</b>本平台不會要求提供銀行帳號、信用卡資料、網路銀行密碼，也不會以案件處理為由要求匯款。如收到可疑訊息或付款要求，請勿提供金融或敏感資料，並先透過上述電話或 Email 向本平台確認。</p></section>
 </main>
 <footer class="site-footer">智慧藍田 LIVE 一點通</footer>
-<script src="./contact-app.js?v=20260929-1900"></script>
+<script src="./contact-app.js?v=20261013-optional-photo"></script>
 <script>
 if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&/Line\//i.test(navigator.userAgent)){
   document.querySelector('.hero-admin-entry').href='https://liff.line.me/2011802000-aDp14e0D';

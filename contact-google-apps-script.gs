@@ -50,7 +50,16 @@ function handleAdmin_(p){
   if(action==='list')return json_({ok:true,items:readCases_(sheet)});
   const id=clean_(p.id), row=findCaseRow_(sheet,id);
   if(row<2)return json_({ok:false,code:'CASE_NOT_FOUND'});
+  if(String(sheet.getRange(row,8).getValue())==='已刪除')return json_({ok:false,code:'CASE_DELETED'});
   const tz='Asia/Taipei', now=Utilities.formatDate(new Date(),tz,'yyyy-MM-dd HH:mm:ss');
+  if(action==='delete'){
+    const lock=LockService.getScriptLock();lock.waitLock(10000);
+    try{
+      sheet.getRange(row,8).setValue('已刪除');sheet.getRange(row,10).setValue(now);
+    }finally{lock.releaseLock();}
+    return json_({ok:true,items:readCases_(sheet)});
+  }
+
   if(action==='setStatus'){
     const status=clean_(p.status);
     if(['未處理','處理中','已完成'].indexOf(status)<0)return json_({ok:false,code:'INVALID_STATUS'});
@@ -83,7 +92,7 @@ function verifyAdminGateway_(providedSecret){
 function readCases_(sheet){
   const last=sheet.getLastRow(); if(last<2)return [];
   const rows=sheet.getRange(2,1,last-1,14).getDisplayValues();
-  return rows.map(r=>({id:r[0],submittedAt:r[1],type:r[2],name:r[3],phone:r[4],email:r[5],content:r[6],status:r[7]||'未處理',note:r[8],updatedAt:r[9],source:r[10],photoUrl:r[11],photoName:r[12],photoMime:r[13]})).reverse();
+  return rows.filter(r=>r[7]!=='已刪除').map(r=>({id:r[0],submittedAt:r[1],type:r[2],name:r[3],phone:r[4],email:r[5],content:r[6],status:r[7]||'未處理',note:r[8],updatedAt:r[9],source:r[10],photoUrl:r[11],photoName:r[12],photoMime:r[13]})).reverse();
 }
 function findCaseRow_(sheet,id){
   if(!id)return -1; const last=sheet.getLastRow(); if(last<2)return -1;

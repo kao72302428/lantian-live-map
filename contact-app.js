@@ -1,6 +1,37 @@
 (()=>{
 const typeInput=document.getElementById('caseType'),selected=document.getElementById('selected'),form=document.getElementById('contactForm'),formSection=document.getElementById('contactFormSection'),msg=document.getElementById('formMsg'),submit=form?.querySelector('.submit'),receiver=document.getElementById('contactReceiver'),contentText=document.getElementById('contentText'),contentLabelText=document.getElementById('contentLabelText'),contentGuide=document.getElementById('contentGuide'),typesSection=document.getElementById('contactTypes');
 let waiting=false,done=false,progressTimer=null,slowTimer=null,resetTimer=null;
+const photoInput=document.getElementById('photoInput'),photoPreview=document.getElementById('photoPreview'),photoImage=document.getElementById('photoPreviewImage'),removePhoto=document.getElementById('removePhotoBtn');
+const photoFields=['photoBase64','photoName','photoMime'].map(id=>document.getElementById(id));
+let previewUrl='';
+function clearPhoto(){
+ if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl='';}
+ if(photoInput){photoInput.value='';photoInput.disabled=false;}
+ if(photoPreview)photoPreview.hidden=true;
+ if(photoImage)photoImage.removeAttribute('src');
+ photoFields.forEach(x=>{if(x)x.value='';});
+ if(removePhoto)removePhoto.disabled=false;
+}
+function photoError(file){
+ if(!file)return '';
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type))return '照片僅支援 JPG、PNG 或 WebP 格式。';
+ if(file.size>2500000)return '照片超過 2.5 MB，請選擇較小的圖片。';
+ if(!file.size)return '照片檔案是空的，請重新選擇。';
+ return '';
+}
+if(photoInput)photoInput.addEventListener('change',()=>{
+ const file=photoInput.files[0],error=photoError(file);
+ if(error){clearPhoto();if(msg)msg.textContent=error;return;}
+ if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl='';}
+ photoFields.forEach(x=>{if(x)x.value='';});
+ if(file){previewUrl=URL.createObjectURL(file);photoImage.src=previewUrl;photoPreview.hidden=false;}else photoPreview.hidden=true;
+ if(msg)msg.textContent='';
+});
+if(removePhoto)removePhoto.addEventListener('click',()=>{clearPhoto();if(msg)msg.textContent='照片已移除，可不附照片送出。';});
+function readPhoto(file){return new Promise((resolve,reject)=>{
+ const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(new Error('照片讀取失敗，請重新選擇。'));reader.onabort=()=>reject(new Error('照片讀取中斷，請重新選擇。'));reader.readAsDataURL(file);
+});}
+
 const prompts={
 '平台資訊修改':{label:'平台資訊修改留言',guide:'請依序填寫：\n1. 店家／單位名稱\n2. 需要修改的項目（店名、地址、電話、營業時間、類別等）\n3. 正確資料\n4. 其他補充說明'},
 '地方問題反映／協助通報':{label:'地方問題反映留言',guide:'請依序填寫：\n1. 問題類型（路燈、道路、水溝、環境或其他）\n2. 發生地點／附近明顯地標\n3. 發現時間\n4. 現場狀況與影響\n5. 問題是否仍持續'},
@@ -12,7 +43,7 @@ function clearResetTimer(){if(resetTimer){clearTimeout(resetTimer);resetTimer=nu
 function clearDraft(){try{sessionStorage.removeItem('contactDraft');localStorage.removeItem('contactDraft');}catch(e){}}
 function showTypes(scrollToTypes=true){
  clearResetTimer();
- form?.reset();clearDraft();clearTimers();waiting=false;done=false;
+ form?.reset();clearPhoto();clearDraft();clearTimers();waiting=false;done=false;
  if(typeInput)typeInput.value='';
  if(selected)selected.textContent='';
  if(contentLabelText)contentLabelText.textContent='留言內容';
@@ -25,7 +56,9 @@ function showTypes(scrollToTypes=true){
  if(scrollToTypes)requestAnimationFrame(()=>typesSection?.scrollIntoView({behavior:'smooth',block:'start'}));
 }
 function openForm(type){
+ if(waiting)return;
  const p=prompts[type];if(!p)return;
+ clearPhoto();
  clearResetTimer();
  document.querySelectorAll('[data-card-type]').forEach(c=>c.classList.toggle('active',c.dataset.cardType===type));
  if(typeInput)typeInput.value=type;
@@ -52,12 +85,31 @@ window.addEventListener('pageshow',()=>{
 window.addEventListener('beforeunload',()=>{clearDraft();clearResetTimer();});
 document.querySelectorAll('.enterMessage[data-type]').forEach(btn=>btn.addEventListener('click',()=>openForm(btn.dataset.type)));
 
-if(form){form.addEventListener('submit',e=>{
+if(form){form.addEventListener('submit',async e=>{
+ e.preventDefault();
+ if(waiting)return;
  if(!typeInput?.value){e.preventDefault();showTypes();return;}
  if(!form.reportValidity()){e.preventDefault();return;}
+ const file=photoInput?.files[0],error=photoError(file);
+ if(error){if(msg)msg.textContent=error;return;}
  clearTimers();clearResetTimer();waiting=true;done=false;
+ if(photoInput)photoInput.disabled=true;
+ if(removePhoto)removePhoto.disabled=true;
  if(submit){submit.disabled=true;submit.textContent='送出中…';}
  if(msg)msg.textContent='資料送出中…';
+ try{
+  photoFields.forEach(x=>{if(x)x.value='';});
+  if(file){photoFields[0].value=await readPhoto(file);photoFields[1].value=file.name;photoFields[2].value=file.type;}
+  HTMLFormElement.prototype.submit.call(form);
+ }catch(error){
+  waiting=false;
+  if(msg)msg.textContent=error.message;
+  if(submit){submit.disabled=false;submit.textContent='重新送出';}
+  if(photoInput)photoInput.disabled=false;
+  if(removePhoto)removePhoto.disabled=false;
+  return;
+ }
+
  progressTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent='資料處理中，請稍候…';},3000);
  slowTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent='系統回應較慢，請勿重複送出。';},12000);
 });}
@@ -75,6 +127,8 @@ window.addEventListener('message',e=>{
   markSuccess('資料已送出並完成存檔。案件編號：'+(d.id||'')+'｜即將回到留言選單。');
  }else{
   clearResetTimer();waiting=false;done=true;
+  if(photoInput)photoInput.disabled=false;
+  if(removePhoto)removePhoto.disabled=false;
   if(msg)msg.textContent='送出失敗：'+(d.message||'請稍後再試');
   if(submit){submit.disabled=false;submit.textContent='重新送出';}
  }

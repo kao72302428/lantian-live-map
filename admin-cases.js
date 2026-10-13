@@ -42,13 +42,23 @@ function render(){
    <div><b>目前承辦紀錄</b><div class="case-content">${E(x.note||'尚無')}</div></div>
    <label class="reply">新增回覆／承辦紀錄<textarea class="reply-text" rows="4" placeholder="輸入本次回覆內容；按「回覆案件」後會寄送到案件 Email，並寫入承辦紀錄。"></textarea></label>
   </div>
-  <div class="case-actions"><button class="case-action status-btn" type="button">更新狀態</button><button class="case-action reply-btn" type="button">回覆案件</button></div>
+  <div class="case-actions"><button class="case-action status-btn" type="button">更新狀態</button><button class="case-action reply-btn" type="button">回覆案件</button><button class="case-action delete-btn" type="button">刪除資料</button></div>
  </article>`).join(''):'<div class="empty">沒有符合條件的案件。</div>';
 }
 async function load(){
  setBusy(true);setMessage('案件載入中…');
  try{const d=await api('list');items=d.items||[];render();setMessage('案件已載入。');}
  catch(e){setMessage(e.code==='AUTH_REQUIRED'?'管理員驗證已失效，請使用上方「重新驗證」。':'案件載入失敗：'+e.code,true);}
+ finally{setBusy(false);}
+}
+async function deleteCase(btn){
+ const id=btn.closest('.case-card').dataset.id;
+ if(!window.confirm('確定刪除案件 '+id+'？刪除後將從管理清單移除，原始紀錄保留於試算表。'))return;
+ setBusy(true);setMessage('資料刪除中…');
+ try{
+  const d=await api('delete',{id});
+  items=d.items||items.filter(x=>x.id!==id);render();setMessage('已刪除。');
+ }catch(e){setMessage('刪除失敗：'+e.code,true);}
  finally{setBusy(false);}
 }
 async function act(btn,action){
@@ -69,7 +79,7 @@ async function act(btn,action){
 $('loadBtn').addEventListener('click',load);
 $('searchInput').addEventListener('input',render);
 $('statusFilter').addEventListener('change',render);
-$('caseList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.classList.contains('status-btn'))act(b,'setStatus');if(b.classList.contains('reply-btn'))act(b,'reply');});
+$('caseList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.classList.contains('status-btn'))act(b,'setStatus');if(b.classList.contains('reply-btn'))act(b,'reply');if(b.classList.contains('delete-btn'))deleteCase(b);});
 
 let checks=0;
 const wait=setInterval(()=>{checks++;if(token()){clearInterval(wait);$('loadBtn').disabled=false;load();}else if(checks>30){clearInterval(wait);setMessage('管理員驗證已失效，請使用上方「重新驗證」。',true);}},200);
