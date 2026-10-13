@@ -8,11 +8,11 @@ function node(){return {value:'',files:[],disabled:false,hidden:true,textContent
 function contact(){
  const ids=['caseType','selected','contactForm','contactFormSection','formMsg','contactReceiver','contentText','contentLabelText','contentGuide','contactTypes','photoInput','photoPreview','photoPreviewImage','removePhotoBtn','photoBase64','photoName','photoMime'];
  const els=Object.fromEntries(ids.map(id=>[id,node()])),submit=node(),win={events:{},addEventListener(k,f){this.events[k]=f;}};
- let submitted=0,readError=false;
+ let submitted=0,readError=false,response={ok:true,id:"LT-test-1"},httpOk=true;
  els.caseType.value='合作提案';els.contactForm.querySelector=()=>submit;els.contactForm.reportValidity=()=>true;els.contactForm.reset=()=>{};
- const context={document:{getElementById:id=>els[id],querySelectorAll:()=>[]},window:win,history:{},requestAnimationFrame:f=>f(),setTimeout:()=>1,clearTimeout(){},sessionStorage:{removeItem(){}},localStorage:{removeItem(){}},URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},HTMLFormElement:{prototype:{submit(){submitted++;}}},FileReader:class{readAsDataURL(file){if(readError)this.onerror();else{this.result='data:'+file.type+';base64,YWJj';this.onload();}}}};
+ const context={document:{getElementById:id=>els[id],querySelectorAll:()=>[]},window:win,history:{},requestAnimationFrame:f=>f(),setTimeout:()=>1,clearTimeout(){},sessionStorage:{removeItem(){}},localStorage:{removeItem(){}},URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},FormData:class{*[Symbol.iterator](){yield ["聯絡類型",els.caseType.value];}},AbortSignal,fetch:async()=>{submitted++;return {ok:httpOk,json:async()=>response};},FileReader:class{readAsDataURL(file){if(readError)this.onerror();else{this.result='data:'+file.type+';base64,YWJj';this.onload();}}}};
  vm.runInNewContext(read('contact-app.js'),context);
- return {els,submit,win,count:()=>submitted,failRead:()=>readError=true,send:()=>els.contactForm.events.submit({preventDefault(){}})};
+ return {els,submit,win,count:()=>submitted,failRead:()=>readError=true,result:(data,ok=false)=>{response=data;httpOk=ok;},send:()=>els.contactForm.events.submit({preventDefault(){}})};
 }
 test('photo input is optional and retains existing POST service',()=>{
  const html=read('contact.html');const input=html.match(/<input id="photoInput"[^>]*>/)[0];assert.ok(!input.includes('required'));assert.match(input,/image\/jpeg,image\/png,image\/webp/);assert.match(html,/#photoPreview\[hidden\]\{display:none\}/);
@@ -25,6 +25,10 @@ for(const [name,file] of [['unsupported',{type:'image/gif',size:3}],['oversize',
 test('read failure permits retry without claiming success',async()=>{const c=contact();c.els.photoInput.files=[{type:'image/png',size:3}];c.failRead();await c.send();assert.equal(c.count(),0);assert.equal(c.submit.disabled,false);assert.match(c.els.formMsg.textContent,/讀取失敗/);});
 test('preview and remove clear attachment fields',()=>{const c=contact();c.els.photoInput.files=[{type:'image/png',size:3}];c.els.photoInput.events.change();assert.equal(c.els.photoPreview.hidden,false);c.els.photoBase64.value='old';c.els.removePhotoBtn.events.click();assert.equal(c.els.photoPreview.hidden,true);assert.equal(c.els.photoBase64.value,'');assert.equal(c.els.photoInput.value,'');});
 test('double submission is ignored while waiting',async()=>{const c=contact();await c.send();await c.send();assert.equal(c.count(),1);});
+test('failure receipt stays on form and never claims saved',async()=>{const c=contact();c.result({ok:false,message:'缺少必要欄位'});await c.send();assert.match(c.els.formMsg.textContent,/缺少必要欄位/);assert.equal(c.submit.disabled,false);assert.notEqual(c.submit.textContent,'已送出');});
+test('uncertain receipt prevents duplicate submissions',async()=>{const c=contact();c.result({ok:false,uncertain:true,message:'服務逾時'});await c.send();await c.send();assert.equal(c.count(),1);assert.equal(c.submit.disabled,true);assert.match(c.els.formMsg.textContent,/待確認/);});
+test('success requires returned case ID',async()=>{const c=contact();c.result({ok:true},true);await c.send();assert.notEqual(c.submit.textContent,'已送出');assert.equal(c.submit.disabled,true);});
+test('iframe load and unsolicited messages cannot imply success',()=>{const c=contact();assert.equal(c.els.contactReceiver.events.load,undefined);assert.equal(c.win.events.message,undefined);});
 function cases(){
  const ids=['loadBtn','caseMessage','searchInput','statusFilter','caseCount','caseList'];const els=Object.fromEntries(ids.map(id=>[id,node()]));
  let confirm=true,fail=false,calls=[];

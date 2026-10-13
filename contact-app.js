@@ -1,5 +1,5 @@
 (()=>{
-const typeInput=document.getElementById('caseType'),selected=document.getElementById('selected'),form=document.getElementById('contactForm'),formSection=document.getElementById('contactFormSection'),msg=document.getElementById('formMsg'),submit=form?.querySelector('.submit'),receiver=document.getElementById('contactReceiver'),contentText=document.getElementById('contentText'),contentLabelText=document.getElementById('contentLabelText'),contentGuide=document.getElementById('contentGuide'),typesSection=document.getElementById('contactTypes');
+const typeInput=document.getElementById('caseType'),selected=document.getElementById('selected'),form=document.getElementById('contactForm'),formSection=document.getElementById('contactFormSection'),msg=document.getElementById('formMsg'),submit=form?.querySelector('.submit'),contentText=document.getElementById('contentText'),contentLabelText=document.getElementById('contentLabelText'),contentGuide=document.getElementById('contentGuide'),typesSection=document.getElementById('contactTypes');
 let waiting=false,done=false,progressTimer=null,slowTimer=null,resetTimer=null;
 const photoInput=document.getElementById('photoInput'),photoPreview=document.getElementById('photoPreview'),photoImage=document.getElementById('photoPreviewImage'),removePhoto=document.getElementById('removePhotoBtn');
 const photoFields=['photoBase64','photoName','photoMime'].map(id=>document.getElementById(id));
@@ -57,6 +57,7 @@ function showTypes(scrollToTypes=true){
 }
 function openForm(type){
  if(waiting)return;
+ done=false;
  const p=prompts[type];if(!p)return;
  clearPhoto();
  clearResetTimer();
@@ -87,7 +88,7 @@ document.querySelectorAll('.enterMessage[data-type]').forEach(btn=>btn.addEventL
 
 if(form){form.addEventListener('submit',async e=>{
  e.preventDefault();
- if(waiting)return;
+ if(waiting||done)return;
  if(!typeInput?.value){e.preventDefault();showTypes();return;}
  if(!form.reportValidity()){e.preventDefault();return;}
  const file=photoInput?.files[0],error=photoError(file);
@@ -97,40 +98,29 @@ if(form){form.addEventListener('submit',async e=>{
  if(removePhoto)removePhoto.disabled=true;
  if(submit){submit.disabled=true;submit.textContent='送出中…';}
  if(msg)msg.textContent='資料送出中…';
+ progressTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent='資料處理中，請稍候…';},3000);
+ slowTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent='系統回應較慢，請勿重複送出。';},12000);
+ let sent=false;
  try{
   photoFields.forEach(x=>{if(x)x.value='';});
   if(file){photoFields[0].value=await readPhoto(file);photoFields[1].value=file.name;photoFields[2].value=file.type;}
-  HTMLFormElement.prototype.submit.call(form);
+  const body=Object.fromEntries(new FormData(form));
+  sent=true;
+  const response=await fetch('https://lantian-live-map.vercel.app/api/contact-submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(60000)});
+  const data=await response.json();
+  if(response.ok&&data.ok===true&&/^LT-[A-Za-z0-9-]{1,100}$/.test(data.id||'')){
+   markSuccess('資料已送出並完成存檔。案件編號：'+data.id+'｜即將回到留言選單。');return;
+  }
+  const failure=new Error(data.message||'未收到存檔確認，請聯絡平台查核。');
+  failure.uncertain=data.uncertain===true||data.ok===true;throw failure;
  }catch(error){
-  waiting=false;
-  if(msg)msg.textContent=error.message;
-  if(submit){submit.disabled=false;submit.textContent='重新送出';}
-  if(photoInput)photoInput.disabled=false;
-  if(removePhoto)removePhoto.disabled=false;
-  return;
+  clearTimers();
+  const uncertain=error.uncertain===true||(sent&&typeof error.uncertain==='undefined');
+  waiting=uncertain;
+  if(msg)msg.textContent=(uncertain?'送出結果待確認：':'送出失敗：')+error.message+(uncertain?' 請聯絡平台查核，勿重複送出。':'');
+  if(submit){submit.disabled=uncertain;submit.textContent=uncertain?'待確認，勿重複送出':'重新送出';}
+  if(photoInput)photoInput.disabled=uncertain;
+  if(removePhoto)removePhoto.disabled=uncertain;
  }
-
- progressTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent='資料處理中，請稍候…';},3000);
- slowTimer=setTimeout(()=>{if(waiting&&!done&&msg)msg.textContent='系統回應較慢，請勿重複送出。';},12000);
 });}
-
-if(receiver){receiver.addEventListener('load',()=>{
- if(waiting&&!done){markSuccess('資料已送出完成，1.8 秒後自動回到留言選單。');}
-});}
-
-window.addEventListener('message',e=>{
- if(!receiver||e.source!==receiver.contentWindow)return;
- if(!waiting&&!done)return;
- const d=e.data;if(!d||typeof d!=='object'||typeof d.ok==='undefined')return;
- clearTimers();
- if(d.ok){
-  markSuccess('資料已送出並完成存檔。案件編號：'+(d.id||'')+'｜即將回到留言選單。');
- }else{
-  clearResetTimer();waiting=false;done=true;
-  if(photoInput)photoInput.disabled=false;
-  if(removePhoto)removePhoto.disabled=false;
-  if(msg)msg.textContent='送出失敗：'+(d.message||'請稍後再試');
-  if(submit){submit.disabled=false;submit.textContent='重新送出';}
- }
-});
 })();
