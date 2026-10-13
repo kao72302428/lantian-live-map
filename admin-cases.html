@@ -2,9 +2,9 @@
 <html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>建言與合作案件管理｜智慧藍田管理中心</title>
 <link rel="stylesheet" href="./admin-module.css?v=20260930-1"><link rel="stylesheet" href="./admin-cases.css?v=20261013-delete">
-<style>.topbar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.topbar>.back{justify-self:start}.topbar>div{min-width:0}@media(max-width:760px){.topbar{grid-template-columns:1fr}.topbar>div{justify-self:center}}</style>
+<style>.topbar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}.topbar>.back{justify-self:start}.topbar>div{min-width:0}@media(max-width:760px){.topbar{grid-template-columns:1fr auto}.topbar>div{justify-self:center;grid-column:1/-1;grid-row:2}.sheet-entry{grid-column:2;grid-row:1}}.sheet-entry{justify-self:end;display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;background:#0b75c9;color:#fff;font-weight:800;text-decoration:none;white-space:nowrap;cursor:pointer}.sheet-entry:focus-visible{outline:3px solid #ff9b32;outline-offset:3px}</style>
 </head><body>
-<header class="topbar"><a class="back" href="./admin.html">← 返回管理中心</a><div><div class="title">建言與合作案件管理</div><div class="sub">智慧藍田 LIVE 一點通</div></div></header>
+<header class="topbar"><a class="back" href="./admin.html">← 返回管理中心</a><div><div class="title">建言與合作案件管理</div><div class="sub">智慧藍田 LIVE 一點通</div></div><a class="sheet-entry" href="https://docs.google.com/spreadsheets/d/1OsP6JygCRd5FN4XHZsba8TM6hEU8h96k3cqHTJfr6Sk/edit" target="_blank" rel="noopener noreferrer" aria-label="查看案件試算表（另開分頁）">查看試算表</a></header>
 <main class="shell">
 <section class="gate"><p class="eyebrow">AUTH STATUS</p><h1 id="authTitle">管理員驗證中</h1><p class="lead">管理中心驗證成功後，可直接載入案件、更新處理狀態及回覆案件。</p><div id="authStatus" class="status">驗證中…</div></section>
 <section class="panel" id="casePanel">
