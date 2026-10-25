@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>會員管理欄位骨架｜智慧藍田 LIVE 一點通</title>
+<link rel="stylesheet" href="./member-area.css?v=20261025-1">
+<script src="./member-schema.js?v=20261025-1" defer></script>
+<script src="./admin-members.js?v=20261025-1" defer></script>
+</head>
+<body>
+<header class="site-header"><a href="./vision.html">← 返回會員專用區</a><span>智慧藍田 LIVE 一點通</span></header>
+<main class="shell">
+<div class="page-heading"><p class="eyebrow">會員專用區</p><h1>會員管理欄位骨架</h1><p>本頁僅展示管理欄位，不是已開通的會員管理系統。</p></div>
+<p class="notice"><strong>以下為兩張固定示意卡，非真實會員資料。</strong><br>尚未接登入、會員資料來源、審核、編修或正式權限；本頁沒有保存與發布操作。</p>
+<div class="admin-filter"><label for="memberTypeFilter">會員類別</label><select id="memberTypeFilter"><option value="all">全部類別</option><option value="business">店家會員</option><option value="individual">一般會員（非店家會員）</option></select><span id="sampleCount" role="status"></span></div>
+<div id="memberSkeletons" class="schema-grid"></div>
+<section class="schema-states" aria-labelledby="statesTitle"><h2 id="statesTitle">獨立狀態欄位預留</h2><p>會員狀態：待驗證／正常／停權／停用。</p><p>店家審核狀態：待審核／已通過／退回補件／停用。</p><p>店家資料修改審核：未提出／待審核／已通過／退回補件／停用。</p><p>三種狀態分開記錄。日後須完成正式驗證與權限後，才可開放真實會員資料管理。</p></section>
+<noscript><p class="notice">請啟用 JavaScript 查看固定示意欄位。</p></noscript>
+</main>
+<footer>智慧藍田 LIVE 一點通</footer>
+</body>
+</html>

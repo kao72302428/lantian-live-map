@@ -3,19 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>會員專用區</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;min-height:100svh;display:grid;place-items:center;padding:24px;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:#f4f8fb;color:#17324d}
-main{width:100%;max-width:576px;text-align:center;padding:clamp(24px,6vw,48px) 16px;background:#fff;border:1px solid #dfe8ee;border-radius:18px}
-h1{margin:0 0 16px;font-size:clamp(26px,5vw,36px);line-height:1.4}
-p{margin:0;font-size:18px;line-height:1.6;color:#526a7c}
-</style>
+<title>會員專用區｜智慧藍田 LIVE 一點通</title>
+<link rel="stylesheet" href="./member-area.css?v=20261025-1">
+<script src="./member-schema.js?v=20261025-1" defer></script>
+<script src="./member-area.js?v=20261025-1" defer></script>
 </head>
 <body>
-<main>
-<h1>會員專用區</h1>
-<p>會員功能建置中</p>
+<header class="site-header"><a href="./home.html">← 返回首頁</a><span>智慧藍田 LIVE 一點通</span></header>
+<main class="shell">
+<div class="page-heading"><p class="eyebrow">會員專用區</p><h1>選擇您的會員類別</h1><p>依您的身分，查看對應註冊欄位。</p></div>
+<p class="notice" role="note"><strong>目前為註冊欄位與畫面預覽，尚未開放註冊／登入。</strong><br>請使用測試資料。填寫內容不會送出或保存，重新整理即清除。</p>
+<section id="memberChoices" class="choices" aria-label="選擇會員類別">
+<article class="choice business"><span class="choice-icon" aria-hidden="true">🏪</span><span class="badge business">店家會員</span><h2>店家會員</h2><p>適用店家、商家、品牌、工作室、攤商及服務業者。</p><button class="primary" type="button" data-member-type="business">選擇店家會員</button></article>
+<article class="choice individual"><span class="choice-icon" aria-hidden="true">👤</span><span class="badge individual">非店家會員</span><h2>非店家會員</h2><p>適用一般居民、消費者、社區民眾及一般訪客。會員中心顯示為「一般會員」。</p><button class="primary" type="button" data-member-type="individual">選擇非店家會員</button></article>
+</section>
+<section id="registration" class="panel" hidden aria-labelledby="formTitle">
+<div class="section-heading"><div><span id="typeBadge" class="badge"></span><h2 id="formTitle" tabindex="-1"></h2></div><button id="changeType" class="secondary" type="button">返回類別選擇</button></div>
+<p>標示「必填」者為必要欄位；登入方式及密碼本次僅預留，尚未啟用。</p>
+<form id="memberForm" autocomplete="off">
+<div id="identitySection"></div>
+<div id="formSections"></div>
+<details class="policy-note"><summary>會員條款與隱私權政策（待正式核定）</summary><p>正式會員條款與隱私權政策尚待核定。本次勾選僅供表單欄位預覽，不會建立會員、提出正式申請或訂立會員契約。</p></details>
+<p id="formMessage" role="status" aria-live="polite"></p>
+<div class="actions"><button class="primary" type="submit">預覽會員資料（不送出）</button><button id="clearForm" class="secondary" type="button">清空資料</button></div>
+</form>
+</section>
+<section id="memberPreview" class="panel" hidden aria-labelledby="previewTitle"><div id="previewContent"></div><div class="actions"><button id="editPreview" class="primary" type="button">返回修改欄位</button><button id="finishPreview" class="secondary" type="button">清空並返回類別選擇</button></div></section>
+<p class="skeleton-link"><a href="./admin-members.html">查看會員管理欄位骨架</a>（僅固定示意資料，尚未開放會員管理）</p>
+<noscript><p class="notice">請啟用 JavaScript，才能選擇會員類別及查看表單。本頁不會送出註冊資料。</p></noscript>
 </main>
+<footer>智慧藍田 LIVE 一點通</footer>
 </body>
 </html>
