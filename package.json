@@ -1,0 +1,14 @@
+{
+  "name": "lantian-live-map",
+  "private": true,
+  "scripts": {
+    "test:members-data": "node --test tests/members-data.test.cjs",
+    "members:production-verify": "node scripts/members-production-verify.cjs"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.12"
+  }
+}
