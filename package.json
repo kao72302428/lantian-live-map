@@ -3,12 +3,19 @@
   "private": true,
   "scripts": {
     "test:members-data": "node --test tests/members-data.test.cjs",
-    "members:production-verify": "node scripts/members-production-verify.cjs"
+    "members:production-verify": "node scripts/members-production-verify.cjs",
+    "test:members-auth": "node --test tests/member-auth.test.cjs tests/member-auth-ui.test.cjs",
+    "members:auth-migrate": "node scripts/member-auth-migrate.cjs",
+    "members:auth-production": "node scripts/member-auth-uat.cjs"
   },
   "dependencies": {
+    "bcryptjs": "3.0.3",
+    "connect-pg-simple": "10.0.0",
+    "express-session": "1.19.0",
     "pg": "8.23.1"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.12"
+    "@electric-sql/pglite": "0.5.12",
+    "jsdom": "30.1.3"
   }
 }
