@@ -1,0 +1,49 @@
+{
+  "project": "kao72302428/lantian-live-map",
+  "baseline": "e82ee9bb5837118e1b6bd6917eef15a289b7edd7",
+  "verifiedSourceCommit": "fc5990f4e1c0aff1fa66836f4007576b87255956",
+  "verificationDateTaiwan": "2026-10-28",
+  "localTests": {
+    "backend": 28,
+    "frontendDom": 6,
+    "passed": 34,
+    "failed": 0
+  },
+  "production": {
+    "source_sha": "fc5990f4e1c0aff1fa66836f4007576b87255956",
+    "individual_register": "PASS",
+    "committed_independent_readback": "PASS",
+    "password_hash_protection": "PASS",
+    "duplicate_email": "PASS",
+    "wrong_password": "PASS",
+    "login": "PASS",
+    "cookie_flags": "PASS",
+    "me_current_member": "PASS",
+    "last_login_at": "PASS",
+    "response_minimization": "PASS",
+    "logout_revoked": "PASS",
+    "business_register": "PASS",
+    "business_profile": "PASS",
+    "business_pending": "PASS",
+    "business_unbound": "PASS",
+    "me_requires_session": "PASS",
+    "cleanup": "PASS"
+  },
+  "frontend": {
+    "status": 200,
+    "formalRegister": true,
+    "loginPanel": true,
+    "logout": true
+  },
+  "migrationDeployment": "dpl_YcPLM4DscLnJskamSrSiXPBF1Ff5",
+  "verificationDeployment": "dpl_ELhSUg3LKJkhFCBGCemDptWkiL5J",
+  "deploymentState": "READY",
+  "pagesRun": 40643810173,
+  "pagesConclusion": "success",
+  "protectedExistingFilesUnchanged": 135,
+  "merchantDataModified": false,
+  "otherFiveModulesModified": false,
+  "adminMemberListEnabled": false,
+  "sessionSecret": "configured-sensitive-production-only",
+  "manualAcceptance": "pending"
+}
