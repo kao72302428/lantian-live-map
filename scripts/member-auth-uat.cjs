@@ -7,11 +7,11 @@ function fixture(type){
  const d={memberType:type,password:randomBytes(20).toString('base64url')};
  d.name='SYSTEM UAT TEST';d.email=`uat-auth-${randomUUID()}@example.invalid`;d.mobile='TEST-NOT-A-PHONE';
  d.termsAccepted=true;d.privacyAccepted=true;
- if(type==='business'){d.shopIdentity='existing';d.shopName='SYSTEM UAT TEST SHOP';}
+ if(type==='business'){d.shopName='SYSTEM UAT TEST SHOP';}
  return d;
 }
 async function runProduction(pool){
- const checks={},records=[fixture('individual'),fixture('business'),{...fixture('business'),shopIdentity:'new'}];
+ const checks={},records=[fixture('individual'),fixture('business')];
  const mark=k=>checks[k]='PASS';
  const fingerprint=async()=>{
   const r=await pool.query(`SELECT
@@ -29,7 +29,7 @@ async function runProduction(pool){
  try{
   for(const [i,data] of records.entries()){
    const reg=await call('register',data);assert.equal(reg.status,201);assert.equal(reg.data.ok,true);
-   assert.ok(reg.data.member.memberId);mark(i?'business_register':'individual_register');if(i)mark('business_'+data.shopIdentity+'_minimal');
+   assert.ok(reg.data.member.memberId);mark(i?'business_register':'individual_register');if(i){assert.equal(reg.data.member.shopIdentity,'application');mark('business_application_minimal');}
    // Independent SQL connection after HTTP transaction COMMIT.
    const c=await pool.connect();
    try{

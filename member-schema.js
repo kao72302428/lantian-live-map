@@ -62,9 +62,9 @@ const fieldsFor=type=>schemas[type]?schemas[type].sections.flatMap(s=>s.fields):
 // First registration is a projection; the complete profile/admin schema stays intact.
 const registrationKeys={
  individual:['name','mobile','email','password','termsAccepted','privacyAccepted'],
- business:['name','mobile','email','password','termsAccepted','privacyAccepted','shopName']
+ business:['name','mobile','email','password','shopName','termsAccepted','privacyAccepted']
 };
-const registrationFieldsFor=type=>fieldsFor(type).filter(f=>registrationKeys[type]?.includes(f.key));
+const registrationFieldsFor=type=>registrationKeys[type]?registrationKeys[type].map(key=>fieldsFor(type).find(f=>f.key===key)):[];
 const registrationSectionsFor=type=>schemas[type]?schemas[type].sections.map(s=>({...s,fields:s.fields.filter(f=>registrationKeys[type].includes(f.key))})).filter(s=>s.fields.length):[];
 const validateRegistration=(type,data)=>validatePreview(type,data,true);
 function validatePreview(type,data,registration=false){
@@ -80,7 +80,7 @@ function validatePreview(type,data,registration=false){
  }
  if(data.birthMonth&&(!/^\d{4}-(0[1-9]|1[0-2])$/.test(data.birthMonth)||data.birthMonth>new Date().toISOString().slice(0,7)))errors.push('出生資料請使用有效年月，不可填未來年月。');
  if(type==='business'){
-  if(!['existing','new'].includes(data.shopIdentity))errors.push('請選擇店家身分類型。');
+  if(!registration&&!['existing','new'].includes(data.shopIdentity))errors.push('請選擇店家身分類型。');
   if(!registration&&data.shopIdentity==='existing'&&!String(data.existingShopName||'').trim())errors.push('請填寫待綁定的既有店家名稱。');
  }
  return errors;

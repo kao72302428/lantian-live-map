@@ -81,20 +81,6 @@ function drawField(f){
  }
  return wrap;
 }
-function drawIdentity(){
- const set=el('fieldset'),legend=el('legend','店家身分類型（必填）'),grid=el('div',undefined,'form-grid');
- set.append(legend,el('p','請先選擇店家身分。註冊只建立待審核資料，不會自動取得店家管理權。'));
- for(const [value,title,note] of [
-  ['existing','平台既有店家','進入既有店家綁定流程，待管理員核定；不新增或覆蓋店家。'],
-  ['new','新申請店家','僅預留待審核店家申請，不會直接公開到高大好店家。']
- ]){
-  const label=el('label',undefined,'radio-label'),radio=el('input'),text=el('span',undefined,'radio-text');
-  radio.type='radio';radio.name='shopIdentity';radio.value=value;radio.required=true;
-  text.append(el('strong',title),el('span',note,'help'));label.append(radio,text);grid.append(label);
- }
- set.append(grid);
- $('identitySection').append(set);
-}
 function selectType(type){
  if(!M.schemas[type])return;
  clearCurrent();memberType=type;
@@ -102,13 +88,11 @@ function selectType(type){
  $('typeBadge').className='badge '+type;$('typeBadge').textContent=M.schemas[type].icon+' '+M.schemas[type].entryLabel;
  $('formTitle').textContent=M.schemas[type].entryLabel+'註冊欄位';
  document.querySelector('h1').textContent='會員註冊';
- if(type==='business')drawIdentity();
- for(const section of M.registrationSectionsFor(type)){
-  const set=el('fieldset'),grid=el('div',undefined,'form-grid');set.append(el('legend',section.title));
-  for(const f of section.fields)grid.append(drawField(f));
-  set.append(grid);$('formSections').append(set);
- }
- $('formSections').append(el('p',type==='business'?'店家詳細資料將於註冊後再補充；既有店家將另進行綁定審核。資料補充功能屬後續會員資料補充工作包。':'其他個人資料保留於後續會員資料補充工作包；目前尚未開放補填。','help'));
+ const set=el('fieldset'),grid=el('div',undefined,'form-grid');
+ set.append(el('legend',type==='business'?'店家會員申請':'一般會員註冊'));
+ for(const f of M.registrationFieldsFor(type))grid.append(drawField(f));
+ set.append(grid);$('formSections').append(set);
+ $('formSections').append(el('p',type==='business'?'店家詳細資料及既有店家綁定將於後續審核處理；本次僅提出店家會員申請。資料補充功能屬後續會員資料補充工作包。':'其他個人資料保留於後續會員資料補充工作包；目前尚未開放補填。','help'));
  $('formTitle').focus();
 }
 function readFields(){
@@ -116,9 +100,6 @@ function readFields(){
  for(const f of M.registrationFieldsFor(memberType)){
   if(['reserved','password-reserved','file'].includes(f.type))continue;
   const input=$('member-'+f.key);data[f.key]=f.type==='checkbox'?input.checked:input.value;
- }
- if(memberType==='business'){
-  data.shopIdentity=$('memberForm').querySelector('input[name=shopIdentity]:checked')?.value||'';
  }
  return data;
 }

@@ -67,15 +67,14 @@ for(const type of ['individual','business'])test(`${type} first registration con
  for(const i of w.document.querySelectorAll('#formSections input'))assert.equal(i.required,true);
  assert.equal(w.document.getElementById('member-displayName'),null);assert.equal(w.document.getElementById('member-residenceArea'),null);
  if(type==='business'){
-  const radio=w.document.querySelector('input[value=existing]');radio.click();
-  assert.equal(w.document.getElementById('member-existingShopName'),null);assert.equal(w.document.querySelectorAll('input[name=shopIdentity]').length,2);
+  assert.equal(w.document.getElementById('member-existingShopName'),null);assert.equal(w.document.querySelectorAll('input[name=shopIdentity]').length,0);
  }
- assert.match(w.document.getElementById('formSections').textContent,/後續會員資料補充工作包/);w.close();
+ assert.match(w.document.getElementById('formSections').textContent,/後續會員資料補充工作包/);assert.equal(w.document.querySelectorAll('#formSections fieldset').length,1);assert.doesNotMatch(w.document.getElementById('formSections').textContent,/A\. |B\. /);if(type==='business')assert.match(w.document.getElementById('formSections').textContent,/店家會員申請/);w.close();
 });
 test('minimal business form sends only required profile and identity',async()=>{
  let sent;const d=await page(async(path,options)=>{if(path.endsWith('/me'))return anon();sent=JSON.parse(options.body);return response(true,{ok:true,member:{...member,memberType:'business'}});}),w=d.window;
  w.document.querySelector('[data-member-type=business]').click();
  for(const i of w.document.querySelectorAll('#formSections input')){if(i.type==='checkbox')i.checked=true;else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
- w.document.querySelector('input[value=existing]').click();w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();
- assert.equal(sent.shopIdentity,'existing');assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
+ w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();
+ assert.equal(sent.shopIdentity,undefined);assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
 });

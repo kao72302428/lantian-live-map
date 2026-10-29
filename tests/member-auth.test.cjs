@@ -6,9 +6,10 @@ const {randomBytes}=require('node:crypto');
 const {PGlite}=require('@electric-sql/pglite');
 const {migrate}=require('../lib/members-migrate.cjs');
 const {migrateAuth}=require('../lib/member-auth-migrate.cjs');
+const {migrateApplication}=require('../lib/member-application-migrate.cjs');
 const {handler,createRuntime,ORIGIN}=require('../lib/member-auth-handler.cjs');
 const {fixture}=require('../scripts/member-auth-uat.cjs');
-let db,pool,server,base,person,business,account,cookie;let ip=0;
+let db,pool,server,base,person,business,account,cookie;let ip=0;let oldProfiles;
 async function call(action,data,options={}){
  const res=await fetch(`${base}/api/members/${action}`,{method:options.method||(data===undefined?'GET':'POST'),headers:{Origin:ORIGIN,'x-forwarded-proto':'https','x-real-ip':options.ip||`unit-${++ip}`,...(data===undefined?{}:{'Content-Type':'application/json'}),...(options.cookie?{Cookie:options.cookie}:{}),...options.headers},body:data===undefined?undefined:JSON.stringify(data)});
  return {status:res.status,data:await res.json(),cookie:res.headers.get('set-cookie')};
@@ -22,6 +23,10 @@ before(async()=>{
  }
  const client={query,release(){}};pool={query,connect:async()=>client};
  await migrate(client);await migrateAuth(client);
+ for(const identity of ['existing','new'])await require('../lib/members-repository.cjs').repository(client).createMember({...fixture('business'),displayName:'Legacy shop',shopIdentity:identity});
+ oldProfiles=(await pool.query('SELECT * FROM lantian_members.business_member_profiles ORDER BY member_fk')).rows;
+ await migrateApplication(client);
+ assert.deepEqual((await pool.query('SELECT * FROM lantian_members.business_member_profiles ORDER BY member_fk')).rows,oldProfiles);
  const rt=createRuntime(pool,randomBytes(48).toString('base64url'));
  server=http.createServer(async(req,res)=>{
   res.status=n=>{res.statusCode=n;return res;};res.json=d=>{res.setHeader('Content-Type','application/json');res.end(JSON.stringify(d));};
@@ -76,7 +81,7 @@ test('business profile failure rolls back member',async()=>{
  const d={...fixture('business'),shopName:'x'.repeat(201),shopDisplayName:'UAT'};
  assert.equal((await call('register',d)).status,503);assert.equal((await pool.query('SELECT id FROM lantian_members.members WHERE email=$1',[d.email])).rows.length,0);
 });
-test('auth migration repeatable',async()=>assert.equal(await migrateAuth(await pool.connect()),'ALREADY_APPLIED'));
+test('application migration repeatable',async()=>assert.equal(await migrateApplication(await pool.connect()),'ALREADY_APPLIED'));
 test('expired session rejected',async()=>{
  const login=await call('login',{email:person.email,password:person.password});const c=login.cookie.split(';')[0];
  await pool.query("UPDATE lantian_members.sessions SET expire=now()-interval '1 day'");assert.equal((await call('me',undefined,{cookie:c})).status,401);
@@ -89,23 +94,23 @@ test('minimal individual defaults display name and preserves omitted optional fi
  for(const key of ['residenceArea','birthMonth','gender','preferredContact'])assert.equal(row.registration_profile[key],'');
 });
 for(const type of ['individual','business']){
- for(const key of ['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName','shopIdentity']:[])])test(`${type} missing ${key} rejected`,async()=>{
+ for(const key of ['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName']:[])])test(`${type} missing ${key} rejected`,async()=>{
   const d=fixture(type);delete d[key];assert.equal((await call('register',d)).status,400);
  });
 }
-test('invalid shop identity rejected',async()=>assert.equal((await call('register',{...fixture('business'),shopIdentity:'admin'})).status,400));
+test('client cannot classify or bind shop',async()=>{const r=await call('register',{...fixture('business'),shopIdentity:'existing',shopBound:true,shopId:'client'});assert.equal(r.status,201);assert.equal(r.data.member.shopIdentity,'application');assert.equal(r.data.member.shopBound,false);});
 test('new business minimal registration pending unbound no public shop id',async()=>{
  const d={...fixture('business'),shopIdentity:'new'},r=await call('register',d);assert.equal(r.status,201);
  assert.equal(r.data.member.shopReviewStatus,'pending');assert.equal(r.data.member.shopBound,false);
  const b=(await pool.query('SELECT shop_id FROM lantian_members.business_member_profiles WHERE member_fk=(SELECT id FROM lantian_members.members WHERE email=$1)',[d.email])).rows[0];assert.equal(b.shop_id,null);
 });
-test('existing shop uses shop name without requesting duplicate binding fields',async()=>{
+test('unclassified application does not create binding claim',async()=>{
  const d=fixture('business'),r=await call('register',d);assert.equal(r.status,201);
  const row=(await pool.query('SELECT registration_profile FROM lantian_members.members WHERE email=$1',[d.email])).rows[0];
- assert.equal(row.registration_profile.existingShopName,d.shopName);assert.equal(row.registration_profile.existingShopId,'');
+ assert.equal(row.registration_profile.existingShopName,'');assert.equal(row.registration_profile.existingShopId,'');
 });
 test('previous full-profile account can login me logout without losing profile',async()=>{
- const M=require('../member-schema.js'),d=fixture('individual');d.displayName='Existing nickname';d.residenceArea='Existing area';d.birthMonth='2000-01';d.gender='不提供';
+ const d=fixture('individual');d.displayName='Existing nickname';d.residenceArea='Existing area';d.birthMonth='2000-01';d.gender='不提供';
  const hash=await require('bcryptjs').hash(d.password,12);
  await require('../lib/members-repository.cjs').repository(await pool.connect()).createMember(d,{passwordHash:hash});
  const before=(await pool.query('SELECT display_name,registration_profile,password_hash FROM lantian_members.members WHERE email=$1',[d.email])).rows[0];
