@@ -44,7 +44,7 @@ test('weak password reject',async()=>assert.equal((await call('register',{...fix
 test('blank password reject',async()=>assert.equal((await call('register',{...fixture('individual'),password:'        '})).status,400));
 test('bcrypt over 72 bytes rejected rather than truncated',async()=>assert.equal((await call('register',{...fixture('individual'),password:'密'.repeat(25)})).status,400));
 test('required terms and privacy enforced server side',async()=>assert.equal((await call('register',{...fixture('individual'),privacyAccepted:false})).status,400));
-test('required business fields enforced',async()=>assert.equal((await call('register',{...fixture('business'),shopAddress:''})).status,400));
+test('required business fields enforced',async()=>assert.equal((await call('register',{...fixture('business'),shopName:''})).status,400));
 test('invalid member type reject',async()=>assert.equal((await call('register',{...fixture('individual'),memberType:'admin'})).status,400));
 test('password hash is bcrypt not plaintext',async()=>{const row=(await pool.query('SELECT password_hash FROM lantian_members.members WHERE email=$1',[person.email])).rows[0];assert.match(row.password_hash,/^\$2[aby]\$12\$/);assert.notEqual(row.password_hash,person.password);});
 test('login wrong password and missing email return same error',async()=>{
@@ -73,11 +73,44 @@ test('CSRF origin rejected',async()=>assert.equal((await call('logout',{}, {head
 test('mutations reject GET',async()=>assert.equal((await call('register')).status,405));
 test('rate limit persists across requests',async()=>{let r;for(let i=0;i<11;i++)r=await call('login',{email:'limited@example.invalid',password:'short'},{ip:'same-rate-test'});assert.equal(r.status,429);});
 test('business profile failure rolls back member',async()=>{
- const d={...fixture('business'),shopName:'x'.repeat(201)};
+ const d={...fixture('business'),shopName:'x'.repeat(201),shopDisplayName:'UAT'};
  assert.equal((await call('register',d)).status,503);assert.equal((await pool.query('SELECT id FROM lantian_members.members WHERE email=$1',[d.email])).rows.length,0);
 });
 test('auth migration repeatable',async()=>assert.equal(await migrateAuth(await pool.connect()),'ALREADY_APPLIED'));
 test('expired session rejected',async()=>{
  const login=await call('login',{email:person.email,password:person.password});const c=login.cookie.split(';')[0];
  await pool.query("UPDATE lantian_members.sessions SET expire=now()-interval '1 day'");assert.equal((await call('me',undefined,{cookie:c})).status,401);
+});
+
+
+test('minimal individual defaults display name and preserves omitted optional fields',async()=>{
+ const d=fixture('individual'),r=await call('register',d);assert.equal(r.status,201);assert.equal(r.data.member.displayName,d.name);
+ const row=(await pool.query('SELECT registration_profile FROM lantian_members.members WHERE email=$1',[d.email])).rows[0];
+ for(const key of ['residenceArea','birthMonth','gender','preferredContact'])assert.equal(row.registration_profile[key],'');
+});
+for(const type of ['individual','business']){
+ for(const key of ['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName','shopIdentity']:[])])test(`${type} missing ${key} rejected`,async()=>{
+  const d=fixture(type);delete d[key];assert.equal((await call('register',d)).status,400);
+ });
+}
+test('invalid shop identity rejected',async()=>assert.equal((await call('register',{...fixture('business'),shopIdentity:'admin'})).status,400));
+test('new business minimal registration pending unbound no public shop id',async()=>{
+ const d={...fixture('business'),shopIdentity:'new'},r=await call('register',d);assert.equal(r.status,201);
+ assert.equal(r.data.member.shopReviewStatus,'pending');assert.equal(r.data.member.shopBound,false);
+ const b=(await pool.query('SELECT shop_id FROM lantian_members.business_member_profiles WHERE member_fk=(SELECT id FROM lantian_members.members WHERE email=$1)',[d.email])).rows[0];assert.equal(b.shop_id,null);
+});
+test('existing shop uses shop name without requesting duplicate binding fields',async()=>{
+ const d=fixture('business'),r=await call('register',d);assert.equal(r.status,201);
+ const row=(await pool.query('SELECT registration_profile FROM lantian_members.members WHERE email=$1',[d.email])).rows[0];
+ assert.equal(row.registration_profile.existingShopName,d.shopName);assert.equal(row.registration_profile.existingShopId,'');
+});
+test('previous full-profile account can login me logout without losing profile',async()=>{
+ const M=require('../member-schema.js'),d=fixture('individual');d.displayName='Existing nickname';d.residenceArea='Existing area';d.birthMonth='2000-01';d.gender='不提供';
+ const hash=await require('bcryptjs').hash(d.password,12);
+ await require('../lib/members-repository.cjs').repository(await pool.connect()).createMember(d,{passwordHash:hash});
+ const before=(await pool.query('SELECT display_name,registration_profile,password_hash FROM lantian_members.members WHERE email=$1',[d.email])).rows[0];
+ const login=await call('login',{email:d.email,password:d.password});assert.equal(login.status,200);const c=login.cookie.split(';')[0];
+ const me=await call('me',undefined,{cookie:c});assert.equal(me.status,200);assert.equal(me.data.member.displayName,d.displayName);
+ assert.equal((await call('logout',{}, {cookie:c})).status,200);assert.equal((await call('me',undefined,{cookie:c})).status,401);
+ assert.deepEqual((await pool.query('SELECT display_name,registration_profile,password_hash FROM lantian_members.members WHERE email=$1',[d.email])).rows[0],before);
 });

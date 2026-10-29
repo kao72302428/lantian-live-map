@@ -16,7 +16,7 @@ const response=(ok,data)=>({ok,json:async()=>data});
 const anon=()=>response(false,{ok:false,code:'UNAUTHENTICATED',message:'請重新登入'});
 function fill(w){
  w.document.querySelector('[data-member-type=individual]').click();
- for(const f of w.LantianMembers.fieldsFor('individual')){
+ for(const f of w.LantianMembers.registrationFieldsFor('individual')){
   const i=w.document.getElementById('member-'+f.key);if(!i||i.disabled||i.readOnly)continue;
   if(f.type==='checkbox')i.checked=true;
   else if(f.required)i.value=f.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';
@@ -57,4 +57,25 @@ test('business center visibly shows type shop review and binding state',async()=
 });
 test('UI never uses browser token/password persistence',()=>{
  const script=readFileSync('member-area.js','utf8');assert.doesNotMatch(script,/localStorage|sessionStorage|indexedDB/);assert.match(script,/credentials:'same-origin'/);
+});
+
+
+for(const type of ['individual','business'])test(`${type} first registration contains only authorized minimal fields`,async()=>{
+ const d=await page(anon),w=d.window;w.document.querySelector(`[data-member-type=${type}]`).click();
+ const expected=['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName']:[])];
+ assert.deepEqual([...w.document.querySelectorAll('#formSections input')].map(i=>i.name).sort(),expected.sort());
+ for(const i of w.document.querySelectorAll('#formSections input'))assert.equal(i.required,true);
+ assert.equal(w.document.getElementById('member-displayName'),null);assert.equal(w.document.getElementById('member-residenceArea'),null);
+ if(type==='business'){
+  const radio=w.document.querySelector('input[value=existing]');radio.click();
+  assert.equal(w.document.getElementById('member-existingShopName'),null);assert.equal(w.document.querySelectorAll('input[name=shopIdentity]').length,2);
+ }
+ assert.match(w.document.getElementById('formSections').textContent,/後續會員資料補充工作包/);w.close();
+});
+test('minimal business form sends only required profile and identity',async()=>{
+ let sent;const d=await page(async(path,options)=>{if(path.endsWith('/me'))return anon();sent=JSON.parse(options.body);return response(true,{ok:true,member:{...member,memberType:'business'}});}),w=d.window;
+ w.document.querySelector('[data-member-type=business]').click();
+ for(const i of w.document.querySelectorAll('#formSections input')){if(i.type==='checkbox')i.checked=true;else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
+ w.document.querySelector('input[value=existing]').click();w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();
+ assert.equal(sent.shopIdentity,'existing');assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
 });

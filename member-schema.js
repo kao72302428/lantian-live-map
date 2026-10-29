@@ -59,13 +59,21 @@ const businessAdmin=[
  ['shopBound','是否完成既有店家綁定'],['shopReviewStatus','店家審核狀態'],['shopChangeReviewStatus','店家資料修改審核狀態']
 ];
 const fieldsFor=type=>schemas[type]?schemas[type].sections.flatMap(s=>s.fields):[];
-function validatePreview(type,data){
+// First registration is a projection; the complete profile/admin schema stays intact.
+const registrationKeys={
+ individual:['name','mobile','email','password','termsAccepted','privacyAccepted'],
+ business:['name','mobile','email','password','termsAccepted','privacyAccepted','shopName']
+};
+const registrationFieldsFor=type=>fieldsFor(type).filter(f=>registrationKeys[type]?.includes(f.key));
+const registrationSectionsFor=type=>schemas[type]?schemas[type].sections.map(s=>({...s,fields:s.fields.filter(f=>registrationKeys[type].includes(f.key))})).filter(s=>s.fields.length):[];
+const validateRegistration=(type,data)=>validatePreview(type,data,true);
+function validatePreview(type,data,registration=false){
  const errors=[];
  if(!schemas[type])return ['請先選擇會員類別。'];
  for(const f of fieldsFor(type)){
   if(f.type==='reserved'||f.type==='password-reserved'||f.type==='file')continue;
   const value=data[f.key];
-  if(f.required&&(f.type==='checkbox'?value!==true:!String(value||'').trim()))errors.push('請填寫／勾選：'+f.label);
+  if(f.required&&(!registration||registrationKeys[type].includes(f.key))&&(f.type==='checkbox'?value!==true:!String(value||'').trim()))errors.push('請填寫／勾選：'+f.label);
   if(value&&f.type==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))errors.push('Email 格式不正確。');
   if(value&&f.type==='url'){try{if(!['http:','https:'].includes(new URL(value).protocol))throw Error();}catch{errors.push(f.label+'請填寫 http 或 https 網址。');}}
   if(value&&f.type==='select'&&!f.options.includes(value))errors.push(f.label+'選項不正確。');
@@ -73,7 +81,7 @@ function validatePreview(type,data){
  if(data.birthMonth&&(!/^\d{4}-(0[1-9]|1[0-2])$/.test(data.birthMonth)||data.birthMonth>new Date().toISOString().slice(0,7)))errors.push('出生資料請使用有效年月，不可填未來年月。');
  if(type==='business'){
   if(!['existing','new'].includes(data.shopIdentity))errors.push('請選擇店家身分類型。');
-  if(data.shopIdentity==='existing'&&!String(data.existingShopName||'').trim())errors.push('請填寫待綁定的既有店家名稱。');
+  if(!registration&&data.shopIdentity==='existing'&&!String(data.existingShopName||'').trim())errors.push('請填寫待綁定的既有店家名稱。');
  }
  return errors;
 }
@@ -101,7 +109,8 @@ function fileError(file){
  if(file.size<=0||file.size>2500000)return '圖片須大於 0 bytes 且不超過 2.5 MB。';
  return '';
 }
-const api={schemas,states,commonAdmin,businessAdmin,fieldsFor,validatePreview,previewMember,fileError};
+const api={schemas,states,commonAdmin,businessAdmin,fieldsFor,registrationFieldsFor,registrationSectionsFor,validateRegistration,validatePreview,previewMember,fileError};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 else root.LantianMembers=api;
 })(typeof window!=='undefined'?window:{});
+

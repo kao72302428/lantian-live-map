@@ -93,19 +93,6 @@ function drawIdentity(){
   text.append(el('strong',title),el('span',note,'help'));label.append(radio,text);grid.append(label);
  }
  set.append(grid);
- const binding=el('section',undefined,'binding');binding.id='existingBinding';binding.hidden=true;
- binding.append(el('h3','既有店家待綁定資料'),el('p','填寫欲綁定的店家識別資料，提交後等待後續管理員審核。店家 ID 仍以原平台資料為準，不會重編。'));
- const inputs=el('div',undefined,'form-grid');
- inputs.append(drawField({key:'existingShopId',label:'既有店家 ID（若已知）',type:'text',required:false}),drawField({key:'existingShopName',label:'待綁定的既有店家名稱',type:'text',required:true}));
- binding.append(inputs);set.append(binding);
- for(const radio of grid.querySelectorAll('input')){
-  radio.addEventListener('change',()=>{
-   const existing=radio.value==='existing'&&radio.checked;
-   binding.hidden=!existing;
-   for(const input of binding.querySelectorAll('input')){input.disabled=!existing;if(!existing)input.value='';}
-  });
- }
- for(const input of binding.querySelectorAll('input'))input.disabled=true;
  $('identitySection').append(set);
 }
 function selectType(type){
@@ -116,23 +103,22 @@ function selectType(type){
  $('formTitle').textContent=M.schemas[type].entryLabel+'註冊欄位';
  document.querySelector('h1').textContent='會員註冊';
  if(type==='business')drawIdentity();
- for(const section of M.schemas[type].sections){
+ for(const section of M.registrationSectionsFor(type)){
   const set=el('fieldset'),grid=el('div',undefined,'form-grid');set.append(el('legend',section.title));
   for(const f of section.fields)grid.append(drawField(f));
   set.append(grid);$('formSections').append(set);
  }
+ $('formSections').append(el('p',type==='business'?'店家詳細資料將於註冊後再補充；既有店家將另進行綁定審核。資料補充功能屬後續會員資料補充工作包。':'其他個人資料保留於後續會員資料補充工作包；目前尚未開放補填。','help'));
  $('formTitle').focus();
 }
 function readFields(){
  const data={};
- for(const f of M.fieldsFor(memberType)){
+ for(const f of M.registrationFieldsFor(memberType)){
   if(['reserved','password-reserved','file'].includes(f.type))continue;
   const input=$('member-'+f.key);data[f.key]=f.type==='checkbox'?input.checked:input.value;
  }
  if(memberType==='business'){
   data.shopIdentity=$('memberForm').querySelector('input[name=shopIdentity]:checked')?.value||'';
-  data.existingShopId=$('member-existingShopId').value;
-  data.existingShopName=$('member-existingShopName').value;
  }
  return data;
 }
@@ -160,8 +146,8 @@ $('clearForm').addEventListener('click',()=>selectType(memberType));
 
 $('memberForm').addEventListener('submit',async event=>{
  event.preventDefault();if(busy||!$('memberForm').reportValidity())return;
- const data=readFields(),result=M.previewMember(memberType,data);
- if(!result.ok){$('formMessage').textContent=result.errors.join('\n');return;}
+ const data=readFields(),errors=M.validateRegistration(memberType,data);
+ if(errors.length){$('formMessage').textContent=errors.join('\n');return;}
  data.memberType=memberType;data.password=$('member-password').value;
  lock(true);$('formMessage').textContent='註冊送出中…';
  try{
@@ -186,4 +172,5 @@ refreshMember().catch(()=>{});
 $('memberForm').addEventListener('invalid',()=>{$('formMessage').textContent='請確認必填欄位、Email 格式及條款／隱私權勾選。';},true);
 window.addEventListener('pagehide',clearImages);
 })();
+
 
