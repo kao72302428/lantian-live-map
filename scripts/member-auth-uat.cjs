@@ -57,6 +57,11 @@ async function runProduction(pool){
   const expired=await call('me',undefined,expiredCookie);assert.equal(expired.status,401);assert.equal(expired.data.code,'SESSION_EXPIRED');assert.ok(expired.setCookie.includes('Max-Age=0'));mark('idle_timeout_rejected');
   assert.equal((await call('activity',{},expiredCookie)).status,401);mark('expired_session_not_revivable');
   const remaining=(await pool.query("SELECT count(*) AS n FROM lantian_members.sessions WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$1)",[data.email])).rows[0];assert.equal(Number(remaining.n),0);mark('idle_session_deleted');
+  const absolute=await call('login',{email:data.email,password:data.password});assert.equal(absolute.status,200);const absoluteCookie=absolute.setCookie.split(';')[0];
+  await pool.query("UPDATE lantian_members.sessions SET sess=jsonb_set(jsonb_set(sess::jsonb,'{createdAt}',$1::jsonb),'{lastActivityAt}',$2::jsonb)::json WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$3 AND name='SYSTEM UAT TEST')",[JSON.stringify(Date.now()-604800001),JSON.stringify(Date.now()),data.email]);
+  const absoluteMe=await call('me',undefined,absoluteCookie);assert.equal(absoluteMe.status,401);assert.equal(absoluteMe.data.code,'SESSION_EXPIRED');mark('absolute_7_day_timeout_rejected_despite_recent_activity');
+  assert.equal((await call('activity',{},absoluteCookie)).status,401);mark('absolute_expired_session_not_revivable');
+  const absoluteRemaining=(await pool.query("SELECT count(*) AS n FROM lantian_members.sessions WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$1)",[data.email])).rows[0];assert.equal(Number(absoluteRemaining.n),0);mark('absolute_session_deleted');
   assert.equal((await call('me')).status,401);mark('me_requires_session');
  }finally{
   const emails=records.map(x=>x.email),c=await pool.connect();

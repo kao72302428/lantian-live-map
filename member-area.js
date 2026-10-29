@@ -19,10 +19,10 @@ function lock(value){busy=value;for(const b of document.querySelectorAll('button
 const M=window.LantianMembers;
 const $=id=>document.getElementById(id);
 const IDLE=30*60*1000;
-let idleTimer,activitySyncTimer,sessionLimits=null,lastInputAt=0,lastSyncAt=0,syncing=false,authEpoch=0;
+let verifyTimer,verifying=false,idleTimer,activitySyncTimer,sessionLimits=null,lastInputAt=0,lastSyncAt=0,syncing=false,authEpoch=0;
 const idleChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('lantian-member-activity'):null;
 function publish(data){idleChannel?.postMessage(data);}
-function stopIdle(){clearTimeout(idleTimer);clearTimeout(activitySyncTimer);sessionLimits=null;authEpoch++;}
+function stopIdle(){clearTimeout(verifyTimer);clearTimeout(idleTimer);clearTimeout(activitySyncTimer);sessionLimits=null;authEpoch++;}
 function limitAt(){return Math.min(lastInputAt+IDLE,sessionLimits.idleExpiresAt,sessionLimits.sessionExpiresAt);}
 function armIdle(){
  clearTimeout(idleTimer);if(!sessionLimits)return;
@@ -38,10 +38,10 @@ function expireIdle(){
 function checkIdle(){if(sessionLimits){if(Date.now()>=limitAt())expireIdle();else armIdle();}}
 function startIdle(result){
  if(!Number.isFinite(result.idleExpiresAt)||!Number.isFinite(result.sessionExpiresAt))throw Error('登入期限未確認，請重新登入。');
- sessionLimits={idleExpiresAt:result.idleExpiresAt,sessionExpiresAt:result.sessionExpiresAt};lastInputAt=Date.now();lastSyncAt=0;armIdle();
+ sessionLimits={idleExpiresAt:result.idleExpiresAt,sessionExpiresAt:result.sessionExpiresAt};lastInputAt=Date.now();lastSyncAt=0;armIdle();armVerify();
 }
-async function recordActivity(){
- if(!sessionLimits)return;
+async function recordActivity(event){
+ if(!sessionLimits||!event?.isTrusted||document.visibilityState!=='visible')return;
  if(Date.now()>=limitAt()){expireIdle();return;}
  lastInputAt=Date.now();publish({type:'activity',at:lastInputAt});armIdle();
  syncActivity();
@@ -60,8 +60,21 @@ async function syncActivity(){
  }catch(e){if(epoch===authEpoch&&['SESSION_EXPIRED','UNAUTHENTICATED'].includes(e.code))returnToLogin('登入已逾時，請重新登入。');}
  finally{syncing=false;}
 }
-for(const type of ['pointerdown','pointermove','keydown','scroll','touchstart','input'])document.addEventListener(type,recordActivity,{passive:true});
-document.addEventListener('visibilitychange',checkIdle);window.addEventListener('pageshow',checkIdle);
+for(const type of ['pointerdown','keydown','wheel','touchstart','touchmove','input'])document.addEventListener(type,recordActivity,{passive:true});
+function armVerify(){clearTimeout(verifyTimer);if(sessionLimits)verifyTimer=setTimeout(verifyServer,60000);}
+async function verifyServer(){
+ if(!sessionLimits||verifying)return;checkIdle();if(!sessionLimits)return;
+ verifying=true;const epoch=authEpoch;
+ try{
+  const result=await request('me');if(epoch!==authEpoch||!sessionLimits)return;
+  if(Number.isFinite(result.idleExpiresAt)&&Number.isFinite(result.sessionExpiresAt)){
+   sessionLimits={idleExpiresAt:result.idleExpiresAt,sessionExpiresAt:result.sessionExpiresAt};checkIdle();
+  }
+ }catch(e){if(epoch===authEpoch&&['SESSION_EXPIRED','UNAUTHENTICATED'].includes(e.code)){returnToLogin('登入已逾時，請重新登入。');publish({type:'logout'});}}
+ finally{verifying=false;armVerify();}
+}
+function resumeSession(){checkIdle();if(document.visibilityState==='visible')verifyServer();}
+document.addEventListener('visibilitychange',resumeSession);window.addEventListener('pageshow',resumeSession);
 if(idleChannel)idleChannel.onmessage=event=>{
  const m=event.data;if(!sessionLimits||!m)return;
  if(m.type==='logout'){returnToLogin('登入已結束，請重新登入。');return;}

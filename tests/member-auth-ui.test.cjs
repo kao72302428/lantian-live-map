@@ -7,8 +7,11 @@ const {JSDOM}=require('jsdom');
 const tick=()=>new Promise(r=>setTimeout(r,10));
 const member={memberId:'MEM-UAT-ONLY',memberType:'individual',name:'SYSTEM UAT TEST',displayName:'SYSTEM-UAT',email:'ui@example.invalid',mobile:'TEST',memberStatus:'pending',emailVerified:false,mobileVerified:false,registeredAt:'2026-10-28T00:00:00Z',lastLoginAt:'2026-10-28T00:00:01Z'};
 async function page(callback,setup){
- const dom=new JSDOM(readFileSync('vision.html','utf8'),{url:'https://lantian-live-map.vercel.app/vision.html',runScripts:'outside-only'});
- const w=dom.window;if(setup)setup(w);
+ const dom=new JSDOM(readFileSync('vision.html','utf8'),{url:'https://lantian-live-map.vercel.app/vision.html',runScripts:'outside-only',pretendToBeVisual:true});
+ const w=dom.window;
+ const nativeAdd=w.document.addEventListener.bind(w.document);w.activityHandlers={};
+ w.document.addEventListener=(type,fn,options)=>{if(['pointerdown','keydown','wheel','touchstart','touchmove','input'].includes(type))w.activityHandlers[type]=fn;nativeAdd(type,fn,options);};
+ if(setup)setup(w);
  w.fetch=async(path,options)=>callback(path,options);
  w.eval(readFileSync('member-schema.js','utf8'));w.eval(readFileSync('member-area.js','utf8'));await tick();return dom;
 }
@@ -92,10 +95,24 @@ test('real page activity syncs server deadline and postpones logout; background 
  let c,activity=0,outs=0;const d=await page(async(path)=>{
  if(path.endsWith('/activity')){activity++;return response(true,{ok:true,idleExpiresAt:c.now()+1800000,sessionExpiresAt:c.now()+604800000});}
  if(path.endsWith('/logout')){outs++;return response(true,{ok:true});}return response(true,{ok:true,member});},w=>{c=clock(w);});
- await c.advance(900000);assert.equal(activity,0);d.window.document.dispatchEvent(new d.window.Event('keydown'));await tick();assert.equal(activity,1);
+ await c.advance(900000);assert.equal(activity,0);d.window.activityHandlers.keydown({isTrusted:true});await tick();assert.equal(activity,1);
  await c.advance(900001);assert.equal(outs,0);await c.advance(900000);assert.equal(outs,1);d.window.close();
 });
 test('return after a suspended tab passes deadline cannot renew session',async()=>{
  let c,activity=0;const d=await page(async(path)=>{if(path.endsWith('/activity'))activity++;return response(true,{ok:true,member});},w=>{c=clock(w);});
  await c.advance(1800001);d.window.document.dispatchEvent(new d.window.Event('pointerdown'));await tick();assert.equal(activity,0);assert.equal(d.window.document.getElementById('memberPreview').hidden,true);d.window.close();
+});
+
+test('mouse movement and synthetic input do not keep an idle account alive',async()=>{
+ let c,activity=0,outs=0;const d=await page(async(path)=>{
+ if(path.endsWith('/activity')){activity++;return response(true,{ok:true,idleExpiresAt:c.now()+1800000,sessionExpiresAt:c.now()+604800000});}
+ if(path.endsWith('/logout')){outs++;return response(true,{ok:true});}return response(true,{ok:true,member});},w=>{c=clock(w);});
+ try{for(let i=0;i<3;i++){await c.advance(500000);d.window.document.dispatchEvent(new d.window.Event('pointermove'));d.window.document.dispatchEvent(new d.window.Event('keydown'));await tick();}assert.equal(activity,0);await c.advance(300001);assert.equal(outs,1);}finally{d.window.close();}
+});
+test('background status check removes a stale member display without renewing activity',async()=>{
+ let c,reads=0,activity=0;const d=await page(async(path)=>{
+ if(path.endsWith('/activity'))activity++;
+ if(++reads===1)return response(true,{ok:true,member});return response(false,{ok:false,code:'UNAUTHENTICATED'});
+ },w=>{c=clock(w);});
+ try{await c.advance(60000);assert.equal(d.window.document.getElementById('memberPreview').hidden,true);assert.equal(activity,0);}finally{d.window.close();}
 });
