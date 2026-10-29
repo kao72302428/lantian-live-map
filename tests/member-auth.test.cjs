@@ -41,7 +41,7 @@ before(async()=>{
  person=fixture('individual');business=fixture('business');
 });
 after(async()=>{await new Promise(resolve=>server.close(resolve));await db.close();});
-test('valid individual register',async()=>{const r=await call('register',person);assert.equal(r.status,201);account=r.data.member;assert.ok(account.memberId);assert.equal(account.memberStatus,'active');assert.equal(account.membershipPlan,'free');});
+test('valid individual register',async()=>{const r=await call('register',person);assert.equal(r.status,201);account=r.data.member;assert.ok(account.memberId);assert.equal(account.memberStatus,'active');assert.equal(account.membershipPlan,'free');assert.equal(r.data.memberSheet.status,'not_configured');});
 test('valid business register and pending/unbound',async()=>{const r=await call('register',business);assert.equal(r.status,201);assert.equal(r.data.member.shopReviewStatus,'pending');assert.equal(r.data.member.shopBound,false);assert.equal(r.data.member.memberStatus,'active');assert.equal(r.data.member.shopReviewRequired,false);});
 test('duplicate email case insensitive reject',async()=>assert.equal((await call('register',{...person,email:person.email.toUpperCase()})).status,409));
 test('invalid email reject',async()=>assert.equal((await call('register',{...fixture('individual'),email:'bad'})).status,400));
