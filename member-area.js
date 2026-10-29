@@ -111,7 +111,7 @@ function showMember(member){
  if(member.memberType==='business')host.append(el('p','店家會員｜'+member.shopName,'profile-shop'));
  const list=el('dl');
  const status={pending:'待驗證（可登入但尚未驗證）',active:'正常',suspended:'停權',disabled:'停用'};
- for(const [label,value] of [['Email',member.email],['手機',member.mobile],['會員編號',member.memberId],['會員狀態',status[member.memberStatus]||member.memberStatus],['註冊時間',member.registeredAt?new Date(member.registeredAt).toLocaleString('zh-TW'):'—'],['最後登入時間',member.lastLoginAt?new Date(member.lastLoginAt).toLocaleString('zh-TW'):'—'],['Email 驗證',member.emailVerified?'已驗證':'未驗證'],['手機驗證',member.mobileVerified?'已驗證':'未驗證']])addPair(list,label,value);
+ for(const [label,value] of [[member.memberType==='business'?'聯絡人姓名':'姓名',member.name],['Email',member.email],['手機',member.mobile],['會員編號',member.memberId],['會員狀態',status[member.memberStatus]||member.memberStatus],['註冊時間',member.registeredAt?new Date(member.registeredAt).toLocaleString('zh-TW'):'—'],['最後登入時間',member.lastLoginAt?new Date(member.lastLoginAt).toLocaleString('zh-TW'):'—'],['Email 驗證',member.emailVerified?'已驗證':'未驗證'],['手機驗證',member.mobileVerified?'已驗證':'未驗證']])addPair(list,label,value);
  if(member.memberType==='business'){
   addPair(list,'店家審核狀態',({pending:'待審核',approved:'已通過',returned:'退回補件',disabled:'停用'})[member.shopReviewStatus]||'待審核');
   addPair(list,'店家綁定狀態',member.shopBound?'已綁定':'未綁定');
