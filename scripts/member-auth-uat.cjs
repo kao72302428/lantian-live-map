@@ -35,9 +35,9 @@ async function runProduction(pool){
    try{
     const row=(await c.query('SELECT id,member_id,password_hash,member_status,email_verified,mobile_verified,suspended FROM lantian_members.members WHERE email=$1',[data.email])).rows[0];
     assert.equal(row.member_id,reg.data.member.memberId);assert.equal(reg.data.member.displayName,i?data.shopName:data.name);assert.notEqual(row.password_hash,data.password);assert.ok(await bcrypt.compare(data.password,row.password_hash));
-    assert.equal(row.member_status,'pending');assert.equal(row.email_verified,false);assert.equal(row.mobile_verified,false);assert.equal(row.suspended,false);
+    assert.equal(row.member_status,'active');assert.equal(row.email_verified,false);assert.equal(row.mobile_verified,false);assert.equal(row.suspended,false);
     mark('committed_independent_readback');mark('password_hash_protection');
-    if(i){const b=(await c.query('SELECT shop_id,shop_bound,shop_review_status FROM lantian_members.business_member_profiles WHERE member_fk=$1',[row.id])).rows[0];assert.equal(b.shop_id,null);assert.equal(b.shop_bound,false);assert.equal(b.shop_review_status,'pending');mark('business_profile');mark('business_pending');mark('business_unbound');}
+    if(i){const b=(await c.query('SELECT shop_id,shop_bound,shop_review_status FROM lantian_members.business_member_profiles WHERE member_fk=$1',[row.id])).rows[0];assert.equal(b.shop_id,null);assert.equal(b.shop_bound,false);assert.equal(b.shop_review_status,'pending');mark('business_profile');assert.equal(reg.data.member.shopReviewRequired,false);mark('free_business_no_review_required');mark('business_unbound');}
    }finally{c.release();}
    const dup=await call('register',{...data,email:data.email.toUpperCase()});assert.equal(dup.status,409);mark('duplicate_email');
    const bad=await call('login',{email:data.email,password:randomBytes(20).toString('hex')});assert.equal(bad.status,401);mark('wrong_password');

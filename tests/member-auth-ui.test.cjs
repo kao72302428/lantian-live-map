@@ -56,7 +56,7 @@ test('login center uses me response and logout calls backend',async()=>{
 test('business center visibly shows type shop review and binding state',async()=>{
  const d=await page(async()=>response(true,{ok:true,member:{...member,memberType:'business',shopName:'UAT SHOP',shopReviewStatus:'pending',shopBound:false}}));
  const text=d.window.document.getElementById('previewContent').textContent;
- for(const label of ['店家會員','UAT SHOP','待審核','未綁定'])assert.ok(text.includes(label));d.window.close();
+ for(const label of ['免費店家會員','UAT SHOP','免費會員','未綁定'])assert.ok(text.includes(label));assert.doesNotMatch(text,/待審核|店家審核狀態/);d.window.close();
 });
 test('UI never uses browser token/password persistence',()=>{
  const script=readFileSync('member-area.js','utf8');assert.doesNotMatch(script,/localStorage|sessionStorage|indexedDB/);assert.match(script,/credentials:'same-origin'/);
@@ -72,7 +72,7 @@ for(const type of ['individual','business'])test(`${type} first registration con
  if(type==='business'){
   assert.equal(w.document.getElementById('member-existingShopName'),null);assert.equal(w.document.querySelectorAll('input[name=shopIdentity]').length,0);
  }
- assert.match(w.document.getElementById('formSections').textContent,/後續會員資料補充工作包/);assert.equal(w.document.querySelectorAll('#formSections fieldset').length,1);assert.doesNotMatch(w.document.getElementById('formSections').textContent,/A\. |B\. /);if(type==='business')assert.match(w.document.getElementById('formSections').textContent,/店家會員申請/);w.close();
+ assert.match(w.document.getElementById('formSections').textContent,type==='business'?/無須資格審核/:/後續會員資料補充工作包/);assert.equal(w.document.querySelectorAll('#formSections fieldset').length,1);assert.doesNotMatch(w.document.getElementById('formSections').textContent,/A\. |B\. /);if(type==='business')assert.match(w.document.getElementById('formSections').textContent,/店家會員申請/);w.close();
 });
 test('minimal business form sends only required profile and identity',async()=>{
  let sent;const d=await page(async(path,options)=>{if(path.endsWith('/me'))return anon();sent=JSON.parse(options.body);return response(true,{ok:true,member:{...member,memberType:'business'}});}),w=d.window;

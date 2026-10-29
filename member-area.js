@@ -157,7 +157,7 @@ function selectType(type){
  set.append(el('legend',type==='business'?'店家會員申請':'一般會員註冊'));
  for(const f of M.registrationFieldsFor(type))grid.append(drawField(f));
  set.append(grid);$('formSections').append(set);
- $('formSections').append(el('p',type==='business'?'店家詳細資料及既有店家綁定將於後續審核處理；本次僅提出店家會員申請。資料補充功能屬後續會員資料補充工作包。':'其他個人資料保留於後續會員資料補充工作包；目前尚未開放補填。','help'));
+ $('formSections').append(el('p',type==='business'?'填寫基本資料即可加入免費店家會員，無須資格審核。店家詳細資料增修沿用「建言與合作」入口；行銷推廣依各活動辦法辦理。':'其他個人資料保留於後續會員資料補充工作包；目前尚未開放補填。','help'));
  $('formTitle').focus();
 }
 function readFields(){
@@ -172,13 +172,12 @@ function addPair(list,label,value){list.append(el('dt',label),el('dd',value));}
 function showMember(member){
  const host=$('previewContent');host.replaceChildren();
  const heading=el('h2','會員中心');heading.id='previewTitle';heading.tabIndex=-1;
- host.append(heading,el('h3',member.name,'profile-name'),el('span',M.schemas[member.memberType].icon+' '+M.schemas[member.memberType].memberLabel,'badge '+member.memberType));
- if(member.memberType==='business')host.append(el('p','店家會員｜'+member.shopName,'profile-shop'));
- const list=el('dl');
- const status={pending:'待驗證（可登入但尚未驗證）',active:'正常',suspended:'停權',disabled:'停用'};
+ host.append(heading,el('h3',member.name,'profile-name'),el('span',M.schemas[member.memberType].icon+' '+(member.memberType==='business'?'免費店家會員':M.schemas[member.memberType].memberLabel),'badge '+member.memberType));
+ if(member.memberType==='business')host.append(el('p','免費店家會員｜'+member.shopName,'profile-shop'));
+ const list=el('dl');addPair(list,'會員方案','免費會員');
+ const status={pending:'可使用（聯絡方式尚未驗證）',active:'正常',suspended:'停權',disabled:'停用'};
  for(const [label,value] of [[member.memberType==='business'?'聯絡人姓名':'姓名',member.name],['Email',member.email],['手機',member.mobile],['會員編號',member.memberId],['會員狀態',status[member.memberStatus]||member.memberStatus],['註冊時間',member.registeredAt?new Date(member.registeredAt).toLocaleString('zh-TW'):'—'],['最後登入時間',member.lastLoginAt?new Date(member.lastLoginAt).toLocaleString('zh-TW'):'—'],['Email 驗證',member.emailVerified?'已驗證':'未驗證'],['手機驗證',member.mobileVerified?'已驗證':'未驗證']])addPair(list,label,value);
  if(member.memberType==='business'){
-  addPair(list,'店家審核狀態',({pending:'待審核',approved:'已通過',returned:'退回補件',disabled:'停用'})[member.shopReviewStatus]||'待審核');
   addPair(list,'店家綁定狀態',member.shopBound?'已綁定':'未綁定');
  }
  host.append(list);clearImages();$('memberForm').reset();$('loginForm').reset();
@@ -200,7 +199,9 @@ $('memberForm').addEventListener('submit',async event=>{
   const response=await request('register',data);
   if(!response.member?.memberId)throw Error('註冊結果不完整，請先嘗試登入確認。');
   const email=data.email;goChoices();$('loginPanel').hidden=false;$('loginEmail').value=email;
-  $('loginMessage').textContent='註冊成功，請使用 Email 與密碼登入。帳號可登入但尚未驗證。';$('loginEmail').focus();
+  const mailStatus=response.registrationEmail?.status;
+  const mailNote=mailStatus==='sent'?'註冊通知信已送出。':mailStatus==='not_configured'?'註冊通知信尚未啟用。':'註冊通知信尚未確認送出，帳號已建立，請勿重複註冊。';
+  $('loginMessage').textContent='註冊成功，已加入免費會員，請使用 Email 與密碼登入。'+mailNote;$('loginEmail').focus();
  }catch(e){$('formMessage').textContent=e.message;}
  finally{data.password='';if($('member-password'))$('member-password').value='';lock(false);}
 });
