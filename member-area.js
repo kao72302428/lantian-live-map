@@ -9,7 +9,7 @@ async function request(action,data){
  try{
   const response=await fetch('/api/members/'+action,{method:data===undefined?'GET':'POST',credentials:'same-origin',cache:'no-store',headers:data===undefined?{}:{'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data),signal:controller.signal});
   let result;try{result=await response.json();}catch{throw Error('後端未回傳有效結果，請稍後確認。');}
-  if(!response.ok||result.ok!==true)throw Error(result.message||'操作未完成，請稍後再試。');
+  if(!response.ok||result.ok!==true)throw Object.assign(Error(result.message||'操作未完成，請稍後再試。'),{code:result.code});
   return result;
  }catch(e){if(e.name==='AbortError')throw Error('連線逾時，結果尚未確認；請先嘗試登入確認，勿重複送出註冊。');if(e instanceof TypeError)throw Error('網路連線失敗，請稍後確認或重試。');throw e;}
  finally{clearTimeout(timeout);}
@@ -18,6 +18,58 @@ function lock(value){busy=value;for(const b of document.querySelectorAll('button
 
 const M=window.LantianMembers;
 const $=id=>document.getElementById(id);
+const IDLE=30*60*1000;
+let idleTimer,activitySyncTimer,sessionLimits=null,lastInputAt=0,lastSyncAt=0,syncing=false,authEpoch=0;
+const idleChannel=typeof BroadcastChannel==='function'?new BroadcastChannel('lantian-member-activity'):null;
+function publish(data){idleChannel?.postMessage(data);}
+function stopIdle(){clearTimeout(idleTimer);clearTimeout(activitySyncTimer);sessionLimits=null;authEpoch++;}
+function limitAt(){return Math.min(lastInputAt+IDLE,sessionLimits.idleExpiresAt,sessionLimits.sessionExpiresAt);}
+function armIdle(){
+ clearTimeout(idleTimer);if(!sessionLimits)return;
+ idleTimer=setTimeout(checkIdle,Math.max(0,limitAt()-Date.now()));
+}
+function returnToLogin(message){stopIdle();goChoices();$('loginPanel').hidden=false;$('loginMessage').textContent=message;}
+function expireIdle(){
+ if(!sessionLimits)return;
+ returnToLogin('閒置已達 30 分鐘或登入期限已到，請重新登入。');publish({type:'logout'});
+ // The server enforces its own deadline even if this request cannot reach it.
+ request('logout',{}).catch(()=>{});
+}
+function checkIdle(){if(sessionLimits){if(Date.now()>=limitAt())expireIdle();else armIdle();}}
+function startIdle(result){
+ if(!Number.isFinite(result.idleExpiresAt)||!Number.isFinite(result.sessionExpiresAt))throw Error('登入期限未確認，請重新登入。');
+ sessionLimits={idleExpiresAt:result.idleExpiresAt,sessionExpiresAt:result.sessionExpiresAt};lastInputAt=Date.now();lastSyncAt=0;armIdle();
+}
+async function recordActivity(){
+ if(!sessionLimits)return;
+ if(Date.now()>=limitAt()){expireIdle();return;}
+ lastInputAt=Date.now();publish({type:'activity',at:lastInputAt});armIdle();
+ syncActivity();
+}
+async function syncActivity(){
+ if(!sessionLimits)return;
+ if(Date.now()>=limitAt()){expireIdle();return;}
+ const wait=15000-(Date.now()-lastSyncAt);
+ if(syncing||wait>0){clearTimeout(activitySyncTimer);activitySyncTimer=setTimeout(syncActivity,Math.max(1000,wait));return;}
+ syncing=true;lastSyncAt=Date.now();const epoch=authEpoch;
+ try{
+  const result=await request('activity',{});
+  if(epoch!==authEpoch||!sessionLimits)return;
+  if(!Number.isFinite(result.idleExpiresAt)||!Number.isFinite(result.sessionExpiresAt))return;
+  sessionLimits={idleExpiresAt:result.idleExpiresAt,sessionExpiresAt:result.sessionExpiresAt};publish({type:'limits',...sessionLimits});armIdle();
+ }catch(e){if(epoch===authEpoch&&['SESSION_EXPIRED','UNAUTHENTICATED'].includes(e.code))returnToLogin('登入已逾時，請重新登入。');}
+ finally{syncing=false;}
+}
+for(const type of ['pointerdown','pointermove','keydown','scroll','touchstart','input'])document.addEventListener(type,recordActivity,{passive:true});
+document.addEventListener('visibilitychange',checkIdle);window.addEventListener('pageshow',checkIdle);
+if(idleChannel)idleChannel.onmessage=event=>{
+ const m=event.data;if(!sessionLimits||!m)return;
+ if(m.type==='logout'){returnToLogin('登入已結束，請重新登入。');return;}
+ if(m.type==='activity'&&Number.isFinite(m.at)&&m.at<=Date.now()&&m.at>lastInputAt)lastInputAt=m.at;
+ if(m.type==='limits'&&Number.isFinite(m.idleExpiresAt)&&Number.isFinite(m.sessionExpiresAt))sessionLimits={idleExpiresAt:m.idleExpiresAt,sessionExpiresAt:m.sessionExpiresAt};
+ armIdle();
+};
+
 let memberType='';
 const imageUrls=new Map();
 function el(tag,text,className){
@@ -119,7 +171,7 @@ function showMember(member){
  host.append(list);clearImages();$('memberForm').reset();$('loginForm').reset();
  $('memberPreview').hidden=false;$('registration').hidden=true;$('memberChoices').hidden=true;$('loginPanel').hidden=true;heading.focus();
 }
-async function refreshMember(){const result=await request('me');showMember(result.member);}
+async function refreshMember(){const epoch=authEpoch,result=await request('me');if(epoch!==authEpoch)return;startIdle(result);showMember(result.member);}
 for(const button of document.querySelectorAll('[data-member-type]'))button.addEventListener('click',()=>selectType(button.dataset.memberType));
 $('changeType').addEventListener('click',goChoices);
 $('clearForm').addEventListener('click',()=>selectType(memberType));
@@ -146,7 +198,7 @@ $('loginForm').addEventListener('submit',async event=>{
 });
 $('logoutButton').addEventListener('click',async()=>{
  if(busy)return;lock(true);
- try{await request('logout',{});goChoices();$('loginPanel').hidden=false;$('loginMessage').textContent='已登出';}
+ try{await request('logout',{});returnToLogin('已登出');publish({type:'logout'});}
  catch(e){$('authNotice').textContent='登出未確認：'+e.message;}finally{lock(false);}
 });
 refreshMember().catch(()=>{});

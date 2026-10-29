@@ -6,13 +6,13 @@ const {randomBytes}=require('node:crypto');
 const {JSDOM}=require('jsdom');
 const tick=()=>new Promise(r=>setTimeout(r,10));
 const member={memberId:'MEM-UAT-ONLY',memberType:'individual',name:'SYSTEM UAT TEST',displayName:'SYSTEM-UAT',email:'ui@example.invalid',mobile:'TEST',memberStatus:'pending',emailVerified:false,mobileVerified:false,registeredAt:'2026-10-28T00:00:00Z',lastLoginAt:'2026-10-28T00:00:01Z'};
-async function page(callback){
+async function page(callback,setup){
  const dom=new JSDOM(readFileSync('vision.html','utf8'),{url:'https://lantian-live-map.vercel.app/vision.html',runScripts:'outside-only'});
- const w=dom.window;
+ const w=dom.window;if(setup)setup(w);
  w.fetch=async(path,options)=>callback(path,options);
  w.eval(readFileSync('member-schema.js','utf8'));w.eval(readFileSync('member-area.js','utf8'));await tick();return dom;
 }
-const response=(ok,data)=>({ok,json:async()=>data});
+const response=(ok,data)=>({ok,json:async()=>data.member?{idleExpiresAt:Date.now()+1800000,sessionExpiresAt:Date.now()+604800000,...data}:data});
 const anon=()=>response(false,{ok:false,code:'UNAUTHENTICATED',message:'請重新登入'});
 function fill(w){
  w.document.querySelector('[data-member-type=individual]').click();
@@ -77,4 +77,25 @@ test('minimal business form sends only required profile and identity',async()=>{
  for(const i of w.document.querySelectorAll('#formSections input')){if(i.type==='checkbox')i.checked=true;else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
  w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();
  assert.equal(sent.shopIdentity,undefined);assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
+});
+
+function clock(w){
+ let current=Date.now(),n=0;const jobs=new Map();w.Date.now=()=>current;
+ w.setTimeout=(fn,ms)=>{jobs.set(++n,{fn,at:current+ms});return n;};w.clearTimeout=id=>jobs.delete(id);
+ return {now:()=>current,async advance(ms){current+=ms;for(let k=0;k<20;k++){const due=[...jobs].filter(([,j])=>j.at<=current);if(!due.length)break;for(const [id,j] of due){jobs.delete(id);j.fn();}await tick();}}};
+}
+test('idle timeout clears profile and sends server logout at 30 minutes',async()=>{
+ let c,outs=0;const d=await page(async(path)=>{if(path.endsWith('/logout')){outs++;return response(true,{ok:true});}return response(true,{ok:true,member});},w=>{c=clock(w);});
+ await c.advance(1800000);assert.equal(outs,1);assert.equal(d.window.document.getElementById('memberPreview').hidden,true);assert.match(d.window.document.getElementById('loginMessage').textContent,/30 分鐘/);d.window.close();
+});
+test('real page activity syncs server deadline and postpones logout; background sends no heartbeat',async()=>{
+ let c,activity=0,outs=0;const d=await page(async(path)=>{
+ if(path.endsWith('/activity')){activity++;return response(true,{ok:true,idleExpiresAt:c.now()+1800000,sessionExpiresAt:c.now()+604800000});}
+ if(path.endsWith('/logout')){outs++;return response(true,{ok:true});}return response(true,{ok:true,member});},w=>{c=clock(w);});
+ await c.advance(900000);assert.equal(activity,0);d.window.document.dispatchEvent(new d.window.Event('keydown'));await tick();assert.equal(activity,1);
+ await c.advance(900001);assert.equal(outs,0);await c.advance(900000);assert.equal(outs,1);d.window.close();
+});
+test('return after a suspended tab passes deadline cannot renew session',async()=>{
+ let c,activity=0;const d=await page(async(path)=>{if(path.endsWith('/activity'))activity++;return response(true,{ok:true,member});},w=>{c=clock(w);});
+ await c.advance(1800001);d.window.document.dispatchEvent(new d.window.Event('pointerdown'));await tick();assert.equal(activity,0);assert.equal(d.window.document.getElementById('memberPreview').hidden,true);d.window.close();
 });

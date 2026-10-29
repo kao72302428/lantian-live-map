@@ -119,3 +119,32 @@ test('previous full-profile account can login me logout without losing profile',
  assert.equal((await call('logout',{}, {cookie:c})).status,200);assert.equal((await call('me',undefined,{cookie:c})).status,401);
  assert.deepEqual((await pool.query('SELECT display_name,registration_profile,password_hash FROM lantian_members.members WHERE email=$1',[d.email])).rows[0],before);
 });
+
+test('activity is POST with trusted origin only',async()=>{
+ await pool.query('DELETE FROM lantian_members.rate_limits'); // Isolated test DB; keep new session tests independent of the earlier rate-limit scenario.
+ assert.equal((await call('activity')).status,405);
+ assert.equal((await call('activity',{}, {headers:{Origin:'https://untrusted.invalid'}})).status,403);
+ assert.equal((await call('activity',{})).status,401);
+});
+test('login has 30 minute cookie and activity extends idle but not absolute expiry',async()=>{
+ const r=await call('login',{email:person.email,password:person.password}),c=r.cookie.split(';')[0];assert.equal(r.status,200);const expiry=new Date(r.cookie.match(/Expires=([^;]+)/)[1]).getTime();assert.ok(Math.abs(expiry-Date.now()-1800000)<2000);
+ assert.ok(r.data.idleExpiresAt>Date.now());const absolute=r.data.sessionExpiresAt;
+ const active=await call('activity',{}, {cookie:c});assert.equal(active.status,200);assert.ok(active.data.idleExpiresAt>=r.data.idleExpiresAt);assert.equal(active.data.sessionExpiresAt,absolute);
+});
+test('background me does not advance idle deadline',async()=>{
+ const r=await call('login',{email:person.email,password:person.password}),c=r.cookie.split(';')[0];
+ const me=await call('me',undefined,{cookie:c});assert.equal(me.data.idleExpiresAt,r.data.idleExpiresAt);
+});
+for(const field of ['lastActivityAt','createdAt'])test(`${field} expiry destroys persisted session and cannot be revived by activity`,async()=>{
+ const r=await call('login',{email:person.email,password:person.password}),c=r.cookie.split(';')[0];
+ const id=(await pool.query('SELECT id FROM lantian_members.members WHERE email=$1',[person.email])).rows[0].id;
+ await pool.query(`UPDATE lantian_members.sessions SET sess=jsonb_set(sess::jsonb,$1::text[],$2::jsonb)::json WHERE sess->>'memberId'=$3`,[[field],JSON.stringify(Date.now()-(field==='createdAt'?604800000:1800000)),id]);
+ const me=await call('me',undefined,{cookie:c});assert.equal(me.status,401);assert.equal(me.data.code,'SESSION_EXPIRED');assert.ok(me.cookie.includes('Max-Age=0'));
+ assert.equal((await call('activity',{}, {cookie:c})).status,401);
+});
+test('legacy session without server timestamps requires fresh login',async()=>{
+ const r=await call('login',{email:person.email,password:person.password}),c=r.cookie.split(';')[0];
+ const id=(await pool.query('SELECT id FROM lantian_members.members WHERE email=$1',[person.email])).rows[0].id;
+ await pool.query("UPDATE lantian_members.sessions SET sess=(sess::jsonb-'createdAt'-'lastActivityAt')::json WHERE sess->>'memberId'=$1",[id]);
+ assert.equal((await call('me',undefined,{cookie:c})).status,401);
+});

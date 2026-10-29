@@ -45,10 +45,18 @@ async function runProduction(pool){
    for(const flag of ['HttpOnly','Secure','SameSite=Lax','Path=/'])assert.ok(login.setCookie.includes(flag));mark('login');mark(i?'business_login':'individual_login');mark('cookie_flags');
    const cookie=login.setCookie.split(';')[0]; // Memory only; never log or return cookie values.
    const me=await call('me',undefined,cookie);assert.equal(me.status,200);assert.equal(me.data.member.memberId,reg.data.member.memberId);assert.ok(me.data.member.lastLoginAt);mark('me_current_member');mark(i?'business_me':'individual_me');mark('last_login_at');
+   const activity=await call('activity',{},cookie);assert.equal(activity.status,200);assert.ok(activity.data.idleExpiresAt>=me.data.idleExpiresAt);assert.equal(activity.data.sessionExpiresAt,me.data.sessionExpiresAt);mark('activity_refresh');
    for(const key of ['password_hash','passwordHash','password','admin_notes','adminNotes','id','sessionSecret'])assert.ok(!Object.hasOwn(me.data.member,key));mark('response_minimization');
    const out=await call('logout',{},cookie);assert.equal(out.status,200);assert.ok(out.setCookie.includes('Max-Age=0'));
    assert.equal((await call('me',undefined,cookie)).status,401);mark('logout_revoked');mark(i?'business_logout':'individual_logout');
   }
+  const data=records[0],fresh=await call('login',{email:data.email,password:data.password});assert.equal(fresh.status,200);
+  const expiredCookie=fresh.setCookie.split(';')[0];
+  // Backdate only this generated test account's sessions; never wait or touch real users.
+  await pool.query("UPDATE lantian_members.sessions SET sess=jsonb_set(sess::jsonb,'{lastActivityAt}',$1::jsonb)::json WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$2 AND name='SYSTEM UAT TEST')",[JSON.stringify(Date.now()-1800001),data.email]);
+  const expired=await call('me',undefined,expiredCookie);assert.equal(expired.status,401);assert.equal(expired.data.code,'SESSION_EXPIRED');assert.ok(expired.setCookie.includes('Max-Age=0'));mark('idle_timeout_rejected');
+  assert.equal((await call('activity',{},expiredCookie)).status,401);mark('expired_session_not_revivable');
+  const remaining=(await pool.query("SELECT count(*) AS n FROM lantian_members.sessions WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$1)",[data.email])).rows[0];assert.equal(Number(remaining.n),0);mark('idle_session_deleted');
   assert.equal((await call('me')).status,401);mark('me_requires_session');
  }finally{
   const emails=records.map(x=>x.email),c=await pool.connect();

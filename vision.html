@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>會員專用區｜智慧藍田 LIVE 一點通</title>
 <link rel="stylesheet" href="./member-area.css?v=20261028-auth1">
-<script src="./member-schema.js?v=20261029-application1" defer></script>
-<script src="./member-area.js?v=20261029-application1" defer></script>
+<script src="./member-schema.js?v=20261029-idle1" defer></script>
+<script src="./member-area.js?v=20261029-idle1" defer></script>
 </head>
 <body>
 <header class="site-header"><a href="./home.html">← 返回首頁</a><span>智慧藍田 LIVE 一點通</span></header>
 <main class="shell">
 <div class="page-heading"><p class="eyebrow">會員專用區</p><h1>選擇您的會員類別</h1><p>依您的身分註冊，或登入會員中心。</p></div>
-<p id="authNotice" class="notice" role="status" aria-live="polite">會員帳號可登入但尚未驗證。店家註冊後須等待審核，不會自動綁定或公開。</p>
+<p id="authNotice" class="notice" role="status" aria-live="polite">會員帳號可登入但尚未驗證。連續 30 分鐘未操作會員頁將自動登出。店家註冊後須等待審核，不會自動綁定或公開。</p>
 <section id="loginPanel" class="panel" aria-labelledby="loginTitle"><h2 id="loginTitle">會員登入</h2>
 <form id="loginForm"><div class="form-grid"><div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" required maxlength="254"></div><div class="field"><label for="loginPassword">密碼</label><input id="loginPassword" type="password" autocomplete="current-password" required minlength="8" maxlength="72"></div></div><button class="primary" type="submit">登入</button><p id="loginMessage" role="status" aria-live="polite"></p></form></section>
 <section id="memberChoices" class="choices" aria-label="選擇會員類別">
