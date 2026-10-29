@@ -1,0 +1,81 @@
+{
+  "status": "會員註冊欄位精簡施工完成／待使用者驗收",
+  "baseline": "ee228f98e96fa57a300c5c2113c30b5c2280470b",
+  "implementationCommit": "fff45434cdfe3244ede490df32b3a94687865138",
+  "productionVerificationDeployment": "dpl_96H9KJjQnUta5psjYqHWCidrYMRA",
+  "pagesRun": 40827392162,
+  "localTests": {
+    "passed": 56,
+    "failed": 0,
+    "legacyAccountLoginMeLogout": "PASS"
+  },
+  "production": {
+    "source_sha": "fff45434cdfe3244ede490df32b3a94687865138",
+    "individual_register": "PASS",
+    "committed_independent_readback": "PASS",
+    "password_hash_protection": "PASS",
+    "duplicate_email": "PASS",
+    "wrong_password": "PASS",
+    "login": "PASS",
+    "individual_login": "PASS",
+    "cookie_flags": "PASS",
+    "me_current_member": "PASS",
+    "individual_me": "PASS",
+    "last_login_at": "PASS",
+    "response_minimization": "PASS",
+    "logout_revoked": "PASS",
+    "individual_logout": "PASS",
+    "business_register": "PASS",
+    "business_existing_minimal": "PASS",
+    "business_profile": "PASS",
+    "business_pending": "PASS",
+    "business_unbound": "PASS",
+    "business_login": "PASS",
+    "business_me": "PASS",
+    "business_logout": "PASS",
+    "business_new_minimal": "PASS",
+    "me_requires_session": "PASS",
+    "cleanup": "PASS",
+    "existing_records_unchanged": "PASS"
+  },
+  "requiredFields": {
+    "individual": [
+      "name",
+      "mobile",
+      "email",
+      "password",
+      "termsAccepted",
+      "privacyAccepted"
+    ],
+    "business": [
+      "name",
+      "mobile",
+      "email",
+      "password",
+      "termsAccepted",
+      "privacyAccepted",
+      "shopName",
+      "shopIdentity"
+    ]
+  },
+  "files": [
+    "member-schema.js",
+    "member-area.js",
+    "vision.html",
+    "lib/member-auth-service.cjs",
+    "scripts/member-auth-uat.cjs",
+    "tests/member-auth.test.cjs",
+    "tests/member-auth-ui.test.cjs",
+    "docs/member-registration-minimal.md"
+  ],
+  "migration": false,
+  "authenticationCoreChanged": false,
+  "merchantDataChanged": false,
+  "otherFiveModulesChanged": false,
+  "existingProductionAccounts": "No real account credentials used; compatibility tested with an old-format fixture locally and Production existing rows verified unchanged.",
+  "remaining": [
+    "使用者人工驗收",
+    "後續會員資料補充工作包（本包未新增補填功能）"
+  ],
+  "testUrl": "https://lantian-live-map.vercel.app/vision.html"
+}
