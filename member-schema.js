@@ -12,7 +12,7 @@ const credentials=[
 ];
 const schemas={
  individual:{
-  entryLabel:'非店家會員',memberLabel:'一般會員',icon:'👤',
+  entryLabel:'一般會員',memberLabel:'一般會員',icon:'👤',
   sections:[{title:'個人基本資料',fields:[
    field('name','姓名','text',true),field('displayName','顯示名稱／暱稱','text',true),
    field('mobile','手機號碼','tel',true),field('email','Email','email',true),
