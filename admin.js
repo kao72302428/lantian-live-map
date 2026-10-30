@@ -39,6 +39,11 @@ function setLocked(message, allowLogin=false){
   });
 }
 
+function returnTarget(){
+  const value=new URLSearchParams(location.search).get('return');
+  return value==='admin-members.html'?'./admin-members.html':'';
+}
+
 function setAuthorized(name,idToken){
   try{ if(idToken) sessionStorage.setItem(SESSION_TOKEN,idToken); }catch(e){ console.warn(e); }
   if(authStatus) authStatus.textContent=`管理員驗證成功${name?`：${name}`:''}`;
@@ -51,6 +56,8 @@ function setAuthorized(name,idToken){
       el.classList.remove('disabled-link');
     }
   });
+  const target=returnTarget();
+  if(target) location.replace(target);
 }
 
 function enableRelogin(message){
@@ -120,7 +127,7 @@ async function initLiff(){
       setLocked('已登出管理中心，請點選 LINE 管理員登入。',true);
       if(loginBtn)loginBtn.onclick=()=>{
         try{localStorage.removeItem(LOGOUT_MARKER);}catch(e){console.warn(e);}
-        liff.login({redirectUri:new URL('./admin.html',window.location.href).href});
+        liff.login({redirectUri:window.location.href.split('#')[0]});
       };
       return;
     }
