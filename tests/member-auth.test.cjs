@@ -23,7 +23,7 @@ before(async()=>{
  }
  const client={query,release(){}};pool={query,connect:async()=>client};
  await migrate(client);await migrateAuth(client);
- for(const identity of ['existing','new'])await require('../lib/members-repository.cjs').repository(client).createMember({...fixture('business'),displayName:'Legacy shop',shopIdentity:identity});
+ for(const identity of ['existing','new'])await require('../lib/members-repository.cjs').repository(client).createMember({...fixture('business'),displayName:'舊店家',shopIdentity:identity});
  oldProfiles=(await pool.query('SELECT * FROM lantian_members.business_member_profiles ORDER BY member_fk')).rows;
  await migrateApplication(client);
  assert.deepEqual((await pool.query('SELECT * FROM lantian_members.business_member_profiles ORDER BY member_fk')).rows,oldProfiles);
@@ -112,7 +112,7 @@ test('unclassified application does not create binding claim',async()=>{
  assert.equal(row.registration_profile.existingShopName,'');assert.equal(row.registration_profile.existingShopId,'');
 });
 test('previous full-profile account can login me logout without losing profile',async()=>{
- const d=fixture('individual');d.displayName='Existing nickname';d.residenceArea='Existing area';d.birthMonth='2000-01';d.gender='不提供';
+ const d=fixture('individual');d.displayName='既有暱稱';d.residenceArea='既有區域';d.birthMonth='2000-01';d.gender='不提供';
  const hash=await require('bcryptjs').hash(d.password,12);
  await require('../lib/members-repository.cjs').repository(await pool.connect()).createMember(d,{passwordHash:hash});
  const before=(await pool.query('SELECT display_name,registration_profile,password_hash FROM lantian_members.members WHERE email=$1',[d.email])).rows[0];
@@ -149,4 +149,9 @@ test('legacy session without server timestamps requires fresh login',async()=>{
  const id=(await pool.query('SELECT id FROM lantian_members.members WHERE email=$1',[person.email])).rows[0].id;
  await pool.query("UPDATE lantian_members.sessions SET sess=(sess::jsonb-'createdAt'-'lastActivityAt')::json WHERE sess->>'memberId'=$1",[id]);
  assert.equal((await call('me',undefined,{cookie:c})).status,401);
+});
+
+test('English personal name is rejected for individual and business registration',async()=>{
+ assert.equal((await call('register',{...fixture('individual'),name:'John'})).status,400);
+ assert.equal((await call('register',{...fixture('business'),name:'Mary'})).status,400);
 });
