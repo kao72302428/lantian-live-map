@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>會員專用區｜智慧藍田 LIVE 一點通</title>
-<link rel="stylesheet" href="./member-area.css?v=20261028-auth1">
+<link rel="stylesheet" href="./member-area.css?v=20261031-policy1">
 <script src="./member-schema.js?v=20261031-memberfix1" defer></script>
 <script src="./member-area.js?v=20261031-memberfix1" defer></script>
 </head>
@@ -25,12 +25,12 @@
 <form id="memberForm" autocomplete="off">
 <div id="identitySection"></div>
 <div id="formSections"></div>
-<details class="policy-note"><summary>會員條款與隱私權政策</summary>
-<h3>會員服務條款</h3>
+<details id="termsPolicy" class="policy-note"><summary>會員服務條款</summary>
 <p>會員應提供正確且可聯絡之註冊資料，並妥善保管帳號與密碼；不得冒用他人資料、提供不實資訊、從事違法或妨害平台正常運作之行為。</p>
 <p>店家會員提交之店家資料應為真實資訊；店家註冊不代表已取得既有店家管理權，既有店家綁定、新店家公開及資料異動仍依平台流程辦理。</p>
 <p>平台得因系統維護、安全、違規使用或法令要求，暫停相關帳號或服務；必要調整將以網站公告或其他適當方式通知。</p>
-<h3>隱私權與個人資料告知</h3>
+</details>
+<details id="privacyPolicy" class="policy-note"><summary>隱私權與個人資料告知</summary>
 <p>本平台為提供會員註冊、登入、身分識別、店家會員申請、平台服務及必要聯絡，蒐集姓名、手機、Email、店家名稱、店家申請類型及會員主動提供之必要資料。</p>
 <p>資料於提供會員與平台服務所必要之期間與範圍內使用，並保存於正式會員資料庫；如使用受託之雲端、Email 或簡訊服務，僅於提供服務必要範圍內處理。</p>
 <p>會員得依法申請查詢或閱覽、取得複製本、補充或更正、停止蒐集／處理／利用及刪除個人資料。必要資料未提供時，將無法建立會員帳號或完成相關服務。</p>
@@ -40,6 +40,7 @@
 </form>
 </section>
 <section id="memberPreview" class="panel" hidden aria-labelledby="previewTitle"><div id="previewContent"></div><div class="actions"><button id="logoutButton" class="secondary" type="button">登出</button></div></section>
+<p class="skeleton-link"><a href="https://kao72302428.github.io/lantian-live-map/admin-members.html">會員資料庫（管理員）</a></p>
 <noscript><p class="notice">請啟用 JavaScript，才能選擇會員類別及查看表單。請勿在未啟用 JavaScript 時填寫密碼。</p></noscript>
 </main>
 <footer>智慧藍田 LIVE 一點通</footer>
