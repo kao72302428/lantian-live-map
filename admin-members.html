@@ -3,21 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>會員管理欄位骨架｜智慧藍田 LIVE 一點通</title>
-<link rel="stylesheet" href="./member-area.css?v=20261025-1">
-<script src="./member-schema.js?v=20261025-1" defer></script>
-<script src="./admin-members.js?v=20261025-1" defer></script>
+<title>會員管理｜智慧藍田 LIVE 一點通</title>
+<link rel="stylesheet" href="./member-area.css?v=20261030-admin1">
+<style>
+.admin-toolbar{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:12px;align-items:end}
+.admin-toolbar label{display:flex;flex-direction:column;gap:6px;font-weight:700}
+.admin-toolbar select{width:auto;min-width:150px}
+.member-list{display:grid;gap:16px;margin-top:20px}
+.member-row{background:#fff;border:1px solid #d6e3ec;border-radius:16px;padding:20px}
+.member-row-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.member-row h2{font-size:21px;margin:4px 0}
+.member-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;margin-top:14px}
+.member-meta div{min-width:0;overflow-wrap:anywhere}
+.member-meta b{color:#516b7e}
+.admin-state{margin:18px 0}
+@media(max-width:700px){.admin-toolbar,.member-meta{grid-template-columns:1fr}.admin-toolbar select{width:100%}}
+</style>
+<script src="./admin-members.js?v=20261030-admin1" defer></script>
 </head>
 <body>
-<header class="site-header"><a href="./vision.html">← 返回會員專用區</a><span>智慧藍田 LIVE 一點通</span></header>
+<header class="site-header"><a href="./admin.html">← 返回管理中心</a><span>智慧藍田 LIVE 一點通</span></header>
 <main class="shell">
-<div class="page-heading"><p class="eyebrow">會員專用區</p><h1>會員管理欄位骨架</h1><p>本頁僅展示管理欄位，不是已開通的會員管理系統。</p></div>
-<p class="notice"><strong>以下為兩張固定示意卡，非真實會員資料。</strong><br>尚未接登入、會員資料來源、審核、編修或正式權限；本頁沒有保存與發布操作。</p>
-<div class="admin-filter"><label for="memberTypeFilter">會員類別</label><select id="memberTypeFilter"><option value="all">全部類別</option><option value="business">店家會員</option><option value="individual">一般會員（非店家會員）</option></select><span id="sampleCount" role="status"></span></div>
-<div id="memberSkeletons" class="schema-grid"></div>
-<section class="schema-states" aria-labelledby="statesTitle"><h2 id="statesTitle">獨立狀態欄位預留</h2><p>會員狀態：待驗證／正常／停權／停用。</p><p>店家審核狀態：待審核／已通過／退回補件／停用。</p><p>店家資料修改審核：未提出／待審核／已通過／退回補件／停用。</p><p>三種狀態分開記錄。日後須完成正式驗證與權限後，才可開放真實會員資料管理。</p></section>
-<noscript><p class="notice">請啟用 JavaScript 查看固定示意欄位。</p></noscript>
+<div class="page-heading"><p class="eyebrow">會員專用區</p><h1>會員管理</h1><p>僅供已通過 LINE 管理員白名單驗證者唯讀查詢 Neon 正式會員資料。</p></div>
+<p class="notice"><strong>本頁為唯讀管理。</strong><br>不提供會員資料修改、停權、刪除、店家審核或綁定操作；密碼雜湊、內部資料庫 ID、管理備註與 Session 不會回傳前端。</p>
+<p id="authStatus" class="notice admin-state" role="status" aria-live="polite">正在確認管理員驗證狀態…</p>
+<section id="memberAdmin" hidden>
+<div class="admin-toolbar">
+<label>搜尋會員<input id="searchInput" type="search" placeholder="姓名、會員編號、Email、手機或店家名稱" autocomplete="off"></label>
+<label>會員類別<select id="memberTypeFilter"><option value="">全部</option><option value="individual">一般會員</option><option value="business">店家會員</option></select></label>
+<label>會員狀態<select id="memberStatusFilter"><option value="">全部</option><option value="active">正常</option><option value="pending">待驗證</option><option value="suspended">停權</option><option value="disabled">停用</option></select></label>
+</div>
+<p id="memberCount" class="skeleton-link" role="status"></p>
+<div id="memberList" class="member-list"></div>
+</section>
+<noscript><p class="notice">請啟用 JavaScript；本頁需要管理中心既有 LINE 管理員驗證。</p></noscript>
 </main>
-<footer>智慧藍田 LIVE 一點通</footer>
+<footer>智慧藍田 LIVE 一點通｜會員管理</footer>
 </body>
 </html>

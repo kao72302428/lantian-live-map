@@ -1,35 +1,87 @@
-(function(){
+(()=>{
 'use strict';
-const M=window.LantianMembers;
-const samples=[
- {memberType:'business',name:'示意聯絡人乙',displayName:'示意店家',shopName:'示意店家（非真實店家）',memberStatus:'待驗證',shopIdentity:'existing',shopBound:false,shopReviewStatus:'待審核',shopChangeReviewStatus:'未提出',emailVerified:false,mobileVerified:false,suspended:false},
- {memberType:'individual',name:'示意會員甲',displayName:'示意暱稱',memberStatus:'待驗證',emailVerified:false,mobileVerified:false,suspended:false}
-];
-function el(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;}
-function value(item,key){
- if(key==='memberType')return M.schemas[item.memberType].memberLabel;
- if(key==='shopIdentity')return item.shopIdentity==='existing'?'平台既有店家':'新申請店家';
- if(['emailVerified','mobileVerified'].includes(key))return item[key]?'已驗證':'未驗證';
- if(key==='suspended')return item.suspended?'是':'否';
- if(key==='shopBound')return item.shopBound?'已完成':'未完成';
- if(key==='lastLoginAt')return '尚未登入';
- if(['registeredAt','updatedAt','memberId','shopId'].includes(key))return '尚未建立';
- return item[key]||'未填（示意）';
+const API='https://lantian-live-map.vercel.app/api/members-admin';
+const SESSION_TOKEN='lantianAdminIdToken';
+const $=id=>document.getElementById(id);
+let items=[];
+
+function token(){try{return sessionStorage.getItem(SESSION_TOKEN)||'';}catch{return '';}}
+function text(value){return String(value??'');}
+function fmtTime(value){
+ if(!value)return '—';
+ const d=new Date(value);
+ return Number.isFinite(d.getTime())?new Intl.DateTimeFormat('zh-TW',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Taipei'}).format(d):'—';
+}
+function stateLabel(value){
+ return ({active:'正常',pending:'待驗證',suspended:'停權',disabled:'停用'})[value]||text(value)||'—';
+}
+function identityLabel(value){
+ return ({existing:'既有店家',new:'新申請店家',application:'待判別申請'})[value]||text(value)||'—';
+}
+function el(tag,value,className){
+ const node=document.createElement(tag);
+ if(value!==undefined)node.textContent=value;
+ if(className)node.className=className;
+ return node;
+}
+function meta(label,value){
+ const box=el('div');box.append(el('b',label+'：'),document.createTextNode(value));return box;
+}
+function matches(item){
+ const type=$('memberTypeFilter').value,status=$('memberStatusFilter').value,q=$('searchInput').value.trim().toLowerCase();
+ if(type&&item.memberType!==type)return false;
+ if(status&&item.memberStatus!==status)return false;
+ if(!q)return true;
+ return [item.memberId,item.name,item.displayName,item.mobile,item.email,item.shopName].some(v=>text(v).toLowerCase().includes(q));
 }
 function render(){
- const host=document.getElementById('memberSkeletons');host.replaceChildren();
- const selected=document.getElementById('memberTypeFilter').value;
- const shown=samples.filter(x=>selected==='all'||x.memberType===selected);
- document.getElementById('sampleCount').textContent='顯示 '+shown.length+' 張固定示意卡';
- for(const item of shown){
-  const article=el('article',undefined,'panel schema-card');
-  article.append(el('span',M.schemas[item.memberType].icon+' '+M.schemas[item.memberType].memberLabel,'badge '+item.memberType),el('h2',item.name,'profile-name'));
-  if(item.memberType==='business')article.append(el('p','店家會員｜'+item.shopName,'profile-shop'));
-  const list=el('dl');
-  const fields=[...M.commonAdmin,...(item.memberType==='business'?M.businessAdmin:[])];
-  for(const [key,label]of fields)list.append(el('dt',label),el('dd',value(item,key)));
-  article.append(list);host.append(article);
+ const rows=items.filter(matches),host=$('memberList');host.replaceChildren();
+ $('memberCount').textContent=`顯示 ${rows.length}／${items.length} 筆已載入會員`;
+ if(!rows.length){host.append(el('p','沒有符合條件的會員。','notice'));return;}
+ for(const item of rows){
+  const card=el('article',undefined,'member-row');
+  const head=el('div',undefined,'member-row-head');
+  const title=el('div');title.append(el('span',item.memberType==='business'?'🏪 店家會員':'👤 一般會員','badge '+item.memberType),el('h2',item.name||'未命名會員'));
+  head.append(title,el('span',stateLabel(item.memberStatus),'status-chip'));
+  const grid=el('div',undefined,'member-meta');
+  const fields=[
+   ['會員編號',item.memberId||'—'],['Email',item.email||'—'],['手機',item.mobile||'—'],
+   ['顯示名稱',item.displayName||'—'],['註冊時間',fmtTime(item.registeredAt)],['最後登入',fmtTime(item.lastLoginAt)],
+   ['Email 驗證',item.emailVerified?'已驗證':'未驗證'],['手機驗證',item.mobileVerified?'已驗證':'未驗證']
+  ];
+  if(item.memberType==='business')fields.push(
+   ['店家名稱',item.shopName||'—'],['店家申請類型',identityLabel(item.shopIdentity)],
+   ['店家綁定',item.shopBound?'已綁定':'未綁定'],['店家審核',item.shopReviewStatus||'—']
+  );
+  for(const [label,value] of fields)grid.append(meta(label,text(value)));
+  card.append(head,grid);host.append(card);
  }
 }
-document.getElementById('memberTypeFilter').addEventListener('change',render);render();
+async function load(){
+ const idToken=token();
+ if(!idToken){
+  $('authStatus').textContent='尚未取得管理員驗證。請返回管理中心，以 LINE 管理員帳號完成驗證後再進入本頁。';
+  return;
+ }
+ $('authStatus').textContent='管理員驗證中，正在載入會員資料…';
+ try{
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken,action:'list'}),cache:'no-store'});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok||data.ok!==true){
+   if(['INVALID_LINE_ID_TOKEN','NOT_AUTHORIZED','MISSING_ID_TOKEN'].includes(data.code)){
+    try{sessionStorage.removeItem(SESSION_TOKEN);}catch{}
+    throw Error('管理員驗證已失效，請返回管理中心重新登入。');
+   }
+   throw Error('會員資料目前無法載入（'+text(data.code||'REQUEST_FAILED')+'）。');
+  }
+  items=Array.isArray(data.items)?data.items:[];
+  $('authStatus').textContent='管理員驗證成功。會員資料已從 Neon 以唯讀方式載入。';
+  $('memberAdmin').hidden=false;
+  render();
+ }catch(e){$('authStatus').textContent=e.message||'會員資料載入失敗。';}
+}
+for(const id of ['searchInput','memberTypeFilter','memberStatusFilter']){
+ const node=$(id);node.addEventListener(id==='searchInput'?'input':'change',render);
+}
+load();
 })();
