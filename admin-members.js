@@ -65,7 +65,7 @@ function render(){
 async function load(){
  const idToken=token();
  if(!idToken){
-  $('authStatus').textContent='尚未取得管理員驗證。請返回管理中心，以 LINE 管理員帳號完成驗證後再進入本頁。';
+  location.replace('./admin.html?return=admin-members.html');
   return;
  }
  $('authStatus').textContent='管理員驗證中，正在載入會員資料…';
@@ -75,7 +75,7 @@ async function load(){
   if(!r.ok||data.ok!==true){
    if(['INVALID_LINE_ID_TOKEN','NOT_AUTHORIZED','MISSING_ID_TOKEN'].includes(data.code)){
     try{sessionStorage.removeItem(SESSION_TOKEN);}catch{}
-    throw Error('管理員驗證已失效，請返回管理中心重新登入。');
+    location.replace('./admin.html?return=admin-members.html');return;
    }
    throw Error('會員資料目前無法載入（'+text(data.code||'REQUEST_FAILED')+'）。');
   }
