@@ -14,7 +14,7 @@ const schemas={
  individual:{
   entryLabel:'一般會員',memberLabel:'一般會員',icon:'👤',
   sections:[{title:'個人基本資料',fields:[
-   field('name','姓名','text',true),field('displayName','顯示名稱／暱稱','text',true),
+   field('name','姓名','text',true,{chineseOnly:true,placeholder:'請輸入中文姓名'}),field('displayName','顯示名稱／暱稱','text',true),
    field('mobile','手機號碼','tel',true),field('email','Email','email',true),
    field('residenceArea','居住區域','text',true,{placeholder:'例如：高雄市楠梓區；不用填完整地址'}),
    ...credentials,
@@ -28,7 +28,7 @@ const schemas={
   entryLabel:'店家會員',memberLabel:'店家會員',icon:'🏪',
   sections:[
    {title:'A. 聯絡人基本資料',fields:[
-    field('name','聯絡人姓名','text',true),field('mobile','手機號碼','tel',true),
+    field('name','聯絡人姓名','text',true,{chineseOnly:true,placeholder:'請輸入中文姓名'}),field('mobile','手機號碼','tel',true),
     field('email','Email','email',true),field('jobTitle','職稱','text',true),
     ...credentials,field('lineContact','LINE 聯絡方式'),...consent
    ]},
@@ -74,6 +74,7 @@ function validatePreview(type,data,registration=false){
   if(f.type==='reserved'||f.type==='password-reserved'||f.type==='file')continue;
   const value=data[f.key];
   if(f.required&&(!registration||registrationKeys[type].includes(f.key))&&(f.type==='checkbox'?value!==true:!String(value||'').trim()))errors.push('請填寫／勾選：'+f.label);
+  if(value&&f.chineseOnly&&!/^\p{Script=Han}+$/u.test(String(value).trim()))errors.push(f.label+'僅限中文姓名。');
   if(value&&f.type==='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))errors.push('Email 格式不正確。');
   if(value&&f.type==='url'){try{if(!['http:','https:'].includes(new URL(value).protocol))throw Error();}catch{errors.push(f.label+'請填寫 http 或 https 網址。');}}
   if(value&&f.type==='select'&&!f.options.includes(value))errors.push(f.label+'選項不正確。');
