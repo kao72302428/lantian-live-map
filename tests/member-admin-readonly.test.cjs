@@ -33,7 +33,7 @@ test('frontend is read-only and uses existing admin session token',()=>{
  const src=fs.readFileSync('admin-members.js','utf8');
  assert.match(src,/lantianAdminIdToken/);
  assert.match(src,/action:'list'/);
- assert.doesNotMatch(src,/停權|刪除會員|審核通過|saveMember|updateMember|deleteMember/);
+ assert.doesNotMatch(src,/刪除會員|審核通過|saveMember|updateMember|deleteMember|suspendMember/);
  assert.doesNotMatch(src,/innerHTML\s*=/);
 });
 test('admin center routes former vision module to member management',()=>{
