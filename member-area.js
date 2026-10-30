@@ -122,6 +122,7 @@ function drawField(f){
  if(f.type.includes('reserved')){input.disabled=true;input.placeholder=f.type==='reserved'?'尚未啟用':'密碼欄位尚未啟用';}
  else input.required=f.required;
  if(f.placeholder)input.placeholder=f.placeholder;
+ if(f.chineseOnly){input.maxLength=20;input.autocomplete='name';input.title='僅限中文姓名';}
  if(f.type==='month')input.max=new Date().toISOString().slice(0,7);
  if(f.type==='tel')input.inputMode='tel';
  if(f.type==='text')input.maxLength=f.key==='shopDescription'?1000:200;
