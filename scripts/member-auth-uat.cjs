@@ -5,7 +5,7 @@ const bcrypt=require('bcryptjs');
 const {ORIGIN}=require('../lib/member-auth-handler.cjs');
 function fixture(type){
  const d={memberType:type,password:randomBytes(20).toString('base64url')};
- d.name='SYSTEM UAT TEST';d.email=`uat-auth-${randomUUID()}@example.invalid`;d.mobile='TEST-NOT-A-PHONE';
+ d.name='系統測試會員';d.email=`uat-auth-${randomUUID()}@example.invalid`;d.mobile='TEST-NOT-A-PHONE';
  d.termsAccepted=true;d.privacyAccepted=true;
  if(type==='business'){d.shopName='SYSTEM UAT TEST SHOP';d.shopCategory='生活服務';}
  return d;
@@ -53,12 +53,12 @@ async function runProduction(pool){
   const data=records[0],fresh=await call('login',{email:data.email,password:data.password});assert.equal(fresh.status,200);
   const expiredCookie=fresh.setCookie.split(';')[0];
   // Backdate only this generated test account's sessions; never wait or touch real users.
-  await pool.query("UPDATE lantian_members.sessions SET sess=jsonb_set(sess::jsonb,'{lastActivityAt}',$1::jsonb)::json WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$2 AND name='SYSTEM UAT TEST')",[JSON.stringify(Date.now()-1800001),data.email]);
+  await pool.query("UPDATE lantian_members.sessions SET sess=jsonb_set(sess::jsonb,'{lastActivityAt}',$1::jsonb)::json WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$2 AND name='系統測試會員')",[JSON.stringify(Date.now()-1800001),data.email]);
   const expired=await call('me',undefined,expiredCookie);assert.equal(expired.status,401);assert.equal(expired.data.code,'SESSION_EXPIRED');assert.ok(expired.setCookie.includes('Max-Age=0'));mark('idle_timeout_rejected');
   assert.equal((await call('activity',{},expiredCookie)).status,401);mark('expired_session_not_revivable');
   const remaining=(await pool.query("SELECT count(*) AS n FROM lantian_members.sessions WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$1)",[data.email])).rows[0];assert.equal(Number(remaining.n),0);mark('idle_session_deleted');
   const absolute=await call('login',{email:data.email,password:data.password});assert.equal(absolute.status,200);const absoluteCookie=absolute.setCookie.split(';')[0];
-  await pool.query("UPDATE lantian_members.sessions SET sess=jsonb_set(jsonb_set(sess::jsonb,'{createdAt}',$1::jsonb),'{lastActivityAt}',$2::jsonb)::json WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$3 AND name='SYSTEM UAT TEST')",[JSON.stringify(Date.now()-604800001),JSON.stringify(Date.now()),data.email]);
+  await pool.query("UPDATE lantian_members.sessions SET sess=jsonb_set(jsonb_set(sess::jsonb,'{createdAt}',$1::jsonb),'{lastActivityAt}',$2::jsonb)::json WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$3 AND name='系統測試會員')",[JSON.stringify(Date.now()-604800001),JSON.stringify(Date.now()),data.email]);
   const absoluteMe=await call('me',undefined,absoluteCookie);assert.equal(absoluteMe.status,401);assert.equal(absoluteMe.data.code,'SESSION_EXPIRED');mark('absolute_7_day_timeout_rejected_despite_recent_activity');
   assert.equal((await call('activity',{},absoluteCookie)).status,401);mark('absolute_expired_session_not_revivable');
   const absoluteRemaining=(await pool.query("SELECT count(*) AS n FROM lantian_members.sessions WHERE sess->>'memberId'=(SELECT id::text FROM lantian_members.members WHERE email=$1)",[data.email])).rows[0];assert.equal(Number(absoluteRemaining.n),0);mark('absolute_session_deleted');
@@ -67,10 +67,10 @@ async function runProduction(pool){
   const emails=records.map(x=>x.email),c=await pool.connect();
   try{
    await c.query('BEGIN');
-   const ids=(await c.query("SELECT id FROM lantian_members.members WHERE email=ANY($1::text[]) AND name='SYSTEM UAT TEST'",[emails])).rows.map(x=>x.id);
+   const ids=(await c.query("SELECT id FROM lantian_members.members WHERE email=ANY($1::text[]) AND name='系統測試會員'",[emails])).rows.map(x=>x.id);
    await c.query("DELETE FROM lantian_members.sessions WHERE sess->>'memberId'=ANY($1::text[])",[ids]);
    await c.query('DELETE FROM lantian_members.business_member_profiles WHERE member_fk=ANY($1::uuid[])',[ids]);
-   await c.query("DELETE FROM lantian_members.members WHERE id=ANY($1::uuid[]) AND email=ANY($2::text[]) AND name='SYSTEM UAT TEST'",[ids,emails]);
+   await c.query("DELETE FROM lantian_members.members WHERE id=ANY($1::uuid[]) AND email=ANY($2::text[]) AND name='系統測試會員'",[ids,emails]);
    await c.query('COMMIT');
    assert.equal(Number((await c.query('SELECT count(*) AS n FROM lantian_members.members WHERE email=ANY($1::text[])',[emails])).rows[0].n),0);mark('cleanup');assert.deepEqual(await fingerprint(),before);mark('existing_records_unchanged');
   }catch{await c.query('ROLLBACK');throw Error('UAT_CLEANUP_FAILED');}
