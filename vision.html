@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>會員專用區｜智慧藍田 LIVE 一點通</title>
 <link rel="stylesheet" href="./member-area.css?v=20261028-auth1">
-<script src="./member-schema.js?v=20261030-free1" defer></script>
-<script src="./member-area.js?v=20261030-free1" defer></script>
+<script src="./member-schema.js?v=20261031-memberfix1" defer></script>
+<script src="./member-area.js?v=20261031-memberfix1" defer></script>
 </head>
 <body>
 <header class="site-header"><a href="./home.html">← 返回首頁</a><span>智慧藍田 LIVE 一點通</span></header>
 <main class="shell">
 <div class="page-heading"><p class="eyebrow">會員專用區</p><h1>選擇您的會員類別</h1><p>依您的身分註冊，或登入會員中心。</p></div>
-<p id="authNotice" class="notice" role="status" aria-live="polite">目前免費開放註冊，填寫基本資料即可加入，無須資格審核。Email 與手機驗證尚未啟用。連續 30 分鐘未操作會員頁將自動登出。</p>
+<p id="authNotice" class="notice" role="status" aria-live="polite">免費開放註冊，填寫基本資料即可加入</p>
 <section id="loginPanel" class="panel" aria-labelledby="loginTitle"><h2 id="loginTitle">會員登入</h2>
 <form id="loginForm"><div class="form-grid"><div class="field"><label for="loginEmail">Email</label><input id="loginEmail" type="email" autocomplete="username" required maxlength="254"></div><div class="field"><label for="loginPassword">密碼</label><input id="loginPassword" type="password" autocomplete="current-password" required minlength="8" maxlength="72"></div></div><button class="primary" type="submit">登入</button><p id="loginMessage" role="status" aria-live="polite"></p></form></section>
 <section id="memberChoices" class="choices" aria-label="選擇會員類別">
@@ -25,13 +25,21 @@
 <form id="memberForm" autocomplete="off">
 <div id="identitySection"></div>
 <div id="formSections"></div>
-<details class="policy-note"><summary>會員條款與隱私權政策（待正式核定）</summary><p>正式會員條款與隱私權政策尚待核定。正式條款內容待平台核定；本頁已開放帳號註冊，勾選與基本資料會隨註冊保存。</p></details>
+<details class="policy-note"><summary>會員條款與隱私權政策</summary>
+<h3>會員服務條款</h3>
+<p>會員應提供正確且可聯絡之註冊資料，並妥善保管帳號與密碼；不得冒用他人資料、提供不實資訊、從事違法或妨害平台正常運作之行為。</p>
+<p>店家會員提交之店家資料應為真實資訊；店家註冊不代表已取得既有店家管理權，既有店家綁定、新店家公開及資料異動仍依平台流程辦理。</p>
+<p>平台得因系統維護、安全、違規使用或法令要求，暫停相關帳號或服務；必要調整將以網站公告或其他適當方式通知。</p>
+<h3>隱私權與個人資料告知</h3>
+<p>本平台為提供會員註冊、登入、身分識別、店家會員申請、平台服務及必要聯絡，蒐集姓名、手機、Email、店家名稱、店家申請類型及會員主動提供之必要資料。</p>
+<p>資料於提供會員與平台服務所必要之期間與範圍內使用，並保存於正式會員資料庫；如使用受託之雲端、Email 或簡訊服務，僅於提供服務必要範圍內處理。</p>
+<p>會員得依法申請查詢或閱覽、取得複製本、補充或更正、停止蒐集／處理／利用及刪除個人資料。必要資料未提供時，將無法建立會員帳號或完成相關服務。</p>
+</details>
 <p id="formMessage" role="status" aria-live="polite"></p>
 <div class="actions"><button class="primary" type="submit">正式註冊</button><button id="clearForm" class="secondary" type="button">清空資料</button></div>
 </form>
 </section>
 <section id="memberPreview" class="panel" hidden aria-labelledby="previewTitle"><div id="previewContent"></div><div class="actions"><button id="logoutButton" class="secondary" type="button">登出</button></div></section>
-<p class="skeleton-link"><a href="https://docs.google.com/spreadsheets/d/1N1m_GBw7vQK0KZ6SncyZj3io0G8bt9_ksMX9t_UCsK8/edit?usp=drivesdk" target="_blank" rel="noopener noreferrer">會員資料庫</a>（管理員專用，需以獲授權的 Google 帳號開啟；資料同步尚未啟用）</p>
 <noscript><p class="notice">請啟用 JavaScript，才能選擇會員類別及查看表單。請勿在未啟用 JavaScript 時填寫密碼。</p></noscript>
 </main>
 <footer>智慧藍田 LIVE 一點通</footer>
