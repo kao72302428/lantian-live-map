@@ -50,6 +50,8 @@ test('blank password reject',async()=>assert.equal((await call('register',{...fi
 test('bcrypt over 72 bytes rejected rather than truncated',async()=>assert.equal((await call('register',{...fixture('individual'),password:'密'.repeat(25)})).status,400));
 test('required terms and privacy enforced server side',async()=>assert.equal((await call('register',{...fixture('individual'),privacyAccepted:false})).status,400));
 test('required business fields enforced',async()=>assert.equal((await call('register',{...fixture('business'),shopName:''})).status,400));
+test('business category is required and limited to six options',async()=>{const d=fixture('business');delete d.shopCategory;assert.equal((await call('register',d)).status,400);assert.equal((await call('register',{...fixture('business'),shopCategory:'其他'})).status,400);});
+test('business category is stored in registration profile',async()=>{const d={...fixture('business'),shopCategory:'美食餐飲'},r=await call('register',d);assert.equal(r.status,201);assert.equal(r.data.member.shopCategory,'美食餐飲');const row=(await pool.query('SELECT registration_profile FROM lantian_members.members WHERE email=$1',[d.email])).rows[0];assert.equal(row.registration_profile.shopCategory,'美食餐飲');});
 test('invalid member type reject',async()=>assert.equal((await call('register',{...fixture('individual'),memberType:'admin'})).status,400));
 test('password hash is bcrypt not plaintext',async()=>{const row=(await pool.query('SELECT password_hash FROM lantian_members.members WHERE email=$1',[person.email])).rows[0];assert.match(row.password_hash,/^\$2[aby]\$12\$/);assert.notEqual(row.password_hash,person.password);});
 test('login wrong password and missing email return same error',async()=>{
@@ -94,7 +96,7 @@ test('minimal individual defaults display name and preserves omitted optional fi
  for(const key of ['residenceArea','birthMonth','gender','preferredContact'])assert.equal(row.registration_profile[key],'');
 });
 for(const type of ['individual','business']){
- for(const key of ['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName']:[])])test(`${type} missing ${key} rejected`,async()=>{
+ for(const key of ['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName','shopCategory']:[])])test(`${type} missing ${key} rejected`,async()=>{
   const d=fixture(type);delete d[key];assert.equal((await call('register',d)).status,400);
  });
 }
