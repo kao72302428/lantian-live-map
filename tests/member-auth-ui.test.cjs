@@ -5,7 +5,7 @@ const {readFileSync}=require('node:fs');
 const {randomBytes}=require('node:crypto');
 const {JSDOM}=require('jsdom');
 const tick=()=>new Promise(r=>setTimeout(r,10));
-const member={memberId:'MEM-UAT-ONLY',memberType:'individual',name:'SYSTEM UAT TEST',displayName:'SYSTEM-UAT',email:'ui@example.invalid',mobile:'TEST',memberStatus:'pending',emailVerified:false,mobileVerified:false,registeredAt:'2026-10-28T00:00:00Z',lastLoginAt:'2026-10-28T00:00:01Z'};
+const member={memberId:'MEM-UAT-ONLY',memberType:'individual',name:'系統測試會員',displayName:'系統測試會員',email:'ui@example.invalid',mobile:'TEST',memberStatus:'pending',emailVerified:false,mobileVerified:false,registeredAt:'2026-10-28T00:00:00Z',lastLoginAt:'2026-10-28T00:00:01Z'};
 async function page(callback,setup){
  const dom=new JSDOM(readFileSync('vision.html','utf8'),{url:'https://lantian-live-map.vercel.app/vision.html',runScripts:'outside-only',pretendToBeVisual:true});
  const w=dom.window;
@@ -22,7 +22,7 @@ function fill(w){
  for(const f of w.LantianMembers.registrationFieldsFor('individual')){
   const i=w.document.getElementById('member-'+f.key);if(!i||i.disabled||i.readOnly)continue;
   if(f.type==='checkbox')i.checked=true;
-  else if(f.required)i.value=f.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';
+  else if(f.required)i.value=f.type==='email'?'ui@example.invalid':'系統測試會員';
  }
  w.document.getElementById('member-password').value=randomBytes(18).toString('base64url');
 }
@@ -77,9 +77,9 @@ for(const type of ['individual','business'])test(`${type} first registration con
 test('minimal business form sends only required profile and identity',async()=>{
  let sent;const d=await page(async(path,options)=>{if(path.endsWith('/me'))return anon();sent=JSON.parse(options.body);return response(true,{ok:true,member:{...member,memberType:'business'}});}),w=d.window;
  w.document.querySelector('[data-member-type=business]').click();
- for(const i of w.document.querySelectorAll('#formSections input,#formSections select')){if(i.type==='checkbox')i.checked=true;else if(i.name==='shopCategory')i.value='美食餐飲';else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
+ for(const i of w.document.querySelectorAll('#formSections input,#formSections select')){if(i.type==='checkbox')i.checked=true;else if(i.name==='shopCategory')i.value='美食餐飲';else i.value=i.type==='email'?'ui@example.invalid':'系統測試會員';}
  w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();
- assert.equal(sent.shopIdentity,undefined);assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.equal(sent.shopCategory,'美食餐飲');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
+ assert.equal(sent.shopIdentity,undefined);assert.equal(sent.shopName,'系統測試會員');assert.equal(sent.shopCategory,'美食餐飲');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
 });
 
 function clock(w){
@@ -131,5 +131,20 @@ test('business registration shows six required categories',async()=>{
  const select=w.document.getElementById('member-shopCategory');
  assert.ok(select);assert.equal(select.required,true);
  assert.deepEqual([...select.options].slice(1).map(o=>o.value),['美食餐飲','購物零售','居家服務','醫療保健','生活服務','教育休閒']);
+ d.window.close();
+});
+
+test('registration rejects non-Chinese personal name',async()=>{
+ const d=await page(anon),w=d.window;w.document.querySelector('[data-member-type=individual]').click();
+ for(const f of w.LantianMembers.registrationFieldsFor('individual')){
+  const i=w.document.getElementById('member-'+f.key);if(!i||i.disabled||i.readOnly)continue;
+  if(f.type==='checkbox')i.checked=true;
+  else if(f.key==='name')i.value='John';
+  else if(f.required)i.value=f.type==='email'?'ui@example.invalid':'測試';
+ }
+ w.document.getElementById('member-password').value=randomBytes(18).toString('base64url');
+ w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));
+ await tick();
+ assert.match(w.document.getElementById('formMessage').textContent,/姓名僅限中文姓名/);
  d.window.close();
 });
