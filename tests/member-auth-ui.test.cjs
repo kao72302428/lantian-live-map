@@ -65,21 +65,21 @@ test('UI never uses browser token/password persistence',()=>{
 
 for(const type of ['individual','business'])test(`${type} first registration contains only authorized minimal fields`,async()=>{
  const d=await page(anon),w=d.window;w.document.querySelector(`[data-member-type=${type}]`).click();
- const expected=['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName']:[])];
+ const expected=['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName','shopCategory']:[])];
  assert.deepEqual([...w.document.querySelectorAll('#formSections input')].map(i=>i.name).sort(),expected.sort());
  for(const i of w.document.querySelectorAll('#formSections input'))assert.equal(i.required,true);
  assert.equal(w.document.getElementById('member-displayName'),null);assert.equal(w.document.getElementById('member-residenceArea'),null);
  if(type==='business'){
   assert.equal(w.document.getElementById('member-existingShopName'),null);assert.equal(w.document.querySelectorAll('input[name=shopIdentity]').length,0);
  }
- assert.match(w.document.getElementById('formSections').textContent,type==='business'?/無須資格審核/:/後續會員資料補充工作包/);assert.equal(w.document.querySelectorAll('#formSections fieldset').length,1);assert.doesNotMatch(w.document.getElementById('formSections').textContent,/A\. |B\. /);if(type==='business')assert.match(w.document.getElementById('formSections').textContent,/店家會員申請/);w.close();
+ assert.doesNotMatch(w.document.getElementById('formSections').textContent,/無須資格審核|尚未開放補填/);assert.equal(w.document.querySelectorAll('#formSections fieldset').length,1);assert.doesNotMatch(w.document.getElementById('formSections').textContent,/A\. |B\. /);if(type==='business')assert.match(w.document.getElementById('formSections').textContent,/店家會員申請/);w.close();
 });
 test('minimal business form sends only required profile and identity',async()=>{
  let sent;const d=await page(async(path,options)=>{if(path.endsWith('/me'))return anon();sent=JSON.parse(options.body);return response(true,{ok:true,member:{...member,memberType:'business'}});}),w=d.window;
  w.document.querySelector('[data-member-type=business]').click();
- for(const i of w.document.querySelectorAll('#formSections input')){if(i.type==='checkbox')i.checked=true;else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
+ for(const i of w.document.querySelectorAll('#formSections input')){if(i.type==='checkbox')i.checked=true;else if(i.name==='shopCategory')i.value='美食餐飲';else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
  w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();
- assert.equal(sent.shopIdentity,undefined);assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
+ assert.equal(sent.shopIdentity,undefined);assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.equal(sent.shopCategory,'美食餐飲');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
 });
 
 function clock(w){
@@ -115,4 +115,21 @@ test('background status check removes a stale member display without renewing ac
  if(++reads===1)return response(true,{ok:true,member});return response(false,{ok:false,code:'UNAUTHENTICATED'});
  },w=>{c=clock(w);});
  try{await c.advance(60000);assert.equal(d.window.document.getElementById('memberPreview').hidden,true);assert.equal(activity,0);}finally{d.window.close();}
+});
+
+test('registration page uses concise notice and published policy text',async()=>{
+ const d=await page(anon),w=d.window;
+ assert.equal(w.document.getElementById('authNotice').textContent.trim(),'免費開放註冊，填寫基本資料即可加入');
+ const body=w.document.body.textContent;
+ for(const removed of ['註冊通知信尚未啟用','Email 與手機驗證尚未啟用','待正式核定','資料同步尚未啟用'])assert.equal(body.includes(removed),false,removed);
+ for(const required of ['會員服務條款','隱私權與個人資料告知','查詢或閱覽','停止蒐集／處理／利用'])assert.ok(body.includes(required),required);
+ assert.equal(w.document.querySelector('a[href*="docs.google.com/spreadsheets"]'),null);
+ d.window.close();
+});
+test('business registration shows six required categories',async()=>{
+ const d=await page(anon),w=d.window;w.document.querySelector('[data-member-type=business]').click();
+ const select=w.document.getElementById('member-shopCategory');
+ assert.ok(select);assert.equal(select.required,true);
+ assert.deepEqual([...select.options].slice(1).map(o=>o.value),['美食餐飲','購物零售','居家服務','醫療保健','生活服務','教育休閒']);
+ d.window.close();
 });
