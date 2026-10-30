@@ -7,7 +7,7 @@ function fixture(type){
  const d={memberType:type,password:randomBytes(20).toString('base64url')};
  d.name='SYSTEM UAT TEST';d.email=`uat-auth-${randomUUID()}@example.invalid`;d.mobile='TEST-NOT-A-PHONE';
  d.termsAccepted=true;d.privacyAccepted=true;
- if(type==='business'){d.shopName='SYSTEM UAT TEST SHOP';}
+ if(type==='business'){d.shopName='SYSTEM UAT TEST SHOP';d.shopCategory='生活服務';}
  return d;
 }
 async function runProduction(pool){
@@ -22,7 +22,7 @@ async function runProduction(pool){
  const before=await fingerprint();
  async function call(action,body,cookie){
   const res=await fetch(`${ORIGIN}/api/members/${action}`,{method:body===undefined?'GET':'POST',headers:{Origin:ORIGIN,...(body===undefined?{}:{'Content-Type':'application/json'}),...(cookie?{Cookie:cookie}:{})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(30000),redirect:'manual'});
-  assert.equal(res.headers.get('x-member-auth-version'),'20261028-1');
+  assert.equal(res.headers.get('x-member-auth-version'),'20261031-1');
   let data;try{data=await res.json();}catch{throw Error('PRODUCTION_HTTP_UNAVAILABLE');}
   return {status:res.status,data,setCookie:res.headers.get('set-cookie')};
  }
@@ -37,7 +37,7 @@ async function runProduction(pool){
     assert.equal(row.member_id,reg.data.member.memberId);assert.equal(reg.data.member.displayName,i?data.shopName:data.name);assert.notEqual(row.password_hash,data.password);assert.ok(await bcrypt.compare(data.password,row.password_hash));
     assert.equal(row.member_status,'active');assert.equal(row.email_verified,false);assert.equal(row.mobile_verified,false);assert.equal(row.suspended,false);
     mark('committed_independent_readback');mark('password_hash_protection');
-    if(i){const b=(await c.query('SELECT shop_id,shop_bound,shop_review_status FROM lantian_members.business_member_profiles WHERE member_fk=$1',[row.id])).rows[0];assert.equal(b.shop_id,null);assert.equal(b.shop_bound,false);assert.equal(b.shop_review_status,'pending');mark('business_profile');assert.equal(reg.data.member.shopReviewRequired,false);mark('free_business_no_review_required');mark('business_unbound');}
+    if(i){const b=(await c.query('SELECT shop_id,shop_bound,shop_review_status FROM lantian_members.business_member_profiles WHERE member_fk=$1',[row.id])).rows[0];assert.equal(b.shop_id,null);assert.equal(b.shop_bound,false);assert.equal(b.shop_review_status,'pending');const p=(await c.query('SELECT registration_profile FROM lantian_members.members WHERE id=$1',[row.id])).rows[0];assert.equal(p.registration_profile.shopCategory,data.shopCategory);mark('business_category');mark('business_profile');assert.equal(reg.data.member.shopReviewRequired,false);mark('free_business_no_review_required');mark('business_unbound');}
    }finally{c.release();}
    const dup=await call('register',{...data,email:data.email.toUpperCase()});assert.equal(dup.status,409);mark('duplicate_email');
    const bad=await call('login',{email:data.email,password:randomBytes(20).toString('hex')});assert.equal(bad.status,401);mark('wrong_password');
