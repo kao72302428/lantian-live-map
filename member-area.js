@@ -126,7 +126,18 @@ function drawField(f){
  if(f.type==='tel')input.inputMode='tel';
  if(f.type==='text')input.maxLength=f.key==='shopDescription'?1000:200;
  if(f.type==='textarea')input.maxLength=2000;
- if(f.type==='checkbox'){label.append(input,text);wrap.append(label);}
+ if(f.type==='checkbox'){
+  label.append(input,text);wrap.append(label);
+  if(['termsAccepted','privacyAccepted'].includes(f.key)){
+   const btn=el('button','查看內容','policy-link');
+   btn.type='button';
+   const target=f.key==='termsAccepted'?'termsPolicy':'privacyPolicy';
+   btn.addEventListener('click',()=>{
+    const details=$(target);if(!details)return;details.open=true;details.scrollIntoView({behavior:'smooth',block:'center'});
+   });
+   wrap.append(btn);
+  }
+ }
  else{label.append(text);wrap.append(label,input);}
  if(f.note){const hint=el('small',f.note,'help');hint.id=id+'-help';input.setAttribute('aria-describedby',hint.id);wrap.append(hint);}
  if(f.type==='file'){
