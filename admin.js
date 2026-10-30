@@ -1,4 +1,12 @@
 (()=>{
+const CANONICAL_ADMIN_URL='https://kao72302428.github.io/lantian-live-map/admin.html';
+if(location.hostname.endsWith('.vercel.app')){
+  const target=new URL(CANONICAL_ADMIN_URL);
+  target.search=location.search;
+  target.hash=location.hash;
+  location.replace(target.href);
+  return;
+}
 const LIFF_ID='2011802000-aDp14e0D';
 const AUTH_API='https://lantian-live-map.vercel.app/api/admin-auth';
 const authStatus=document.getElementById('authStatus');

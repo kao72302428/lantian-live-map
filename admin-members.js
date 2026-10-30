@@ -1,5 +1,10 @@
 (()=>{
 'use strict';
+const CANONICAL_MEMBER_ADMIN_URL='https://kao72302428.github.io/lantian-live-map/admin-members.html';
+if(location.hostname.endsWith('.vercel.app')){
+  location.replace(CANONICAL_MEMBER_ADMIN_URL);
+  return;
+}
 const API='https://lantian-live-map.vercel.app/api/members-admin';
 const SESSION_TOKEN='lantianAdminIdToken';
 const $=id=>document.getElementById(id);

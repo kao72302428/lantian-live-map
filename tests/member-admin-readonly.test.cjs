@@ -42,3 +42,13 @@ test('admin center routes former vision module to member management',()=>{
  assert.match(html,/href="\.\/admin-members\.html"/);
  assert.doesNotMatch(html,/藍田新願景管理/);
 });
+
+test('admin pages canonicalize Vercel UI to GitHub Pages before LINE auth',()=>{
+ const admin=fs.readFileSync('admin.js','utf8');
+ const members=fs.readFileSync('admin-members.js','utf8');
+ assert.match(admin,/CANONICAL_ADMIN_URL='https:\/\/kao72302428\.github\.io\/lantian-live-map\/admin\.html'/);
+ assert.match(admin,/hostname\.endsWith\('\.vercel\.app'\)/);
+ assert.ok(admin.indexOf('location.replace(target.href)')<admin.indexOf('liff.init'));
+ assert.match(members,/CANONICAL_MEMBER_ADMIN_URL='https:\/\/kao72302428\.github\.io\/lantian-live-map\/admin-members\.html'/);
+ assert.match(members,/hostname\.endsWith\('\.vercel\.app'\)/);
+});
