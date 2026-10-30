@@ -66,8 +66,8 @@ test('UI never uses browser token/password persistence',()=>{
 for(const type of ['individual','business'])test(`${type} first registration contains only authorized minimal fields`,async()=>{
  const d=await page(anon),w=d.window;w.document.querySelector(`[data-member-type=${type}]`).click();
  const expected=['name','mobile','email','password','termsAccepted','privacyAccepted',...(type==='business'?['shopName','shopCategory']:[])];
- assert.deepEqual([...w.document.querySelectorAll('#formSections input')].map(i=>i.name).sort(),expected.sort());
- for(const i of w.document.querySelectorAll('#formSections input'))assert.equal(i.required,true);
+ assert.deepEqual([...w.document.querySelectorAll('#formSections input,#formSections select')].map(i=>i.name).sort(),expected.sort());
+ for(const i of w.document.querySelectorAll('#formSections input,#formSections select'))assert.equal(i.required,true);
  assert.equal(w.document.getElementById('member-displayName'),null);assert.equal(w.document.getElementById('member-residenceArea'),null);
  if(type==='business'){
   assert.equal(w.document.getElementById('member-existingShopName'),null);assert.equal(w.document.querySelectorAll('input[name=shopIdentity]').length,0);
@@ -77,7 +77,7 @@ for(const type of ['individual','business'])test(`${type} first registration con
 test('minimal business form sends only required profile and identity',async()=>{
  let sent;const d=await page(async(path,options)=>{if(path.endsWith('/me'))return anon();sent=JSON.parse(options.body);return response(true,{ok:true,member:{...member,memberType:'business'}});}),w=d.window;
  w.document.querySelector('[data-member-type=business]').click();
- for(const i of w.document.querySelectorAll('#formSections input')){if(i.type==='checkbox')i.checked=true;else if(i.name==='shopCategory')i.value='美食餐飲';else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
+ for(const i of w.document.querySelectorAll('#formSections input,#formSections select')){if(i.type==='checkbox')i.checked=true;else if(i.name==='shopCategory')i.value='美食餐飲';else i.value=i.type==='email'?'ui@example.invalid':'SYSTEM UAT TEST';}
  w.document.getElementById('memberForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();
  assert.equal(sent.shopIdentity,undefined);assert.equal(sent.shopName,'SYSTEM UAT TEST');assert.equal(sent.shopCategory,'美食餐飲');assert.ok(!Object.hasOwn(sent,'shopAddress'));assert.match(w.document.getElementById('loginMessage').textContent,/註冊成功/);w.close();
 });
