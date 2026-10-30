@@ -3,8 +3,8 @@
 'use strict';
 const field=(key,label,type='text',required=false,options={})=>({key,label,type,required,...options});
 const consent=[
- field('termsAccepted','同意會員條款','checkbox',true),
- field('privacyAccepted','同意隱私權政策','checkbox',true)
+ field('termsAccepted','我已閱讀並同意會員服務條款','checkbox',true),
+ field('privacyAccepted','我已閱讀並同意隱私權與個人資料告知','checkbox',true)
 ];
 const credentials=[
  field('loginMethod','會員登入方式','reserved',true,{note:'登入方式尚未啟用，待後續工作包核定。'}),
@@ -30,11 +30,11 @@ const schemas={
    {title:'A. 聯絡人基本資料',fields:[
     field('name','聯絡人姓名','text',true),field('mobile','手機號碼','tel',true),
     field('email','Email','email',true),field('jobTitle','職稱','text',true),
-    ...credentials,field('lineContact','LINE 聯絡方式'),...consent.map(f=>({...f,label:f.key==='termsAccepted'?'同意店家會員條款':f.label}))
+    ...credentials,field('lineContact','LINE 聯絡方式'),...consent
    ]},
    {title:'B. 店家基本資料',fields:[
     field('shopName','店家名稱','text',true),field('shopDisplayName','店家顯示名稱','text',true),
-    field('shopCategory','店家主分類','select',true,{options:['美食餐飲','購物零售','居家服務','醫療保健','生活服務','教育休閒']}),
+    field('shopCategory','店家申請類型','select',true,{options:['美食餐飲','購物零售','居家服務','醫療保健','生活服務','教育休閒']}),
     field('shopSubcategory','店家次分類','text',true,{placeholder:'例如：咖啡、服飾、美髮'}),
     field('shopPhone','店家電話','tel',true),field('shopAddress','店家地址','text',true),
     field('businessArea','營業區域','text',true),field('shopDescription','店家簡介','textarea',true),
@@ -62,7 +62,7 @@ const fieldsFor=type=>schemas[type]?schemas[type].sections.flatMap(s=>s.fields):
 // First registration is a projection; the complete profile/admin schema stays intact.
 const registrationKeys={
  individual:['name','mobile','email','password','termsAccepted','privacyAccepted'],
- business:['name','mobile','email','password','shopName','termsAccepted','privacyAccepted']
+ business:['name','mobile','email','password','shopName','shopCategory','termsAccepted','privacyAccepted']
 };
 const registrationFieldsFor=type=>registrationKeys[type]?registrationKeys[type].map(key=>fieldsFor(type).find(f=>f.key===key)):[];
 const registrationSectionsFor=type=>schemas[type]?schemas[type].sections.map(s=>({...s,fields:s.fields.filter(f=>registrationKeys[type].includes(f.key))})).filter(s=>s.fields.length):[];
