@@ -101,6 +101,37 @@ async function writeImage(token, raw) {
   return { path: `./${path}`, sha: data.content?.sha || '', bytes: image.bytes };
 }
 
+function validateVideoUpload(raw) {
+  const mime = String(raw?.mime || '').trim().toLowerCase();
+  const base64 = String(raw?.base64 || '').trim();
+  const extByMime = {'video/mp4':'mp4','video/webm':'webm'};
+  const ext = extByMime[mime];
+  if (!ext) throw new Error('INVALID_VIDEO_TYPE');
+  if (!base64 || base64.length > 3333336 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64)) {
+    throw new Error('INVALID_VIDEO_DATA');
+  }
+  const bytes = Buffer.from(base64, 'base64');
+  if (!bytes.length || bytes.length > 2500000) throw new Error('VIDEO_TOO_LARGE');
+  return { base64, ext, bytes: bytes.length };
+}
+
+async function writeVideo(token, raw) {
+  const video = validateVideoUpload(raw);
+  const stamp = Date.now();
+  const random = crypto.randomBytes(4).toString('hex');
+  const path = `assets/news-videos/news-${stamp}-${random}.${video.ext}`;
+  const url = `https://api.github.com/repos/${REPO}/contents/${path}`;
+  const body = {
+    message: `Admin upload news video: ${path}`,
+    content: video.base64,
+    branch: BRANCH
+  };
+  const r = await fetch(url, { method: 'PUT', headers: ghHeaders(token), body: JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error('VIDEO_WRITE_FAILED');
+  return { path: `./${path}`, sha: data.content?.sha || '', bytes: video.bytes };
+}
+
 function cleanItem(raw, existingId, existingPublished) {
   const now = Date.now();
   const id = String(existingId || raw?.id || `news-${now}`).trim();
@@ -111,6 +142,7 @@ function cleanItem(raw, existingId, existingPublished) {
     summary: String(raw?.summary || '').trim(),
     content: String(raw?.content || '').trim(),
     image: String(raw?.image || '').trim(),
+    video: String(raw?.video || '').trim(),
     map: String(raw?.map || '').trim(),
     link: String(raw?.link || '').trim(),
     linkText: String(raw?.linkText || '').trim(),
@@ -138,6 +170,10 @@ module.exports = async function handler(req, res) {
   try {
     if (action === 'uploadImage') {
       const uploaded = await writeImage(token, req.body?.image || {});
+      return res.status(200).json({ ok: true, ...uploaded });
+    }
+    if (action === 'uploadVideo') {
+      const uploaded = await writeVideo(token, req.body?.video || {});
       return res.status(200).json({ ok: true, ...uploaded });
     }
 
@@ -193,6 +229,10 @@ module.exports = async function handler(req, res) {
     if (err.message === 'INVALID_IMAGE_DATA') return res.status(400).json({ok:false,code:'INVALID_IMAGE_DATA'});
     if (err.message === 'IMAGE_TOO_LARGE') return res.status(400).json({ok:false,code:'IMAGE_TOO_LARGE'});
     if (err.message === 'IMAGE_WRITE_FAILED') return res.status(502).json({ok:false,code:'IMAGE_WRITE_FAILED'});
+    if (err.message === 'INVALID_VIDEO_TYPE') return res.status(400).json({ok:false,code:'INVALID_VIDEO_TYPE'});
+    if (err.message === 'INVALID_VIDEO_DATA') return res.status(400).json({ok:false,code:'INVALID_VIDEO_DATA'});
+    if (err.message === 'VIDEO_TOO_LARGE') return res.status(400).json({ok:false,code:'VIDEO_TOO_LARGE'});
+    if (err.message === 'VIDEO_WRITE_FAILED') return res.status(502).json({ok:false,code:'VIDEO_WRITE_FAILED'});
     console.error(err);
     return res.status(502).json({ ok: false, code: 'GITHUB_WRITE_FAILED' });
   }

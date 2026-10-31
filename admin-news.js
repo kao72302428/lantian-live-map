@@ -8,7 +8,7 @@ const SESSION_TOKEN='lantianAdminIdToken';
 let reverifyBtn=null;
 
 const $=id=>document.getElementById(id);
-const fields=['date','title','summary','content','imageFile','image','map','link','linkText','published'];
+const fields=['date','title','summary','content','imageFile','image','videoFile','video','map','link','linkText','published'];
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 function setEnabled(enabled){
@@ -61,6 +61,7 @@ function getFormItem(publishedOverride){
    summary:$('summary').value.trim(),
    content:$('content').value.trim(),
    image:$('image').value.trim(),
+   video:$('video').value.trim(),
    map:$('map').value.trim(),
    link:$('link').value.trim(),
    linkText:$('linkText').value.trim(),
@@ -108,6 +109,7 @@ function editItem(item){
  $('summary').value=item.summary||'';
  $('content').value=item.content||'';
  $('image').value=item.image||'';
+ $('video').value=item.video||'';
  $('map').value=item.map||'';
  $('link').value=item.link||'';
  $('linkText').value=item.linkText||'';
@@ -131,10 +133,17 @@ function imageError(file){
  if(file.size>2500000)return '圖片超過 2.5 MB。';
  return '';
 }
-function readImageBase64(file){return new Promise((resolve,reject)=>{
+function videoError(file){
+ if(!file)return '';
+ if(!['video/mp4','video/webm'].includes(file.type))return '影片僅支援 MP4 或 WebM。';
+ if(!file.size)return '影片檔案為空。';
+ if(file.size>2500000)return '影片超過 2.5 MB。';
+ return '';
+}
+function readFileBase64(file,code){return new Promise((resolve,reject)=>{
  const reader=new FileReader();
  reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
- reader.onerror=()=>reject(Object.assign(new Error('IMAGE_READ_FAILED'),{code:'IMAGE_READ_FAILED'}));
+ reader.onerror=()=>reject(Object.assign(new Error(code),{code}));
  reader.readAsDataURL(file);
 });}
 if($('imageFile'))$('imageFile').addEventListener('change',()=>{
@@ -143,13 +152,21 @@ if($('imageFile'))$('imageFile').addEventListener('change',()=>{
  if(err){$('imageFile').value='';if($('imageFileStatus'))$('imageFileStatus').textContent=err;return;}
  if($('imageFileStatus'))$('imageFileStatus').textContent=file?`已選擇：${file.name}（${Math.ceil(file.size/1024)} KB）`:'';
 });
+if($('videoFile'))$('videoFile').addEventListener('change',()=>{
+ const file=$('videoFile').files?.[0];
+ const err=videoError(file);
+ if(err){$('videoFile').value='';if($('videoFileStatus'))$('videoFileStatus').textContent=err;return;}
+ if($('videoFileStatus'))$('videoFileStatus').textContent=file?`已選擇：${file.name}（${Math.ceil(file.size/1024)} KB）`:'';
+});
 
 async function saveItem(published){
  if(busy)return;
  const item=getFormItem(published);
  const file=$('imageFile')?.files?.[0];
+ const videoFile=$('videoFile')?.files?.[0];
  const fileError=imageError(file);
- if(fileError){$('formMessage').hidden=false;$('formMessage').textContent=fileError;return;}
+ const videoFileError=videoError(videoFile);
+ if(fileError||videoFileError){$('formMessage').hidden=false;$('formMessage').textContent=fileError||videoFileError;return;}
  if(!item.date||!item.title||!item.summary||!item.content){
    $('formMessage').hidden=false;
    $('formMessage').textContent='日期、標題、摘要、完整內容為必填。';
@@ -161,13 +178,21 @@ async function saveItem(published){
  try{
    if(file){
      $('formMessage').textContent='圖片上傳中…';
-     const imageBase64=await readImageBase64(file);
+     const imageBase64=await readFileBase64(file,'IMAGE_READ_FAILED');
      const uploaded=await api('uploadImage',{image:{base64:imageBase64,name:file.name,mime:file.type}});
      item.image=uploaded.path;
      $('image').value=uploaded.path;
      if($('imageFileStatus'))$('imageFileStatus').textContent='圖片已上傳。';
-     $('formMessage').textContent='消息儲存中…';
    }
+   if(videoFile){
+     $('formMessage').textContent='影片上傳中…';
+     const videoBase64=await readFileBase64(videoFile,'VIDEO_READ_FAILED');
+     const uploaded=await api('uploadVideo',{video:{base64:videoBase64,name:videoFile.name,mime:videoFile.type}});
+     item.video=uploaded.path;
+     $('video').value=uploaded.path;
+     if($('videoFileStatus'))$('videoFileStatus').textContent='影片已上傳。';
+   }
+   $('formMessage').textContent='消息儲存中…';
    const data=await api('upsert',{item});
    items=data.items||[];
  versionSha=data.sha||'';
