@@ -42,6 +42,7 @@
     "image": "",
     "map": "",
     "link": "",
-    "linkText": ""
+    "linkText": "",
+    "published": false
   }
 ]
