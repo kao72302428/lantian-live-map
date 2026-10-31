@@ -31,7 +31,7 @@ test('admin news frontend uses Blob direct uploads and practical limits',()=>{
   assert.match(js,/IMAGE_UPLOAD_MAX=5\*1024\*1024/);
   assert.match(js,/VIDEO_UPLOAD_MAX=20\*1024\*1024/);
   assert.match(js,/api\/news-media-upload/);
-  assert.match(js,/Vercel\/blob@2\.8\.2\/client/);
+  assert.match(js,/@vercel\/blob@2\.8\.2\/client/);
   assert.match(js,/optimizeImage/);
   assert.doesNotMatch(js,/readFileBase64/);
 });
