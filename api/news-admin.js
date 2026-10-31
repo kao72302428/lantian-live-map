@@ -70,6 +70,37 @@ async function writeNews(token, items, sha, message) {
   return data;
 }
 
+function validateImageUpload(raw) {
+  const mime = String(raw?.mime || '').trim().toLowerCase();
+  const base64 = String(raw?.base64 || '').trim();
+  const extByMime = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+  const ext = extByMime[mime];
+  if (!ext) throw new Error('INVALID_IMAGE_TYPE');
+  if (!base64 || base64.length > 3333336 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64)) {
+    throw new Error('INVALID_IMAGE_DATA');
+  }
+  const bytes = Buffer.from(base64, 'base64');
+  if (!bytes.length || bytes.length > 2500000) throw new Error('IMAGE_TOO_LARGE');
+  return { base64, ext, bytes: bytes.length };
+}
+
+async function writeImage(token, raw) {
+  const image = validateImageUpload(raw);
+  const stamp = Date.now();
+  const random = crypto.randomBytes(4).toString('hex');
+  const path = `assets/news-images/news-${stamp}-${random}.${image.ext}`;
+  const url = `https://api.github.com/repos/${REPO}/contents/${path}`;
+  const body = {
+    message: `Admin upload news image: ${path}`,
+    content: image.base64,
+    branch: BRANCH
+  };
+  const r = await fetch(url, { method: 'PUT', headers: ghHeaders(token), body: JSON.stringify(body) });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error('IMAGE_WRITE_FAILED');
+  return { path: `./${path}`, sha: data.content?.sha || '', bytes: image.bytes };
+}
+
 function cleanItem(raw, existingId, existingPublished) {
   const now = Date.now();
   const id = String(existingId || raw?.id || `news-${now}`).trim();
@@ -105,6 +136,11 @@ module.exports = async function handler(req, res) {
 
   const action = String(req.body?.action || '').trim();
   try {
+    if (action === 'uploadImage') {
+      const uploaded = await writeImage(token, req.body?.image || {});
+      return res.status(200).json({ ok: true, ...uploaded });
+    }
+
     const { items, sha } = await readNews(token);
 
     if (action === 'list') {
@@ -153,6 +189,10 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ ok: false, code: 'UNKNOWN_ACTION' });
   } catch (err) {
     if (err.message === 'STALE_DATA') return res.status(409).json({ok:false,code:'STALE_DATA'});
+    if (err.message === 'INVALID_IMAGE_TYPE') return res.status(400).json({ok:false,code:'INVALID_IMAGE_TYPE'});
+    if (err.message === 'INVALID_IMAGE_DATA') return res.status(400).json({ok:false,code:'INVALID_IMAGE_DATA'});
+    if (err.message === 'IMAGE_TOO_LARGE') return res.status(400).json({ok:false,code:'IMAGE_TOO_LARGE'});
+    if (err.message === 'IMAGE_WRITE_FAILED') return res.status(502).json({ok:false,code:'IMAGE_WRITE_FAILED'});
     console.error(err);
     return res.status(502).json({ ok: false, code: 'GITHUB_WRITE_FAILED' });
   }
