@@ -55,8 +55,14 @@
           <textarea id="content" rows="8" placeholder="輸入完整消息內容" required disabled></textarea>
         </label>
         <label class="wide">
-          圖片網址（可選）
-          <input id="image" type="url" placeholder="https://..." disabled>
+          圖片檔（可選）
+          <input id="imageFile" type="file" accept="image/jpeg,image/png,image/webp" disabled>
+          <span class="field-help">可直接上傳 JPG、PNG、WebP，單檔 2.5 MB 內。</span>
+          <span id="imageFileStatus" class="field-help"></span>
+        </label>
+        <label class="wide">
+          圖片網址（備用，可選）
+          <input id="image" type="url" placeholder="https://... 或既有圖片路徑" disabled>
         </label>
         <label class="wide">
           地圖嵌入網址（可選）
@@ -100,6 +106,6 @@
 
 <footer>智慧藍田 LIVE 一點通｜地方大小事管理</footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script src="./admin-news.js?v=20261012-detail-link"></script>
+<script src="./admin-news.js?v=20261031-image-upload"></script>
 </body>
 </html>
