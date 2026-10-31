@@ -2,12 +2,16 @@ const test=require('node:test'),assert=require('node:assert/strict'),crypto=requ
 const handler=require('../api/news-admin');
 const baseline=[{id:'existing',date:'2026-10-01',title:'Existing',summary:'Summary',content:'Content',published:true}];
 function setup({authorized=true,conflict=false}={}){
- let data=structuredClone(baseline),sha='v1',writes=0;
+ let data=structuredClone(baseline),sha='v1',writes=0,imageWrites=0,lastImagePath='';
  process.env.ADMIN_LINE_USER_HASHES=authorized?crypto.createHash('sha256').update('fixture-admin').digest('hex'):'0'.repeat(64);
  process.env.GITHUB_CONTENT_TOKEN='fixture-token';
  const response=(status,body)=>({ok:status<400,status,json:async()=>body});
  global.fetch=async(url,options={})=>{
   if(url.includes('api.line.me'))return response(200,{sub:'fixture-admin'});
+  if(options.method==='PUT'&&url.includes('/contents/assets/news-images/')){
+   const body=JSON.parse(options.body);assert.equal(body.branch,'main');assert.ok(body.content);
+   imageWrites++;lastImagePath=url;return response(200,{content:{sha:'image-sha'}});
+  }
   if(options.method==='PUT'){
    const body=JSON.parse(options.body);assert.equal(body.branch,'main');assert.equal(body.sha,sha);
    if(conflict)return response(409,{});
@@ -17,7 +21,7 @@ function setup({authorized=true,conflict=false}={}){
   assert.match(url,/news.json\?ref=main$/);
   return response(200,{sha,content:Buffer.from(JSON.stringify(data)).toString('base64')});
  };
- return {get data(){return data},get sha(){return sha},get writes(){return writes}};
+ return {get data(){return data},get sha(){return sha},get writes(){return writes},get imageWrites(){return imageWrites},get lastImagePath(){return lastImagePath}};
 }
 async function invoke(action,extra={}){
  const res={setHeader(){},status(code){this.code=code;return this},json(body){this.body=body;return this},end(){return this}};
@@ -32,6 +36,17 @@ test('news lifecycle persists draft, edits, publishes, unpublishes and deletes o
  r=await invoke('setPublished',{expectedSha:s.sha,id,published:false});assert.equal(r.body.item.published,false);
  r=await invoke('list');assert.equal(r.body.items.find(x=>x.id===id).title,'Edited');
  r=await invoke('delete',{expectedSha:s.sha,id});assert.equal(r.code,200);assert.deepEqual(s.data,baseline);
+});
+test('news image upload accepts JPG PNG or WebP and rejects invalid files',async()=>{
+ const s=setup();
+ const valid=Buffer.from('fixture-image').toString('base64');
+ let r=await invoke('uploadImage',{image:{base64:valid,name:'photo.png',mime:'image/png'}});
+ assert.equal(r.code,200);assert.equal(s.imageWrites,1);assert.match(r.body.path,/^\.\/assets\/news-images\/news-\d+-[a-f0-9]{8}\.png$/);
+ assert.match(s.lastImagePath,/\/contents\/assets\/news-images\/news-/);
+ r=await invoke('uploadImage',{image:{base64:valid,name:'photo.gif',mime:'image/gif'}});
+ assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_IMAGE_TYPE');assert.equal(s.imageWrites,1);
+ r=await invoke('uploadImage',{image:{base64:'%%%bad%%%',name:'photo.png',mime:'image/png'}});
+ assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_IMAGE_DATA');assert.equal(s.imageWrites,1);
 });
 test('stale editor cannot overwrite, unpublish or delete newer data',async()=>{
  const s=setup();await invoke('setPublished',{expectedSha:s.sha,id:'existing',published:false});
