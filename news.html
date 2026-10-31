@@ -21,7 +21,7 @@ input{width:100%;padding:13px 16px 13px 46px;border:1px solid #ccdbe4;border-rad
 .title a{color:#17324d;text-decoration:none}.title a:hover,.title a:focus{text-decoration:underline;color:#0b67a3}
 .summary{font-size:16px;line-height:1.55;color:#526a7c}
 .arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:32px;color:#7a8e9d;line-height:1;text-decoration:none}
-.empty{text-align:center;padding:36px;color:#718493}footer{text-align:center;color:#789;padding:18px;font-size:13px}
+.empty{text-align:center;padding:36px;color:#718493}.pagination{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 4px}.pagination button{border:1px solid #ccdbe4;background:#fff;color:#315b77;border-radius:10px;padding:8px 12px;font:inherit;font-weight:700;cursor:pointer}.pagination button.active{background:#0b75c9;color:#fff;border-color:#0b75c9}.pagination button:disabled{opacity:.45;cursor:not-allowed}.page-info{color:#718493;font-size:14px;margin-left:4px}footer{text-align:center;color:#789;padding:18px;font-size:13px}
 @media(max-width:768px){main{width:calc(100% - 24px);margin:0 12px;padding:12px 0}input{padding:12px 14px 12px 43px;background-position:14px 50%;background-size:19px 19px}.card::before{width:28%}.card::after{right:3%;width:22%;height:30%;bottom:20%}.head{padding:14px calc(28% + 34px) 14px 16px;min-height:108px}.title{font-size:18px}.summary{font-size:15px}.arrow{right:16px;font-size:30px}}
 </style>
 </head>
@@ -30,18 +30,37 @@ input{width:100%;padding:13px 16px 13px 46px;border:1px solid #ccdbe4;border-rad
 <main>
 <input id="q" placeholder="搜尋社區消息">
 <section id="news"></section>
+<div id="pagination" class="pagination" aria-label="消息分頁"></div>
 </main>
 <footer>智慧藍田 LIVE 一點通</footer>
 <script>
 let all=[];
+const PAGE_SIZE=10;
+let currentPage=1;
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const detailUrl=id=>'news-detail.html?id='+encodeURIComponent(String(id??''));
+function renderPagination(total){
+ const pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+ currentPage=Math.min(Math.max(1,currentPage),pages);
+ const el=document.getElementById('pagination');
+ if(total<=PAGE_SIZE){el.innerHTML='';return;}
+ let html='<button type="button" data-page="'+(currentPage-1)+'" '+(currentPage===1?'disabled':'')+'>上一頁</button>';
+ for(let p=1;p<=pages;p++)html+='<button type="button" data-page="'+p+'" class="'+(p===currentPage?'active':'')+'">'+p+'</button>';
+ html+='<button type="button" data-page="'+(currentPage+1)+'" '+(currentPage===pages?'disabled':'')+'>下一頁</button><span class="page-info">第 '+currentPage+' / '+pages+' 頁，共 '+total+' 則</span>';
+ el.innerHTML=html;
+}
 function render(){
  const q=document.getElementById('q').value.trim().toLowerCase();
  const a=all.filter(x=>x.published!==false).filter(x=>!q||[x.title,x.summary,x.content].join(' ').toLowerCase().includes(q)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
- document.getElementById('news').innerHTML=a.length?a.map(x=>'<article class="card"><div class="head"><div class="date">'+E(x.date)+'</div><div class="title"><a href="'+detailUrl(x.id)+'">'+E(x.title)+'</a></div><div class="summary">'+E(x.summary)+'</div><a class="arrow" href="'+detailUrl(x.id)+'" aria-label="查看詳情">›</a></div></article>').join(''):'<div class="empty">目前沒有符合的消息</div>';
+ const pages=Math.max(1,Math.ceil(a.length/PAGE_SIZE));
+ currentPage=Math.min(currentPage,pages);
+ const start=(currentPage-1)*PAGE_SIZE;
+ const rows=a.slice(start,start+PAGE_SIZE);
+ document.getElementById('news').innerHTML=rows.length?rows.map(x=>'<article class="card"><div class="head"><div class="date">'+E(x.date)+'</div><div class="title"><a href="'+detailUrl(x.id)+'">'+E(x.title)+'</a></div><div class="summary">'+E(x.summary)+'</div><a class="arrow" href="'+detailUrl(x.id)+'" aria-label="查看詳情">›</a></div></article>').join(''):'<div class="empty">目前沒有符合的消息</div>';
+ renderPagination(a.length);
 }
-document.getElementById('q').addEventListener('input',render);
+document.getElementById('q').addEventListener('input',()=>{currentPage=1;render();});
+document.getElementById('pagination').addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(!b||b.disabled)return;currentPage=Number(b.dataset.page)||1;render();window.scrollTo({top:0,behavior:'smooth'});});
 fetch('news.json?v='+Date.now()).then(r=>{if(!r.ok)throw Error();return r.json()}).then(x=>{all=x;render()}).catch(()=>document.getElementById('news').innerHTML='<div class="empty">消息資料載入失敗，請稍後再試。</div>');
 </script>
 </body></html>

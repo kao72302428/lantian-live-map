@@ -8,6 +8,8 @@ const IMAGE_UPLOAD_MAX=5*1024*1024;
 const VIDEO_UPLOAD_MAX=20*1024*1024;
 let idToken='';
 let items=[];
+const ADMIN_PAGE_SIZE=20;
+let adminPage=1;
 let versionSha='',busy=false;
 const SESSION_TOKEN='lantianAdminIdToken';
 let reverifyBtn=null;
@@ -89,10 +91,25 @@ async function api(action,extra={}){
  return data;
 }
 
+function renderAdminPagination(total){
+ const pages=Math.max(1,Math.ceil(total/ADMIN_PAGE_SIZE));
+ adminPage=Math.min(Math.max(1,adminPage),pages);
+ const el=$('adminPagination');
+ if(!el)return;
+ if(total<=ADMIN_PAGE_SIZE){el.innerHTML='';return;}
+ let html='<button type="button" data-page="'+(adminPage-1)+'" '+(adminPage===1?'disabled':'')+'>上一頁</button>';
+ for(let p=1;p<=pages;p++)html+='<button type="button" data-page="'+p+'" class="'+(p===adminPage?'active':'')+'">'+p+'</button>';
+ html+='<button type="button" data-page="'+(adminPage+1)+'" '+(adminPage===pages?'disabled':'')+'>下一頁</button><span class="page-info">第 '+adminPage+' / '+pages+' 頁，共 '+total+' 則</span>';
+ el.innerHTML=html;
+}
 function render(){
  const rows=[...items].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
  $('count').textContent=`${rows.length} 則消息`;
- $('list').innerHTML=rows.length?rows.map(x=>`
+ const pages=Math.max(1,Math.ceil(rows.length/ADMIN_PAGE_SIZE));
+ adminPage=Math.min(adminPage,pages);
+ const start=(adminPage-1)*ADMIN_PAGE_SIZE;
+ const visible=rows.slice(start,start+ADMIN_PAGE_SIZE);
+ $('list').innerHTML=visible.length?visible.map(x=>`
   <article class="news-item ${x.published===false?'is-unpublished':''}" data-id="${E(x.id)}">
    <div class="news-meta"><span class="news-date">${E(x.date)}</span><span class="state ${x.published===false?'off':'on'}">${x.published===false?'未公開':'公開中'}</span></div>
    <div class="news-title">${E(x.title)}</div>
@@ -104,6 +121,7 @@ function render(){
     <button type="button" data-action="delete" class="danger">刪除</button>
    </div>
   </article>`).join(''):'<div class="empty">目前沒有消息</div>';
+ renderAdminPagination(rows.length);
 }
 
 function editItem(item){
@@ -255,6 +273,7 @@ async function saveItem(published){
 $('newsForm').addEventListener('submit',e=>{e.preventDefault();saveItem(true);});
 $('saveDraftBtn').addEventListener('click',()=>saveItem(false));
 $('newBtn').addEventListener('click',resetForm);
+$('adminPagination')?.addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(!b||b.disabled)return;adminPage=Number(b.dataset.page)||1;render();});
 $('list').addEventListener('click',async e=>{
  const btn=e.target.closest('button[data-action]');
  if(!btn||busy)return;
