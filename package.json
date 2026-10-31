@@ -9,6 +9,7 @@
     "members:auth-production": "node scripts/member-auth-uat.cjs"
   },
   "dependencies": {
+    "@vercel/blob": "2.8.2",
     "bcryptjs": "3.0.3",
     "connect-pg-simple": "10.0.0",
     "express-session": "1.19.0",
