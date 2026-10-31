@@ -6,8 +6,11 @@ on:
       - 'api/news-media-upload.js'
       - 'admin-news.js'
       - 'admin-news.html'
+      - 'admin-news.css'
+      - 'news.html'
       - 'tests/news-admin.test.js'
       - 'tests/news-media-upload.test.js'
+      - 'tests/news-pagination.test.js'
       - 'package.json'
       - '.github/workflows/news-admin-tests.yml'
   workflow_dispatch:
@@ -24,4 +27,4 @@ jobs:
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: node --check admin-news.js
       - run: node --check api/news-media-upload.js
-      - run: node --test tests/news-admin.test.js tests/news-media-upload.test.js
+      - run: node --test tests/news-admin.test.js tests/news-media-upload.test.js tests/news-pagination.test.js
