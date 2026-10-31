@@ -1,6 +1,11 @@
 (()=>{
 const LIFF_ID='2011802000-aDp14e0D';
 const API='https://lantian-live-map.vercel.app/api/news-admin';
+const MEDIA_UPLOAD_API='https://lantian-live-map.vercel.app/api/news-media-upload';
+const BLOB_CLIENT='https://esm.sh/@vercel/blob@2.8.2/client?bundle';
+const IMAGE_SOURCE_MAX=15*1024*1024;
+const IMAGE_UPLOAD_MAX=5*1024*1024;
+const VIDEO_UPLOAD_MAX=20*1024*1024;
 let idToken='';
 let items=[];
 let versionSha='',busy=false;
@@ -130,22 +135,62 @@ function imageError(file){
  if(!file)return '';
  if(!['image/jpeg','image/png','image/webp'].includes(file.type))return '圖片僅支援 JPG、PNG 或 WebP。';
  if(!file.size)return '圖片檔案為空。';
- if(file.size>2500000)return '圖片超過 2.5 MB。';
+ if(file.size>IMAGE_SOURCE_MAX)return '圖片原檔超過 15 MB。';
  return '';
 }
 function videoError(file){
  if(!file)return '';
  if(!['video/mp4','video/webm'].includes(file.type))return '影片僅支援 MP4 或 WebM。';
  if(!file.size)return '影片檔案為空。';
- if(file.size>2500000)return '影片超過 2.5 MB。';
+ if(file.size>VIDEO_UPLOAD_MAX)return '影片超過 20 MB。';
  return '';
 }
-function readFileBase64(file,code){return new Promise((resolve,reject)=>{
- const reader=new FileReader();
- reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
- reader.onerror=()=>reject(Object.assign(new Error(code),{code}));
- reader.readAsDataURL(file);
+function canvasBlob(canvas,type,quality){return new Promise((resolve,reject)=>{
+ canvas.toBlob(blob=>blob?resolve(blob):reject(Object.assign(new Error('IMAGE_COMPRESS_FAILED'),{code:'IMAGE_COMPRESS_FAILED'})),type,quality);
 });}
+async function optimizeImage(file){
+ if(file.size<=IMAGE_UPLOAD_MAX)return file;
+ if(typeof createImageBitmap!=='function')throw Object.assign(new Error('IMAGE_COMPRESS_UNSUPPORTED'),{code:'IMAGE_COMPRESS_UNSUPPORTED'});
+ const bitmap=await createImageBitmap(file);
+ let scale=Math.min(1,2400/Math.max(bitmap.width,bitmap.height));
+ let width=Math.max(1,Math.round(bitmap.width*scale));
+ let height=Math.max(1,Math.round(bitmap.height*scale));
+ const canvas=document.createElement('canvas');
+ const ctx=canvas.getContext('2d');
+ if(!ctx)throw Object.assign(new Error('IMAGE_COMPRESS_FAILED'),{code:'IMAGE_COMPRESS_FAILED'});
+ const qualities=[.86,.78,.70,.62,.54];
+ let blob=null;
+ for(let round=0;round<4;round++){
+   canvas.width=width;canvas.height=height;
+   ctx.clearRect(0,0,width,height);
+   ctx.drawImage(bitmap,0,0,width,height);
+   for(const quality of qualities){
+     blob=await canvasBlob(canvas,'image/webp',quality);
+     if(blob.size<=IMAGE_UPLOAD_MAX)break;
+   }
+   if(blob&&blob.size<=IMAGE_UPLOAD_MAX)break;
+   width=Math.max(1,Math.round(width*.8));
+   height=Math.max(1,Math.round(height*.8));
+ }
+ bitmap.close?.();
+ if(!blob||blob.size>IMAGE_UPLOAD_MAX)throw Object.assign(new Error('IMAGE_COMPRESS_FAILED'),{code:'IMAGE_COMPRESS_FAILED'});
+ const base=String(file.name||'image').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9._-]+/g,'-')||'image';
+ return new File([blob],base+'.webp',{type:'image/webp',lastModified:Date.now()});
+}
+function safeFileName(name){
+ return String(name||'file').replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-+|-+$/g,'')||'file';
+}
+async function uploadMedia(file,kind,onProgress){
+ const mod=await import(BLOB_CLIENT);
+ const prefix=kind==='image'?'news-images':'news-videos';
+ return mod.upload(prefix+'/'+Date.now()+'-'+safeFileName(file.name),file,{
+   access:'public',
+   handleUploadUrl:MEDIA_UPLOAD_API,
+   clientPayload:JSON.stringify({idToken}),
+   multipart:kind==='video'&&file.size>10*1024*1024,
+   onUploadProgress:progress=>onProgress?.(Math.round(progress.percentage||0))
+ });
+}
 if($('imageFile'))$('imageFile').addEventListener('change',()=>{
  const file=$('imageFile').files?.[0];
  const err=imageError(file);
@@ -177,19 +222,19 @@ async function saveItem(published){
  $('formMessage').textContent='儲存中…';
  try{
    if(file){
-     $('formMessage').textContent='圖片上傳中…';
-     const imageBase64=await readFileBase64(file,'IMAGE_READ_FAILED');
-     const uploaded=await api('uploadImage',{image:{base64:imageBase64,name:file.name,mime:file.type}});
-     item.image=uploaded.path;
-     $('image').value=uploaded.path;
+     $('formMessage').textContent=file.size>IMAGE_UPLOAD_MAX?'圖片壓縮中…':'圖片上傳中…';
+     const optimized=await optimizeImage(file);
+     if($('imageFileStatus'))$('imageFileStatus').textContent=optimized!==file?`已自動壓縮：${Math.ceil(optimized.size/1024)} KB`:'圖片準備上傳。';
+     const uploaded=await uploadMedia(optimized,'image',pct=>{$('formMessage').textContent=`圖片上傳中… ${pct}%`;});
+     item.image=uploaded.url;
+     $('image').value=uploaded.url;
      if($('imageFileStatus'))$('imageFileStatus').textContent='圖片已上傳。';
    }
    if(videoFile){
      $('formMessage').textContent='影片上傳中…';
-     const videoBase64=await readFileBase64(videoFile,'VIDEO_READ_FAILED');
-     const uploaded=await api('uploadVideo',{video:{base64:videoBase64,name:videoFile.name,mime:videoFile.type}});
-     item.video=uploaded.path;
-     $('video').value=uploaded.path;
+     const uploaded=await uploadMedia(videoFile,'video',pct=>{$('formMessage').textContent=`影片上傳中… ${pct}%`;});
+     item.video=uploaded.url;
+     $('video').value=uploaded.url;
      if($('videoFileStatus'))$('videoFileStatus').textContent='影片已上傳。';
    }
    $('formMessage').textContent='消息儲存中…';
@@ -203,7 +248,7 @@ async function saveItem(published){
    $('formMessage').textContent=published?'已儲存並發布。':'已儲存為未公開。';
  }catch(e){
    $('formMessage').hidden=false;
-   $('formMessage').textContent=e.code==='STALE_DATA'?'資料已被其他管理員更新，本次未儲存。請先保留編輯內容，再重新整理後確認最新資料。':e.code==='STORAGE_NOT_CONFIGURED'?'後端儲存尚未設定。':'儲存失敗，請稍後再試。';
+   $('formMessage').textContent=e.code==='STALE_DATA'?'資料已被其他管理員更新，本次未儲存。請先保留編輯內容，再重新整理後確認最新資料。':e.code==='STORAGE_NOT_CONFIGURED'?'後端儲存尚未設定。':e.code==='IMAGE_COMPRESS_UNSUPPORTED'?'此瀏覽器無法自動壓縮圖片，請改用較小圖片。':e.code==='IMAGE_COMPRESS_FAILED'?'圖片自動壓縮失敗，請改用較小圖片。':'儲存失敗，請稍後再試。';
  }finally{setEnabled(true);}
 }
 
