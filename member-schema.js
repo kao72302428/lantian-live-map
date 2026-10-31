@@ -15,7 +15,7 @@ const schemas={
   entryLabel:'一般會員',memberLabel:'一般會員',icon:'👤',
   sections:[{title:'個人基本資料',fields:[
    field('name','姓名','text',true,{chineseOnly:true,placeholder:'請輸入中文姓名'}),field('displayName','顯示名稱／暱稱','text',true),
-   field('mobile','手機號碼','tel',true),field('email','Email','email',true),
+   field('mobile','手機號碼','tel',true),field('email','Email','email',true),field('lineName','LINE 名稱','text',true),
    field('residenceArea','居住區域','text',true,{placeholder:'例如：高雄市楠梓區；不用填完整地址'}),
    ...credentials,
    field('birthMonth','出生年月','month'),
@@ -29,7 +29,7 @@ const schemas={
   sections:[
    {title:'A. 聯絡人基本資料',fields:[
     field('name','聯絡人姓名','text',true,{chineseOnly:true,placeholder:'請輸入中文姓名'}),field('mobile','手機號碼','tel',true),
-    field('email','Email','email',true),field('jobTitle','職稱','text',true),
+    field('email','Email','email',true),field('lineName','LINE 名稱','text',true),field('jobTitle','職稱','text',true),
     ...credentials,field('lineContact','LINE 聯絡方式'),...consent
    ]},
    {title:'B. 店家基本資料',fields:[
@@ -61,8 +61,8 @@ const businessAdmin=[
 const fieldsFor=type=>schemas[type]?schemas[type].sections.flatMap(s=>s.fields):[];
 // First registration is a projection; the complete profile/admin schema stays intact.
 const registrationKeys={
- individual:['name','mobile','email','password','termsAccepted','privacyAccepted'],
- business:['name','mobile','email','password','shopName','shopCategory','termsAccepted','privacyAccepted']
+ individual:['name','mobile','email','lineName','password','termsAccepted','privacyAccepted'],
+ business:['name','mobile','email','lineName','password','shopName','shopCategory','termsAccepted','privacyAccepted']
 };
 const registrationFieldsFor=type=>registrationKeys[type]?registrationKeys[type].map(key=>fieldsFor(type).find(f=>f.key===key)):[];
 const registrationSectionsFor=type=>schemas[type]?schemas[type].sections.map(s=>({...s,fields:s.fields.filter(f=>registrationKeys[type].includes(f.key))})).filter(s=>s.fields.length):[];
