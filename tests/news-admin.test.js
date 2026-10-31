@@ -2,7 +2,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),crypto=requ
 const handler=require('../api/news-admin');
 const baseline=[{id:'existing',date:'2026-10-01',title:'Existing',summary:'Summary',content:'Content',published:true}];
 function setup({authorized=true,conflict=false}={}){
- let data=structuredClone(baseline),sha='v1',writes=0,imageWrites=0,lastImagePath='';
+ let data=structuredClone(baseline),sha='v1',writes=0,imageWrites=0,videoWrites=0,lastImagePath='',lastVideoPath='';
  process.env.ADMIN_LINE_USER_HASHES=authorized?crypto.createHash('sha256').update('fixture-admin').digest('hex'):'0'.repeat(64);
  process.env.GITHUB_CONTENT_TOKEN='fixture-token';
  const response=(status,body)=>({ok:status<400,status,json:async()=>body});
@@ -11,6 +11,10 @@ function setup({authorized=true,conflict=false}={}){
   if(options.method==='PUT'&&url.includes('/contents/assets/news-images/')){
    const body=JSON.parse(options.body);assert.equal(body.branch,'main');assert.ok(body.content);
    imageWrites++;lastImagePath=url;return response(200,{content:{sha:'image-sha'}});
+  }
+  if(options.method==='PUT'&&url.includes('/contents/assets/news-videos/')){
+   const body=JSON.parse(options.body);assert.equal(body.branch,'main');assert.ok(body.content);
+   videoWrites++;lastVideoPath=url;return response(200,{content:{sha:'video-sha'}});
   }
   if(options.method==='PUT'){
    const body=JSON.parse(options.body);assert.equal(body.branch,'main');assert.equal(body.sha,sha);
@@ -21,7 +25,7 @@ function setup({authorized=true,conflict=false}={}){
   assert.match(url,/news.json\?ref=main$/);
   return response(200,{sha,content:Buffer.from(JSON.stringify(data)).toString('base64')});
  };
- return {get data(){return data},get sha(){return sha},get writes(){return writes},get imageWrites(){return imageWrites},get lastImagePath(){return lastImagePath}};
+ return {get data(){return data},get sha(){return sha},get writes(){return writes},get imageWrites(){return imageWrites},get videoWrites(){return videoWrites},get lastImagePath(){return lastImagePath},get lastVideoPath(){return lastVideoPath}};
 }
 async function invoke(action,extra={}){
  const res={setHeader(){},status(code){this.code=code;return this},json(body){this.body=body;return this},end(){return this}};
@@ -47,6 +51,17 @@ test('news image upload accepts JPG PNG or WebP and rejects invalid files',async
  assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_IMAGE_TYPE');assert.equal(s.imageWrites,1);
  r=await invoke('uploadImage',{image:{base64:'%%%bad%%%',name:'photo.png',mime:'image/png'}});
  assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_IMAGE_DATA');assert.equal(s.imageWrites,1);
+});
+test('news video upload accepts MP4 or WebM and rejects invalid files',async()=>{
+ const s=setup();
+ const valid=Buffer.from('fixture-video').toString('base64');
+ let r=await invoke('uploadVideo',{video:{base64:valid,name:'clip.mp4',mime:'video/mp4'}});
+ assert.equal(r.code,200);assert.equal(s.videoWrites,1);assert.match(r.body.path,/^\.\/assets\/news-videos\/news-\d+-[a-f0-9]{8}\.mp4$/);
+ assert.match(s.lastVideoPath,/\/contents\/assets\/news-videos\/news-/);
+ r=await invoke('uploadVideo',{video:{base64:valid,name:'clip.mov',mime:'video/quicktime'}});
+ assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_VIDEO_TYPE');assert.equal(s.videoWrites,1);
+ r=await invoke('uploadVideo',{video:{base64:'%%%bad%%%',name:'clip.mp4',mime:'video/mp4'}});
+ assert.equal(r.code,400);assert.equal(r.body.code,'INVALID_VIDEO_DATA');assert.equal(s.videoWrites,1);
 });
 test('stale editor cannot overwrite, unpublish or delete newer data',async()=>{
  const s=setup();await invoke('setPublished',{expectedSha:s.sha,id:'existing',published:false});
