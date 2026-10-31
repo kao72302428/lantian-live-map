@@ -8,7 +8,7 @@ const SESSION_TOKEN='lantianAdminIdToken';
 let reverifyBtn=null;
 
 const $=id=>document.getElementById(id);
-const fields=['date','title','summary','content','image','map','link','linkText','published'];
+const fields=['date','title','summary','content','imageFile','image','map','link','linkText','published'];
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
 function setEnabled(enabled){
@@ -124,9 +124,32 @@ async function refresh(){
  render();
 }
 
+function imageError(file){
+ if(!file)return '';
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type))return '圖片僅支援 JPG、PNG 或 WebP。';
+ if(!file.size)return '圖片檔案為空。';
+ if(file.size>2500000)return '圖片超過 2.5 MB。';
+ return '';
+}
+function readImageBase64(file){return new Promise((resolve,reject)=>{
+ const reader=new FileReader();
+ reader.onload=()=>resolve(String(reader.result||'').split(',')[1]||'');
+ reader.onerror=()=>reject(Object.assign(new Error('IMAGE_READ_FAILED'),{code:'IMAGE_READ_FAILED'}));
+ reader.readAsDataURL(file);
+});}
+if($('imageFile'))$('imageFile').addEventListener('change',()=>{
+ const file=$('imageFile').files?.[0];
+ const err=imageError(file);
+ if(err){$('imageFile').value='';if($('imageFileStatus'))$('imageFileStatus').textContent=err;return;}
+ if($('imageFileStatus'))$('imageFileStatus').textContent=file?`已選擇：${file.name}（${Math.ceil(file.size/1024)} KB）`:'';
+});
+
 async function saveItem(published){
  if(busy)return;
  const item=getFormItem(published);
+ const file=$('imageFile')?.files?.[0];
+ const fileError=imageError(file);
+ if(fileError){$('formMessage').hidden=false;$('formMessage').textContent=fileError;return;}
  if(!item.date||!item.title||!item.summary||!item.content){
    $('formMessage').hidden=false;
    $('formMessage').textContent='日期、標題、摘要、完整內容為必填。';
@@ -136,6 +159,15 @@ async function saveItem(published){
  $('formMessage').hidden=false;
  $('formMessage').textContent='儲存中…';
  try{
+   if(file){
+     $('formMessage').textContent='圖片上傳中…';
+     const imageBase64=await readImageBase64(file);
+     const uploaded=await api('uploadImage',{image:{base64:imageBase64,name:file.name,mime:file.type}});
+     item.image=uploaded.path;
+     $('image').value=uploaded.path;
+     if($('imageFileStatus'))$('imageFileStatus').textContent='圖片已上傳。';
+     $('formMessage').textContent='消息儲存中…';
+   }
    const data=await api('upsert',{item});
    items=data.items||[];
  versionSha=data.sha||'';
